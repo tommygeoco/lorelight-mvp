@@ -18,7 +18,7 @@ export function AudioPlayerFooter() {
   }
 
   return (
-    <div className="flex items-center gap-6 px-6 py-4 border-t border-white/10">
+    <div className="flex items-center gap-6 px-6 py-4">
       {/* Left: Track Info */}
       <div className="flex-1 flex items-center gap-2">
         {/* Lighting Icon */}

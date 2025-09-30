@@ -1,14 +1,19 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { immer } from 'zustand/middleware/immer'
+import { enableMapSet } from 'immer'
 import type { Scene, SceneInsert } from '@/types'
 import { sceneService } from '@/lib/services/browser/sceneService'
+
+// Enable Immer MapSet plugin for Map/Set support
+enableMapSet()
 
 interface SceneState {
   scenes: Map<string, Scene>
   isLoading: boolean
   error: string | null
   currentSceneId: string | null
+  fetchedCampaigns: Set<string> // Track which campaigns we've fetched
 
   // Actions
   fetchScenesForCampaign: (campaignId: string) => Promise<void>
@@ -32,16 +37,24 @@ export const useSceneStore = create<SceneState>()(
       isLoading: false,
       error: null,
       currentSceneId: null,
+      fetchedCampaigns: new Set(),
 
       fetchScenesForCampaign: async (campaignId) => {
         set({ isLoading: true, error: null })
         try {
           const scenes = await sceneService.listByCampaign(campaignId)
           set(state => {
-            state.scenes.clear()
+            // Clear old scenes for this campaign
+            state.scenes.forEach((scene, id) => {
+              if (scene.campaign_id === campaignId) {
+                state.scenes.delete(id)
+              }
+            })
+            // Add new scenes
             scenes.forEach(scene => {
               state.scenes.set(scene.id, scene)
             })
+            state.fetchedCampaigns.add(campaignId)
             state.isLoading = false
           })
         } catch (error) {

@@ -1,8 +1,12 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { immer } from 'zustand/middleware/immer'
+import { enableMapSet } from 'immer'
 import type { Campaign } from '@/types'
 import { campaignService } from '@/lib/services/browser/campaignService'
+
+// Enable Immer MapSet plugin for Map/Set support
+enableMapSet()
 
 interface CampaignState {
   campaigns: Map<string, Campaign>

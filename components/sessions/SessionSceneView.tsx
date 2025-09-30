@@ -34,7 +34,8 @@ export function SessionSceneView({ campaignId }: SessionSceneViewProps) {
     isLoading,
     fetchScenesForCampaign,
     setActiveScene,
-    currentSceneId
+    currentSceneId,
+    fetchedCampaigns
   } = useSceneStore()
 
   const [selectedSceneId, setSelectedSceneId] = useState<string | null>(currentSceneId)
@@ -45,11 +46,11 @@ export function SessionSceneView({ campaignId }: SessionSceneViewProps) {
   )
 
   useEffect(() => {
-    // Only fetch if we don't have scenes for this campaign
-    if (sceneArray.length === 0 && !isLoading) {
+    // Only fetch if we haven't fetched this campaign yet
+    if (!fetchedCampaigns.has(campaignId) && !isLoading) {
       fetchScenesForCampaign(campaignId)
     }
-  }, [campaignId, sceneArray.length, isLoading, fetchScenesForCampaign])
+  }, [campaignId, fetchedCampaigns, isLoading, fetchScenesForCampaign])
 
   // Sort: active first, then by order_index
   const sortedScenes = useMemo(() => {
@@ -105,7 +106,7 @@ export function SessionSceneView({ campaignId }: SessionSceneViewProps) {
     return parsedNotes.slice(0, 3) // Limit to 3 as in design
   }
 
-  if (isLoading) {
+  if (isLoading && !fetchedCampaigns.has(campaignId)) {
     return (
       <div className="flex items-center justify-center h-screen bg-[#111111]">
         <div className="text-neutral-400">Loading scenes...</div>

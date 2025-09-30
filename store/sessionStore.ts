@@ -1,8 +1,12 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { immer } from 'zustand/middleware/immer'
+import { enableMapSet } from 'immer'
 import type { Session, SessionInsert } from '@/types'
 import { sessionService } from '@/lib/services/browser/sessionService'
+
+// Enable Immer MapSet plugin for Map/Set support
+enableMapSet()
 
 interface SessionState {
   sessions: Map<string, Session>

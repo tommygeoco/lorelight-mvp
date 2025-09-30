@@ -9,7 +9,7 @@ import { useEffect } from 'react'
 
 export function DashboardView() {
   const router = useRouter()
-  const { campaigns, fetchCampaigns, isLoading } = useCampaignStore()
+  const { campaigns, fetchCampaigns, isLoading, error } = useCampaignStore()
 
   useEffect(() => {
     if (campaigns.size === 0 && !isLoading) {
@@ -54,19 +54,19 @@ export function DashboardView() {
               {/* Gradient Background */}
               <div className="absolute inset-0 pointer-events-none overflow-hidden">
                 <div
-                  className="absolute w-[668px] h-40 -top-[137px] left-[92px] opacity-50 blur-3xl"
-                  style={{ background: 'radial-gradient(circle, rgba(139, 92, 246, 0.3) 0%, transparent 70%)' }}
+                  className="absolute w-[668px] h-40 -top-[137px] left-[92px] opacity-100 blur-3xl"
+                  style={{ background: 'radial-gradient(circle, rgba(139, 92, 246, 0.6) 0%, transparent 70%)' }}
                 />
                 <div
-                  className="absolute w-[668px] h-40 -top-[137px] right-[30px] opacity-50 blur-3xl"
-                  style={{ background: 'radial-gradient(circle, rgba(236, 72, 153, 0.3) 0%, transparent 70%)' }}
+                  className="absolute w-[668px] h-40 -top-[137px] right-[30px] opacity-100 blur-3xl"
+                  style={{ background: 'radial-gradient(circle, rgba(236, 72, 153, 0.6) 0%, transparent 70%)' }}
                 />
               </div>
 
               {/* Title */}
               <div className="relative max-w-[640px] mx-auto px-0 pb-6">
                 <h1
-                  className="text-6xl font-bold text-white mb-1 leading-[72px] tracking-tight"
+                  className="text-[60px] font-normal text-white mb-1 leading-[72px] tracking-tight"
                   style={{ fontFamily: '"PP Mondwest", sans-serif' }}
                 >
                   Dashboard
@@ -93,7 +93,11 @@ export function DashboardView() {
                   </button>
                 </div>
 
-                {isLoading ? (
+                {error ? (
+                  <div className="flex items-center justify-center py-12">
+                    <div className="text-red-400">Error: {error}</div>
+                  </div>
+                ) : isLoading ? (
                   <div className="flex items-center justify-center py-12">
                     <div className="text-neutral-400">Loading campaigns...</div>
                   </div>

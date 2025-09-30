@@ -48,13 +48,18 @@ const campaigns = await campaignService.list()
 
 ### State Management (Zustand)
 - Stores in `/store/` directory
-- Use Immer for immutable updates
+- Use Immer for immutable updates with Map/Set support
 - Persist critical state to localStorage
+- **IMPORTANT**: Always enable MapSet plugin when using Map/Set with Immer
 
 ```typescript
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { immer } from 'zustand/middleware/immer'
+import { enableMapSet } from 'immer'
+
+// Enable Immer MapSet plugin for Map/Set support
+enableMapSet()
 
 export const useCampaignStore = create<State>()(
   persist(
@@ -111,6 +116,11 @@ HUE_APP_ID=
 
 ## Common Issues and Solutions
 
+### Immer + Map/Set Issues
+- **Error**: `[Immer] The plugin for 'MapSet' has not been loaded`
+- **Solution**: Add `import { enableMapSet } from 'immer'` and call `enableMapSet()` at module top
+- **TypeScript Warning**: `TS2589: Type instantiation is excessively deep` is expected with Immer+Map, runtime works fine
+
 ### TypeScript Errors
 - `createServerSupabaseClient` is async - always use `await`
 - Use proper error typing instead of `any`
@@ -125,6 +135,10 @@ HUE_APP_ID=
 - Server-side: Use `getUser()` not `getSession()`
 - Client-side: Use `useAuthStore()` hook
 - All API routes require authentication
+
+### Infinite Loops in Data Fetching
+- Track which data has been fetched using a Set (e.g., `fetchedCampaigns`)
+- Don't refetch based on empty results - distinguish "not fetched" from "fetched but empty"
 
 ## Performance Requirements
 
