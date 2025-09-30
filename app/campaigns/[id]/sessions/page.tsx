@@ -159,14 +159,9 @@ export default function SessionsPage({
                       >
                         <div className="flex items-start justify-between mb-4">
                           <div className="flex-1">
-                            <h3 className="text-lg font-semibold text-white mb-1">
+                            <h3 className="text-lg font-semibold text-white">
                               {session.title}
                             </h3>
-                            {session.description && (
-                              <p className="text-sm text-white/50 line-clamp-2">
-                                {session.description}
-                              </p>
-                            )}
                           </div>
                           {session.status === 'active' && (
                             <span className="px-2 py-1 text-xs font-medium text-green-400 bg-green-400/10 rounded-md">

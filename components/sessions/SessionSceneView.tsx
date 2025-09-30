@@ -98,9 +98,9 @@ export function SessionSceneView({ campaignId }: SessionSceneViewProps) {
         <nav className="w-14 flex-shrink-0" aria-label="Main navigation">
           <div className="bg-[#191919] rounded-lg p-2 h-full flex flex-col gap-2">
             <button
-              onClick={() => router.push('/campaigns')}
+              onClick={() => router.back()}
               className="w-10 h-10 rounded-lg hover:bg-white/5 flex items-center justify-center transition-colors"
-              aria-label="Navigate back to campaigns"
+              aria-label="Navigate back"
             >
               <ChevronLeft className="w-[18px] h-[18px] text-white/70" />
             </button>
