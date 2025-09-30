@@ -22,18 +22,29 @@ export default function CampaignDetailPage({
   const campaign = campaigns.get(resolvedParams.id)
 
   useEffect(() => {
-    if (!campaign) {
+    // Only fetch if we don't have any campaigns at all
+    if (campaigns.size === 0) {
       fetchCampaigns()
     }
-  }, [campaign, fetchCampaigns])
+  }, [campaigns.size, fetchCampaigns])
 
-  if (!campaign) {
+  // If we still don't have the campaign after checking, show a minimal loading state
+  if (!campaign && campaigns.size === 0) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-black">
         <div className="text-neutral-400">Loading campaign...</div>
       </div>
     )
   }
+
+  // If campaigns loaded but this one doesn't exist, redirect
+  if (!campaign && campaigns.size > 0) {
+    router.push('/dashboard')
+    return null
+  }
+
+  // TypeScript guard - campaign is guaranteed to exist here
+  if (!campaign) return null
 
   const CampaignHeader = () => (
     <>

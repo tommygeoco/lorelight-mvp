@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { ChevronRight } from 'lucide-react'
 import type { Campaign } from '@/types'
+import { useSceneStore } from '@/store/sceneStore'
 
 interface CampaignCardProps {
   campaign: Campaign
@@ -27,11 +28,20 @@ function getCampaignGradient(campaignId: string): string {
 }
 
 export function CampaignCard({ campaign }: CampaignCardProps) {
+  const { fetchScenesForCampaign } = useSceneStore()
+
+  const handleMouseEnter = () => {
+    // Prefetch scenes for this campaign on hover
+    fetchScenesForCampaign(campaign.id)
+  }
+
   return (
     <article className="bg-white/[0.02] hover:bg-white/[0.05] transition-all rounded-xl">
       <Link
         href={`/campaigns/${campaign.id}/play`}
         className="group flex items-center gap-4 p-4"
+        onMouseEnter={handleMouseEnter}
+        prefetch={true}
       >
         <div
           className="w-14 h-14 rounded-lg flex-shrink-0 shadow-lg"
