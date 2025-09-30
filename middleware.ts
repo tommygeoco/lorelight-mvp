@@ -35,7 +35,7 @@ export async function middleware(request: NextRequest) {
   } = await supabase.auth.getUser()
 
   // Protected routes
-  const protectedPaths = ['/dashboard', '/campaigns', '/sessions', '/audio', '/lighting', '/settings']
+  const protectedPaths = ['/campaigns', '/sessions', '/audio', '/lighting', '/settings']
   const isProtectedPath = protectedPaths.some(path =>
     request.nextUrl.pathname.startsWith(path)
   )
@@ -47,10 +47,10 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
-  // Redirect to dashboard if accessing auth pages while logged in
+  // Redirect to campaigns if accessing auth pages while logged in
   if ((request.nextUrl.pathname === '/login' || request.nextUrl.pathname === '/signup') && user) {
     const url = request.nextUrl.clone()
-    url.pathname = '/dashboard'
+    url.pathname = '/campaigns'
     return NextResponse.redirect(url)
   }
 

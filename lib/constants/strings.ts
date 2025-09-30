@@ -176,12 +176,12 @@ export type StringPath =
 // Helper function to get nested string (future i18n integration)
 export function getString(path: StringPath): string {
   const parts = path.split('.')
-  let value: typeof STRINGS | string = STRINGS
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let value: any = STRINGS
 
   for (const part of parts) {
-    if (typeof value === 'object' && part in value) {
-      value = value[part as keyof typeof value] as typeof STRINGS | string
-    } else {
+    value = value[part]
+    if (value === undefined) {
       console.warn(`String not found: ${path}`)
       return path
     }

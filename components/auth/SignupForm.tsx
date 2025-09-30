@@ -38,7 +38,7 @@ export function SignupForm() {
         email,
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/dashboard`,
+          emailRedirectTo: `${window.location.origin}/campaigns`,
         },
       })
 
@@ -48,7 +48,7 @@ export function SignupForm() {
         return
       }
 
-      router.push('/dashboard')
+      router.push('/campaigns')
       router.refresh()
     } catch {
       setError('An unexpected error occurred')

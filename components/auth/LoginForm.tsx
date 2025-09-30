@@ -33,7 +33,7 @@ export function LoginForm() {
         return
       }
 
-      router.push('/dashboard')
+      router.push('/campaigns')
       router.refresh()
     } catch {
       setError('An unexpected error occurred')
