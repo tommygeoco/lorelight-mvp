@@ -16,9 +16,10 @@ interface AudioFileState {
 
   // Actions
   fetchAudioFiles: () => Promise<void>
-  uploadAudioFile: (file: File, name: string, tags?: string[]) => Promise<AudioFile>
+  uploadAudioFile: (file: File, name: string, tags?: string[], folderId?: string) => Promise<AudioFile>
   deleteAudioFile: (id: string) => Promise<void>
-  updateAudioFile: (id: string, updates: { name?: string; tags?: string[] }) => Promise<void>
+  updateAudioFile: (id: string, updates: { name?: string; tags?: string[]; folder_id?: string | null }) => Promise<void>
+  getAudioFilesInFolder: (folderId: string | null) => AudioFile[] // Get files in folder (null = root)
 }
 
 /**
@@ -52,7 +53,7 @@ export const useAudioFileStore = create<AudioFileState>()(
         }
       },
 
-      uploadAudioFile: async (file, name, tags = []) => {
+      uploadAudioFile: async (file, name, tags = [], folderId) => {
         set({ isUploading: true, uploadProgress: 0 })
         try {
           console.log('Starting upload for:', file.name)
@@ -73,6 +74,7 @@ export const useAudioFileStore = create<AudioFileState>()(
             duration,
             format: file.type,
             tags,
+            folder_id: folderId || null,
           })
           console.log('Audio file record created:', audioFile.id)
           console.log('Full audioFile object:', JSON.stringify(audioFile, null, 2))
@@ -131,6 +133,7 @@ export const useAudioFileStore = create<AudioFileState>()(
           if (file) {
             if (updates.name !== undefined) file.name = updates.name
             if (updates.tags !== undefined) file.tags = updates.tags
+            if (updates.folder_id !== undefined) file.folder_id = updates.folder_id
           }
         })
 
@@ -144,6 +147,18 @@ export const useAudioFileStore = create<AudioFileState>()(
           })
           throw error
         }
+      },
+
+      getAudioFilesInFolder: (folderId) => {
+        const allFiles = Array.from(get().audioFiles.values())
+
+        if (folderId === null) {
+          // Return files with no folder (root level)
+          return allFiles.filter(f => !f.folder_id).sort((a, b) => a.name.localeCompare(b.name))
+        }
+
+        // Return files in specific folder
+        return allFiles.filter(f => f.folder_id === folderId).sort((a, b) => a.name.localeCompare(b.name))
       },
     })),
     {

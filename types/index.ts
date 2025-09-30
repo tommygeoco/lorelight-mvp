@@ -18,6 +18,13 @@ export type LightConfig = Tables<'light_configs'>
 export type Scene = Tables<'scenes'>
 export type HueSettings = Tables<'hue_settings'>
 
+// New v2 entity types
+export type SessionScene = Tables<'session_scenes'>
+export type AudioFolder = Tables<'audio_folders'>
+export type AudioPlaylist = Tables<'audio_playlists'>
+export type PlaylistAudio = Tables<'playlist_audio'>
+export type ScenePreset = Tables<'scene_presets'>
+
 // Insert types
 export type CampaignInsert = Inserts<'campaigns'>
 export type SessionInsert = Inserts<'sessions'>
@@ -25,6 +32,11 @@ export type AudioFileInsert = Inserts<'audio_files'>
 export type LightConfigInsert = Inserts<'light_configs'>
 export type SceneInsert = Inserts<'scenes'>
 export type HueSettingsInsert = Inserts<'hue_settings'>
+export type SessionSceneInsert = Inserts<'session_scenes'>
+export type AudioFolderInsert = Inserts<'audio_folders'>
+export type AudioPlaylistInsert = Inserts<'audio_playlists'>
+export type PlaylistAudioInsert = Inserts<'playlist_audio'>
+export type ScenePresetInsert = Inserts<'scene_presets'>
 
 // Update types
 export type CampaignUpdate = Updates<'campaigns'>
@@ -33,6 +45,11 @@ export type AudioFileUpdate = Updates<'audio_files'>
 export type LightConfigUpdate = Updates<'light_configs'>
 export type SceneUpdate = Updates<'scenes'>
 export type HueSettingsUpdate = Updates<'hue_settings'>
+export type SessionSceneUpdate = Updates<'session_scenes'>
+export type AudioFolderUpdate = Updates<'audio_folders'>
+export type AudioPlaylistUpdate = Updates<'audio_playlists'>
+export type PlaylistAudioUpdate = Updates<'playlist_audio'>
+export type ScenePresetUpdate = Updates<'scene_presets'>
 
 // Session status enum
 export type SessionStatus = 'planning' | 'active' | 'completed'
@@ -66,4 +83,35 @@ export interface HueLight {
 export interface CampaignWithRelations extends Campaign {
   sessions?: Session[]
   scenes?: Scene[]
+}
+
+// Session with scenes
+export interface SessionWithScenes extends Session {
+  scenes: Scene[]
+}
+
+// Scene with preset and relations
+export interface SceneWithRelations extends Omit<Scene, 'light_config'> {
+  preset?: ScenePreset
+  audio_file?: AudioFile
+  light_config?: LightConfig
+}
+
+// Audio file with folder and playlists
+export interface AudioFileWithRelations extends AudioFile {
+  folder?: AudioFolder
+  playlists?: AudioPlaylist[]
+}
+
+// Audio config override type (stored in scenes.audio_config JSON)
+export interface AudioConfig {
+  volume?: number // 0-1
+  startTime?: number // seconds
+  loop?: boolean
+}
+
+// Lighting config override type (stored in scenes.lighting_config JSON)
+export interface LightingConfig {
+  brightnessOverride?: number // 0-100
+  transitionDuration?: number // milliseconds
 }

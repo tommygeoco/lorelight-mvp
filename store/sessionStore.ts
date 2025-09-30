@@ -13,6 +13,7 @@ interface SessionState {
   isLoading: boolean
   error: string | null
   currentSessionId: string | null
+  fetchedCampaigns: Set<string> // Track which campaigns we've fetched
 
   // Actions
   fetchSessionsForCampaign: (campaignId: string) => Promise<void>
@@ -35,16 +36,29 @@ export const useSessionStore = create<SessionState>()(
       isLoading: false,
       error: null,
       currentSessionId: null,
+      fetchedCampaigns: new Set(),
 
       fetchSessionsForCampaign: async (campaignId) => {
+        // Don't refetch if already loaded
+        if (get().fetchedCampaigns.has(campaignId)) {
+          return
+        }
+
         set({ isLoading: true, error: null })
         try {
           const sessions = await sessionService.listByCampaign(campaignId)
           set(state => {
-            state.sessions.clear()
+            // Clear old sessions for this campaign
+            state.sessions.forEach((session, id) => {
+              if (session.campaign_id === campaignId) {
+                state.sessions.delete(id)
+              }
+            })
+            // Add new sessions
             sessions.forEach(session => {
               state.sessions.set(session.id, session)
             })
+            state.fetchedCampaigns.add(campaignId)
             state.isLoading = false
           })
         } catch (error) {
@@ -152,7 +166,28 @@ export const useSessionStore = create<SessionState>()(
       name: 'session-store',
       partialize: (state) => ({
         currentSessionId: state.currentSessionId,
+        fetchedCampaigns: Array.from(state.fetchedCampaigns),
       }),
+      merge: (persistedState, currentState) => {
+        const state = { ...currentState, ...(persistedState as object) }
+        const persisted = persistedState as {
+          currentSessionId?: string | null
+          fetchedCampaigns?: string[]
+        }
+
+        if (typeof persisted?.currentSessionId !== 'undefined') {
+          state.currentSessionId = persisted.currentSessionId
+        }
+
+        // Restore Set from array
+        if (Array.isArray(persisted?.fetchedCampaigns)) {
+          state.fetchedCampaigns = new Set(persisted.fetchedCampaigns)
+        } else {
+          state.fetchedCampaigns = new Set()
+        }
+
+        return state
+      },
     }
   )
 )
