@@ -28,6 +28,7 @@ export function SessionSceneView({ campaignId }: SessionSceneViewProps) {
 
   const [selectedSceneId, setSelectedSceneId] = useState<string | null>(currentSceneId)
   const [isSceneModalOpen, setIsSceneModalOpen] = useState(false)
+  const [editingScene, setEditingScene] = useState<Scene | undefined>(undefined)
 
   const sceneArray = useMemo(
     () => Array.from(scenes.values()).filter(s => s.campaign_id === campaignId),
@@ -56,6 +57,8 @@ export function SessionSceneView({ campaignId }: SessionSceneViewProps) {
 
   const handleSceneClick = async (scene: Scene) => {
     setSelectedSceneId(scene.id)
+    setEditingScene(scene)
+    setIsSceneModalOpen(true)
   }
 
   const handlePlayScene = async (scene: Scene) => {
@@ -138,7 +141,10 @@ export function SessionSceneView({ campaignId }: SessionSceneViewProps) {
             <header className="flex items-center justify-between p-2 mb-2">
               <h2 className="text-[#b4b4b4] font-semibold text-base">Scenes</h2>
               <button
-                onClick={() => setIsSceneModalOpen(true)}
+                onClick={() => {
+                  setEditingScene(undefined)
+                  setIsSceneModalOpen(true)
+                }}
                 className="hover:opacity-80 transition-opacity"
                 aria-label="Add new scene"
               >
@@ -269,8 +275,12 @@ export function SessionSceneView({ campaignId }: SessionSceneViewProps) {
 
       <SceneModal
         isOpen={isSceneModalOpen}
-        onClose={() => setIsSceneModalOpen(false)}
+        onClose={() => {
+          setIsSceneModalOpen(false)
+          setEditingScene(undefined)
+        }}
         campaignId={campaignId}
+        scene={editingScene}
       />
     </div>
   )

@@ -1,23 +1,50 @@
 'use client'
 
-import { useState } from 'react'
-import { X } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { X, Trash2 } from 'lucide-react'
 import { useSceneStore } from '@/store/sceneStore'
 import { Textarea } from '@/components/ui/textarea'
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { logger } from '@/lib/utils/logger'
 import { STRINGS } from '@/lib/constants/strings'
+import type { Scene } from '@/types'
 
 interface SceneModalProps {
   isOpen: boolean
   onClose: () => void
   campaignId: string
+  scene?: Scene // If provided, edit mode
 }
 
-export function SceneModal({ isOpen, onClose, campaignId }: SceneModalProps) {
-  const { createScene } = useSceneStore()
+const SCENE_TYPES = ['Story', 'Encounter', 'Event', 'Location', 'Rest'] as const
+
+export function SceneModal({ isOpen, onClose, campaignId, scene }: SceneModalProps) {
+  const { createScene, updateScene, deleteScene } = useSceneStore()
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
+  const [sceneType, setSceneType] = useState<string>('Story')
+  const [notes, setNotes] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
+
+  const isEditMode = !!scene
+
+  // Initialize form with scene data in edit mode
+  useEffect(() => {
+    if (isEditMode && scene) {
+      setName(scene.name)
+      setDescription(scene.description || '')
+      setSceneType(scene.scene_type || 'Story')
+      setNotes(scene.notes || '')
+    } else {
+      // Reset form in create mode
+      setName('')
+      setDescription('')
+      setSceneType('Story')
+      setNotes('')
+    }
+  }, [isEditMode, scene])
 
   if (!isOpen) return null
 
@@ -27,27 +54,51 @@ export function SceneModal({ isOpen, onClose, campaignId }: SceneModalProps) {
 
     setIsSubmitting(true)
     try {
-      await createScene({
-        campaign_id: campaignId,
-        name: name.trim(),
-        description: description.trim() || undefined,
-        scene_type: 'narrative',
-        notes: '',
-        light_config: {},
-        is_active: false,
-        order_index: 0, // Will be set by the service
-      })
-      // Reset form and close
-      setName('')
-      setDescription('')
+      if (isEditMode && scene) {
+        // Update existing scene
+        await updateScene(scene.id, {
+          name: name.trim(),
+          description: description.trim() || null,
+          scene_type: sceneType,
+          notes: notes.trim() || '',
+        })
+      } else {
+        // Create new scene
+        await createScene({
+          campaign_id: campaignId,
+          name: name.trim(),
+          description: description.trim() || undefined,
+          scene_type: sceneType,
+          notes: notes.trim() || '',
+          light_config: {},
+          is_active: false,
+          order_index: 0,
+        })
+      }
       onClose()
     } catch (error) {
-      logger.error('Failed to create scene', error, { campaignId, sceneName: name })
-      if (error && typeof error === 'object' && 'message' in error) {
-        alert(`Failed to create scene: ${(error as Error).message}`)
-      }
+      logger.error(`Failed to ${isEditMode ? 'update' : 'create'} scene`, error, {
+        campaignId,
+        sceneName: name,
+        sceneId: scene?.id,
+      })
     } finally {
       setIsSubmitting(false)
+    }
+  }
+
+  const handleDelete = async () => {
+    if (!scene) return
+
+    setIsDeleting(true)
+    try {
+      await deleteScene(scene.id)
+      setIsDeleteDialogOpen(false)
+      onClose()
+    } catch (error) {
+      logger.error('Failed to delete scene', error, { sceneId: scene.id })
+    } finally {
+      setIsDeleting(false)
     }
   }
 
@@ -58,77 +109,150 @@ export function SceneModal({ isOpen, onClose, campaignId }: SceneModalProps) {
   }
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
-      onClick={handleBackdropClick}
-    >
-      <div className="bg-[var(--card-surface)] border border-white/10 rounded-[24px] w-[402px] max-h-[90vh] overflow-y-auto shadow-2xl">
-        <form onSubmit={handleSubmit} className="flex flex-col">
-          {/* Header */}
-          <div className="flex items-center justify-between px-6 py-5 border-b border-white/10">
-            <h2 className="text-[16px] font-semibold text-white">{STRINGS.scenes.create}</h2>
-            <button
-              type="button"
-              onClick={onClose}
-              className="w-10 h-10 rounded-[8px] hover:bg-white/5 flex items-center justify-center transition-colors"
-            >
-              <X className="w-[18px] h-[18px] text-white/70" />
-            </button>
-          </div>
-
-          {/* Form Fields */}
-          <div className="px-6 py-6 space-y-5">
-            {/* Name Field */}
-            <div className="space-y-2">
-              <label htmlFor="scene-name" className="block text-[14px] font-semibold text-[#eeeeee]">
-                {STRINGS.scenes.nameLabel}
-              </label>
-              <input
-                id="scene-name"
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder={STRINGS.scenes.namePlaceholder}
-                required
-                className="w-full px-4 py-3 bg-[rgba(255,255,255,0.07)] border border-[#3a3a3a] rounded-[8px] text-[14px] text-white placeholder:text-[#606060] focus:outline-none focus:border-white/20 transition-colors"
-              />
+    <>
+      <div
+        className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
+        onClick={handleBackdropClick}
+      >
+        <div className="bg-[var(--card-surface)] border border-white/10 rounded-[24px] w-[402px] max-h-[90vh] overflow-y-auto shadow-2xl">
+          <form onSubmit={handleSubmit} className="flex flex-col">
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 py-5 border-b border-white/10">
+              <h2 className="text-[16px] font-semibold text-white">
+                {isEditMode ? STRINGS.scenes.edit : STRINGS.scenes.create}
+              </h2>
+              <div className="flex items-center gap-2">
+                {isEditMode && (
+                  <button
+                    type="button"
+                    onClick={() => setIsDeleteDialogOpen(true)}
+                    className="w-10 h-10 rounded-[8px] hover:bg-red-500/10 flex items-center justify-center transition-colors group"
+                  >
+                    <Trash2 className="w-[18px] h-[18px] text-white/40 group-hover:text-red-400" />
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="w-10 h-10 rounded-[8px] hover:bg-white/5 flex items-center justify-center transition-colors"
+                >
+                  <X className="w-[18px] h-[18px] text-white/70" />
+                </button>
+              </div>
             </div>
 
-            {/* Description Field */}
-            <div className="space-y-2">
-              <label htmlFor="scene-description" className="block text-[14px] font-semibold text-[#eeeeee]">
-                {STRINGS.scenes.descriptionLabel}
-              </label>
-              <Textarea
-                id="scene-description"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder={STRINGS.scenes.descriptionPlaceholder}
-                rows={4}
-                className="resize-none"
-              />
-            </div>
-          </div>
+            {/* Form Fields */}
+            <div className="px-6 py-6 space-y-5">
+              {/* Name Field */}
+              <div className="space-y-2">
+                <label htmlFor="scene-name" className="block text-[14px] font-semibold text-[#eeeeee]">
+                  {STRINGS.scenes.nameLabel}
+                </label>
+                <input
+                  id="scene-name"
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder={STRINGS.scenes.namePlaceholder}
+                  required
+                  className="w-full px-4 py-3 bg-[rgba(255,255,255,0.07)] border border-[#3a3a3a] rounded-[8px] text-[14px] text-white placeholder:text-[#606060] focus:outline-none focus:border-white/20 transition-colors"
+                />
+              </div>
 
-          {/* Footer */}
-          <div className="flex items-center justify-end gap-3 px-6 py-5 border-t border-white/10">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 text-[14px] font-medium text-white/70 hover:text-white hover:bg-white/5 rounded-[8px] transition-colors"
-            >
-              {STRINGS.common.cancel}
-            </button>
-            <button
-              type="submit"
-              disabled={!name.trim() || isSubmitting}
-              className="px-4 py-2 text-[14px] font-semibold text-black bg-white rounded-[8px] hover:bg-white/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
-              {isSubmitting ? STRINGS.common.creating : STRINGS.scenes.create}
-            </button>
-          </div>
-        </form>
+              {/* Scene Type Selector */}
+              <div className="space-y-2">
+                <label htmlFor="scene-type" className="block text-[14px] font-semibold text-[#eeeeee]">
+                  Scene Type
+                </label>
+                <div className="grid grid-cols-5 gap-2">
+                  {SCENE_TYPES.map((type) => (
+                    <button
+                      key={type}
+                      type="button"
+                      onClick={() => setSceneType(type)}
+                      className={`px-3 py-2 rounded-[8px] text-[14px] font-medium transition-colors ${
+                        sceneType === type
+                          ? 'bg-white text-black'
+                          : 'bg-white/5 text-white/70 hover:bg-white/10'
+                      }`}
+                    >
+                      {type}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Description Field */}
+              <div className="space-y-2">
+                <label htmlFor="scene-description" className="block text-[14px] font-semibold text-[#eeeeee]">
+                  {STRINGS.scenes.descriptionLabel}
+                </label>
+                <Textarea
+                  id="scene-description"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder={STRINGS.scenes.descriptionPlaceholder}
+                  rows={3}
+                  className="resize-none"
+                />
+              </div>
+
+              {/* Notes Field */}
+              <div className="space-y-2">
+                <label htmlFor="scene-notes" className="block text-[14px] font-semibold text-[#eeeeee]">
+                  Notes
+                </label>
+                <Textarea
+                  id="scene-notes"
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  placeholder="Add notes for this scene..."
+                  rows={4}
+                  className="resize-none"
+                />
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="flex items-center justify-end gap-3 px-6 py-5 border-t border-white/10">
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-4 py-2 text-[14px] font-medium text-white/70 hover:text-white hover:bg-white/5 rounded-[8px] transition-colors"
+              >
+                {STRINGS.common.cancel}
+              </button>
+              <button
+                type="submit"
+                disabled={!name.trim() || isSubmitting}
+                className="px-4 py-2 text-[14px] font-semibold text-black bg-white rounded-[8px] hover:bg-white/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                {isSubmitting
+                  ? isEditMode
+                    ? STRINGS.common.saving
+                    : STRINGS.common.creating
+                  : isEditMode
+                  ? STRINGS.common.save
+                  : STRINGS.scenes.create}
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
-    </div>
+
+      {/* Delete Confirmation Dialog */}
+      {isEditMode && scene && (
+        <ConfirmDialog
+          isOpen={isDeleteDialogOpen}
+          onClose={() => setIsDeleteDialogOpen(false)}
+          onConfirm={handleDelete}
+          title={STRINGS.scenes.deleteConfirmTitle}
+          description={STRINGS.scenes.deleteConfirmDescription}
+          confirmText={STRINGS.common.delete}
+          variant="destructive"
+          isLoading={isDeleting}
+        />
+      )}
+    </>
   )
 }
