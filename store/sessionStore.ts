@@ -165,14 +165,23 @@ export const useSessionStore = create<SessionState>()(
     {
       name: 'session-store',
       partialize: (state) => ({
+        sessions: Array.from(state.sessions.entries()),
         currentSessionId: state.currentSessionId,
         fetchedCampaigns: Array.from(state.fetchedCampaigns),
       }),
       merge: (persistedState, currentState) => {
         const state = { ...currentState, ...(persistedState as object) }
         const persisted = persistedState as {
+          sessions?: Array<[string, Session]>
           currentSessionId?: string | null
           fetchedCampaigns?: string[]
+        }
+
+        // Restore Map from array of entries
+        if (Array.isArray(persisted?.sessions)) {
+          state.sessions = new Map(persisted.sessions)
+        } else {
+          state.sessions = new Map()
         }
 
         if (typeof persisted?.currentSessionId !== 'undefined') {

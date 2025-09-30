@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useCampaignStore } from '@/store/campaignStore'
 import { useSessionStore } from '@/store/sessionStore'
 import { Button } from '@/components/ui/button'
-import { Plus, Play, ChevronLeft, CirclePlay, Settings, Music, Flame } from 'lucide-react'
+import { Plus, Play, ChevronLeft, CirclePlay, Settings, Music, Flame, Trash2 } from 'lucide-react'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { AudioPlayerFooter } from '@/components/dashboard/AudioPlayerFooter'
 import type { Session } from '@/types'
@@ -19,7 +19,7 @@ export default function SessionsPage({
   const resolvedParams = use(params)
   const router = useRouter()
   const { campaigns, fetchCampaigns } = useCampaignStore()
-  const { sessions, fetchSessionsForCampaign, createSession, fetchedCampaigns, isLoading } = useSessionStore()
+  const { sessions, fetchSessionsForCampaign, createSession, deleteSession, fetchedCampaigns, isLoading } = useSessionStore()
   const [isCreating, setIsCreating] = useState(false)
 
   const campaign = campaigns.get(resolvedParams.id)
@@ -69,6 +69,17 @@ export default function SessionsPage({
     router.push(`/campaigns/${resolvedParams.id}/sessions/${session.id}/play`)
   }
 
+  const handleDeleteSession = async (sessionId: string, e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (!confirm('Delete this session? This cannot be undone.')) return
+
+    try {
+      await deleteSession(sessionId)
+    } catch (error) {
+      console.error('Failed to delete session:', error)
+    }
+  }
+
   return (
     <div className="h-screen w-full bg-[#111111] flex flex-col">
       <div className="flex-1 min-h-0 flex overflow-hidden gap-2 px-2 pt-2 pb-2">
@@ -110,15 +121,15 @@ export default function SessionsPage({
         </nav>
 
         {/* Main Content */}
-        <main className="flex-1 bg-[#191919] rounded-tl-lg rounded-tr-2xl flex flex-col overflow-hidden">
-          <PageHeader
-            title={campaign.name}
-            description={campaign.description || 'Select a session to begin playing'}
-          />
+        <main className="flex-1 bg-[#191919] rounded-tl-lg rounded-tr-2xl overflow-y-auto">
+          <div className="w-[640px] mx-auto">
+            <PageHeader
+              title={campaign.name}
+              description={campaign.description || 'Select a session to begin playing'}
+            />
 
-          {/* Sessions Content */}
-          <div className="flex-1 overflow-y-auto">
-            <div className="w-[640px] mx-auto pt-[40px] pb-[40px]">
+            {/* Sessions Content */}
+            <div className="pt-[40px] pb-[40px]">
               <section aria-labelledby="sessions-heading">
                 <header className="h-[48px] pt-[24px] flex items-center justify-between">
                   <h2 id="sessions-heading" className="text-base font-semibold text-white">Sessions</h2>
@@ -157,17 +168,26 @@ export default function SessionsPage({
                         <h3 className="text-base font-semibold text-white">
                           {session.title}
                         </h3>
-                        <Button
-                          size="sm"
-                          className="bg-white/10 hover:bg-white/20 text-white"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            handlePlaySession(session)
-                          }}
-                        >
-                          <Play className="w-4 h-4 mr-2" fill="currentColor" />
-                          Play
-                        </Button>
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={(e) => handleDeleteSession(session.id, e)}
+                            className="w-8 h-8 rounded-full hover:bg-red-500/10 flex items-center justify-center transition-colors opacity-0 group-hover:opacity-100"
+                            aria-label="Delete session"
+                          >
+                            <Trash2 className="w-4 h-4 text-white/40 hover:text-red-400" />
+                          </button>
+                          <Button
+                            size="sm"
+                            className="bg-white/10 hover:bg-white/20 text-white"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              handlePlaySession(session)
+                            }}
+                          >
+                            <Play className="w-4 h-4 mr-2" fill="currentColor" />
+                            Play
+                          </Button>
+                        </div>
                       </article>
                     ))}
                   </div>

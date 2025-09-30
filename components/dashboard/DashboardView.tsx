@@ -71,12 +71,12 @@ export function DashboardView() {
         </nav>
 
         {/* Main Content */}
-        <main className="flex-1 bg-[#191919] rounded-lg overflow-hidden flex flex-col">
-          <PageHeader title="Campaigns" description="Text description" />
+        <main className="flex-1 bg-[#191919] rounded-lg overflow-y-auto">
+          <div className="w-[640px] mx-auto">
+            <PageHeader title="Campaigns" description="Text description" />
 
-          {/* Campaign List Section */}
-          <section className="flex-1 overflow-y-auto" aria-label="Campaign list">
-            <div className="w-[640px] mx-auto pt-[40px] pb-[40px]">
+            {/* Campaign List Section */}
+            <section className="pt-[40px] pb-[40px]" aria-label="Campaign list">
               {campaignArray.length === 0 ? (
                 <div className="text-center py-8">
                   <p className="text-neutral-400">No campaigns yet</p>
@@ -91,8 +91,8 @@ export function DashboardView() {
                   ))}
                 </ul>
               )}
-            </div>
-          </section>
+            </section>
+          </div>
         </main>
       </div>
 

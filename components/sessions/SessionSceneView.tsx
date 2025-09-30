@@ -218,54 +218,52 @@ export function SessionSceneView({ campaignId, sessionId }: SessionSceneViewProp
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1 bg-[#191919] rounded-lg flex flex-col overflow-hidden">
+        <main className="flex-1 bg-[#191919] rounded-lg overflow-y-auto">
           {selectedScene ? (
-            <>
+            <div className="w-[640px] mx-auto">
               <PageHeader title={selectedScene.name} description={selectedScene.description || undefined} />
 
               {/* Scene Content */}
-              <div className="flex-1 overflow-y-auto">
-                <div className="w-[640px] mx-auto pt-[40px] pb-[40px]">
-                  {/* Ambience Section */}
-                  <section aria-labelledby="ambience-heading">
-                    <header className="h-[48px] pt-[24px]">
-                      <h2 id="ambience-heading" className="text-base font-semibold text-white">Ambience</h2>
-                    </header>
-                    <div className="grid grid-cols-2 gap-4 pt-[24px]">
-                      <AmbienceCard
-                        type="lighting"
-                        title="Lighting"
-                        subtitle="Winter Twilight"
-                      />
-                      <AmbienceCard
-                        type="audio"
-                        title="Scene Audio"
-                        subtitle="Ambient Track"
-                      />
-                    </div>
-                  </section>
+              <div className="pt-[40px] pb-[40px]">
+                {/* Ambience Section */}
+                <section aria-labelledby="ambience-heading">
+                  <header className="h-[48px] pt-[24px]">
+                    <h2 id="ambience-heading" className="text-base font-semibold text-white">Ambience</h2>
+                  </header>
+                  <div className="grid grid-cols-2 gap-4 pt-[24px]">
+                    <AmbienceCard
+                      type="lighting"
+                      title="Lighting"
+                      subtitle="Winter Twilight"
+                    />
+                    <AmbienceCard
+                      type="audio"
+                      title="Scene Audio"
+                      subtitle="Ambient Track"
+                    />
+                  </div>
+                </section>
 
-                  {/* Notes Section */}
-                  {notes.length > 0 && (
-                    <section aria-labelledby="notes-heading" className="mt-4">
-                      <header className="h-[48px] pt-[24px]">
-                        <h2 id="notes-heading" className="text-base font-semibold text-white">Notes</h2>
-                      </header>
-                      <ul className="grid grid-cols-3 gap-4 pt-[24px] pb-[40px]" role="list">
-                        {notes.map((note, index) => (
-                          <li key={index}>
-                            <NoteCard
-                              title={note.title}
-                              content={note.content}
-                            />
-                          </li>
-                        ))}
-                      </ul>
-                    </section>
-                  )}
-                </div>
+                {/* Notes Section */}
+                {notes.length > 0 && (
+                  <section aria-labelledby="notes-heading" className="mt-4">
+                    <header className="h-[48px] pt-[24px]">
+                      <h2 id="notes-heading" className="text-base font-semibold text-white">Notes</h2>
+                    </header>
+                    <ul className="grid grid-cols-3 gap-4 pt-[24px] pb-[40px]" role="list">
+                      {notes.map((note, index) => (
+                        <li key={index}>
+                          <NoteCard
+                            title={note.title}
+                            content={note.content}
+                          />
+                        </li>
+                      ))}
+                    </ul>
+                  </section>
+                )}
               </div>
-            </>
+            </div>
           ) : (
             <div className="flex items-center justify-center h-full">
               <p className="text-center">
