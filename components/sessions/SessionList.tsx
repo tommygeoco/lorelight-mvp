@@ -33,8 +33,12 @@ export function SessionList({ campaignId }: SessionListProps) {
   const [editingSession, setEditingSession] = useState<Session | null>(null)
 
   useEffect(() => {
-    fetchSessionsForCampaign(campaignId)
-  }, [campaignId, fetchSessionsForCampaign])
+    // Only fetch if we don't have sessions for this campaign
+    const hasSessions = Object.values(sessions).some(s => s.campaign_id === campaignId)
+    if (!hasSessions && !isLoading) {
+      fetchSessionsForCampaign(campaignId)
+    }
+  }, [campaignId, fetchSessionsForCampaign, sessions, isLoading])
 
   const handleCreate = async (data: {
     name: string

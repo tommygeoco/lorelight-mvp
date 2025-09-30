@@ -61,11 +61,11 @@ export default function CampaignDetailPage({
             <TabsTrigger value="scenes">Scenes</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="sessions">
+          <TabsContent value="sessions" forceMount className="data-[state=inactive]:hidden">
             <SessionList campaignId={resolvedParams.id} />
           </TabsContent>
 
-          <TabsContent value="scenes">
+          <TabsContent value="scenes" forceMount className="data-[state=inactive]:hidden">
             <SceneList campaignId={resolvedParams.id} />
           </TabsContent>
         </Tabs>

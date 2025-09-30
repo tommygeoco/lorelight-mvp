@@ -33,8 +33,12 @@ export function SceneList({ campaignId }: SceneListProps) {
   const [editingScene, setEditingScene] = useState<Scene | null>(null)
 
   useEffect(() => {
-    fetchScenesForCampaign(campaignId)
-  }, [campaignId, fetchScenesForCampaign])
+    // Only fetch if we don't have scenes for this campaign
+    const hasScenes = Object.values(scenes).some(s => s.campaign_id === campaignId)
+    if (!hasScenes && !isLoading) {
+      fetchScenesForCampaign(campaignId)
+    }
+  }, [campaignId, fetchScenesForCampaign, scenes, isLoading])
 
   const handleCreate = async (data: {
     name: string
