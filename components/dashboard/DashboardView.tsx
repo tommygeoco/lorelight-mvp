@@ -22,34 +22,34 @@ export function DashboardView() {
       <div className="h-full flex overflow-hidden">
         {/* Navigation Sidebar */}
         <nav className="w-[72px] flex-shrink-0 p-2" aria-label="Main navigation">
-          <div className="bg-[#191919] rounded-lg p-2 h-full flex flex-col gap-2">
+          <div className="bg-[#191919] rounded-[24px] p-2 h-full flex flex-col gap-2">
             <button
               onClick={() => router.push('/')}
-              className="w-10 h-10 rounded-lg hover:bg-white/5 flex items-center justify-center transition-colors"
+              className="w-10 h-10 rounded-[24px] hover:bg-white/5 flex items-center justify-center transition-colors"
               aria-label="Navigate back"
             >
               <ChevronLeft className="w-[18px] h-[18px] text-white/70" />
             </button>
             <button
-              className="w-10 h-10 rounded-lg bg-white/[0.07] hover:bg-white/10 flex items-center justify-center transition-colors"
+              className="w-10 h-10 rounded-[24px] bg-white/[0.07] hover:bg-white/10 flex items-center justify-center transition-colors"
               aria-label="Play"
             >
               <CirclePlay className="w-[18px] h-[18px] text-white/70" />
             </button>
             <button
-              className="w-10 h-10 rounded-lg hover:bg-white/5 flex items-center justify-center transition-colors"
+              className="w-10 h-10 rounded-[24px] hover:bg-white/5 flex items-center justify-center transition-colors"
               aria-label="Library"
             >
               <BookOpen className="w-[18px] h-[18px] text-white/70" />
             </button>
             <button
-              className="w-10 h-10 rounded-lg hover:bg-white/5 flex items-center justify-center transition-colors"
+              className="w-10 h-10 rounded-[24px] hover:bg-white/5 flex items-center justify-center transition-colors"
               aria-label="Music"
             >
               <Music className="w-[18px] h-[18px] text-white/70" />
             </button>
             <button
-              className="w-10 h-10 rounded-lg hover:bg-white/5 flex items-center justify-center transition-colors"
+              className="w-10 h-10 rounded-[24px] hover:bg-white/5 flex items-center justify-center transition-colors"
               aria-label="Effects"
             >
               <Flame className="w-[18px] h-[18px] text-white/70" />

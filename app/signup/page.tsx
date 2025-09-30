@@ -13,7 +13,7 @@ export default function SignupPage() {
           </p>
         </div>
 
-        <div className="rounded-lg border border-neutral-800 bg-black p-8 shadow-sm">
+        <div className="rounded-[24px] border border-neutral-800 bg-black p-8 shadow-sm">
           <SignupForm />
         </div>
       </div>

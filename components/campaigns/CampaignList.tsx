@@ -84,13 +84,13 @@ export function CampaignList() {
       </div>
 
       {error && (
-        <div className="rounded-md border border-red-900 bg-red-950 p-4 text-sm text-red-200">
+        <div className="rounded-[24px] border border-red-900 bg-red-950 p-4 text-sm text-red-200">
           {error}
         </div>
       )}
 
       {campaignArray.length === 0 ? (
-        <div className="rounded-lg border-2 border-dashed border-neutral-800 p-12 text-center">
+        <div className="rounded-[24px] border-2 border-dashed border-neutral-800 p-12 text-center">
           <h3 className="text-lg font-medium text-white">No campaigns yet</h3>
           <p className="mt-2 text-sm text-neutral-400">
             Get started by creating your first campaign

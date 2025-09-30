@@ -23,7 +23,7 @@ export function CampaignDisplayCard({ campaign }: CampaignCardProps) {
   }
 
   return (
-    <article className="bg-white/[0.02] hover:bg-white/[0.05] transition-all rounded-xl">
+    <article className="bg-white/[0.02] hover:bg-white/[0.05] transition-all rounded-[24px]">
       <Link
         href={`/campaigns/${campaign.id}/sessions`}
         className="group flex items-center gap-4 p-4"
@@ -31,7 +31,7 @@ export function CampaignDisplayCard({ campaign }: CampaignCardProps) {
         prefetch={true}
       >
         <div
-          className="w-14 h-14 rounded-lg flex-shrink-0 shadow-lg"
+          className="w-14 h-14 rounded-[24px] flex-shrink-0 shadow-lg"
           style={{
             background: getCampaignGradient(campaign.id),
           }}

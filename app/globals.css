@@ -20,9 +20,9 @@
   --form-spacing: 1.25rem; /* 20px */
 
   /* Border radius */
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 16px;
+  --radius-sm: 24px;
+  --radius-md: 24px;
+  --radius-lg: 24px;
   --radius-xl: 24px;
 
   /* Icon sizes */

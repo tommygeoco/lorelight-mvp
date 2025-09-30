@@ -106,7 +106,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
                 We&apos;re sorry, but the application encountered an unexpected error.
               </p>
               {process.env.NODE_ENV === 'development' && error && (
-                <div className="mb-6 p-4 bg-red-950/20 border border-red-900 rounded-lg text-left">
+                <div className="mb-6 p-4 bg-red-950/20 border border-red-900 rounded-[24px] text-left">
                   <p className="text-sm font-mono text-red-200 break-all">
                     {error.toString()}
                   </p>
@@ -137,7 +137,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
                 This page encountered an error and couldn&apos;t be displayed.
               </p>
               {process.env.NODE_ENV === 'development' && error && (
-                <div className="mb-4 p-3 bg-red-950/20 border border-red-900 rounded-lg">
+                <div className="mb-4 p-3 bg-red-950/20 border border-red-900 rounded-[24px]">
                   <p className="text-xs font-mono text-red-200 break-all">
                     {error.toString()}
                   </p>
@@ -158,7 +158,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 
       // Feature level (compact inline error)
       return (
-        <div className="p-4 bg-red-950/20 border border-red-900 rounded-lg">
+        <div className="p-4 bg-red-950/20 border border-red-900 rounded-[24px]">
           <div className="flex items-start gap-3">
             <AlertTriangle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
             <div className="flex-1 min-w-0">

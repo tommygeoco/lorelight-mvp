@@ -13,7 +13,7 @@ export function AmbienceCard({ type, title, subtitle, thumbnail }: AmbienceCardP
   const isLighting = type === 'lighting'
 
   return (
-    <div className="bg-[var(--card-surface)] rounded-xl relative overflow-hidden shadow-lg h-[164px]">
+    <div className="bg-[var(--card-surface)] rounded-[24px] relative overflow-hidden shadow-lg h-[164px]">
       {/* Gradient decorations for lighting */}
       {isLighting && (
         <>
@@ -31,7 +31,7 @@ export function AmbienceCard({ type, title, subtitle, thumbnail }: AmbienceCardP
       {/* Audio background */}
       {!isLighting && thumbnail && (
         <>
-          <div className="absolute inset-0 bg-gradient-to-br from-orange-600/40 to-blue-600/40 rounded-xl" />
+          <div className="absolute inset-0 bg-gradient-to-br from-orange-600/40 to-blue-600/40 rounded-[24px]" />
           <div className="absolute inset-0 backdrop-blur-[50px] bg-white/[0.01]" />
         </>
       )}
@@ -41,11 +41,11 @@ export function AmbienceCard({ type, title, subtitle, thumbnail }: AmbienceCardP
         {/* Thumbnail - 64x64 at top */}
         {thumbnail ? (
           <div
-            className="w-16 h-16 rounded-md shadow-md bg-cover bg-center flex-shrink-0"
+            className="w-16 h-16 rounded-[24px] shadow-md bg-cover bg-center flex-shrink-0"
             style={{ backgroundImage: `url(${thumbnail})` }}
           />
         ) : (
-          <div className="w-16 h-16 rounded-md bg-gradient-to-br from-purple-500/20 to-pink-500/20 shadow-md flex-shrink-0" />
+          <div className="w-16 h-16 rounded-[24px] bg-gradient-to-br from-purple-500/20 to-pink-500/20 shadow-md flex-shrink-0" />
         )}
 
         {/* Content - 104px from top (16px padding + 64px thumbnail + 24px gap) */}

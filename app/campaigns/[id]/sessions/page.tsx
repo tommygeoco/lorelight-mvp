@@ -77,34 +77,34 @@ export default function SessionsPage({
       <div className="flex-1 min-h-0 flex overflow-hidden gap-2 p-2">
         {/* Navigation Sidebar */}
         <nav className="w-14 flex-shrink-0" aria-label="Main navigation">
-          <div className="bg-[#191919] rounded-lg p-2 h-full flex flex-col gap-2">
+          <div className="bg-[#191919] rounded-[24px] p-2 h-full flex flex-col gap-2">
             <button
               onClick={() => router.push('/campaigns')}
-              className="w-10 h-10 rounded-lg hover:bg-white/5 flex items-center justify-center transition-colors"
+              className="w-10 h-10 rounded-[24px] hover:bg-white/5 flex items-center justify-center transition-colors"
               aria-label="Navigate back to campaigns"
             >
               <ChevronLeft className="w-[18px] h-[18px] text-white/70" />
             </button>
             <button
-              className="w-10 h-10 rounded-lg bg-white/[0.07] hover:bg-white/10 flex items-center justify-center transition-colors"
+              className="w-10 h-10 rounded-[24px] bg-white/[0.07] hover:bg-white/10 flex items-center justify-center transition-colors"
               aria-label="Sessions"
             >
               <CirclePlay className="w-[18px] h-[18px] text-white/70" />
             </button>
             <button
-              className="w-10 h-10 rounded-lg hover:bg-white/5 flex items-center justify-center transition-colors"
+              className="w-10 h-10 rounded-[24px] hover:bg-white/5 flex items-center justify-center transition-colors"
               aria-label="Campaign settings"
             >
               <Settings className="w-[18px] h-[18px] text-white/70" />
             </button>
             <button
-              className="w-10 h-10 rounded-lg hover:bg-white/5 flex items-center justify-center transition-colors"
+              className="w-10 h-10 rounded-[24px] hover:bg-white/5 flex items-center justify-center transition-colors"
               aria-label="Music library"
             >
               <Music className="w-[18px] h-[18px] text-white/70" />
             </button>
             <button
-              className="w-10 h-10 rounded-lg hover:bg-white/5 flex items-center justify-center transition-colors"
+              className="w-10 h-10 rounded-[24px] hover:bg-white/5 flex items-center justify-center transition-colors"
               aria-label="Lighting effects"
             >
               <Flame className="w-[18px] h-[18px] text-white/70" />
@@ -138,7 +138,7 @@ export default function SessionsPage({
                 {/* Sessions list */}
                 {campaignSessions.length === 0 ? (
                   <div className="pt-[24px]">
-                    <div className="rounded-lg border-2 border-dashed border-neutral-800 p-12 text-center">
+                    <div className="rounded-[24px] border-2 border-dashed border-neutral-800 p-12 text-center">
                       <h3 className="text-lg font-medium text-white">No sessions yet</h3>
                       <p className="mt-2 text-neutral-400">
                         Create your first session to start playing
@@ -154,7 +154,7 @@ export default function SessionsPage({
                     {campaignSessions.map((session) => (
                       <article
                         key={session.id}
-                        className="bg-white/[0.02] hover:bg-white/[0.05] transition-all rounded-xl p-4 cursor-pointer group flex items-center justify-between"
+                        className="bg-white/[0.02] hover:bg-white/[0.05] transition-all rounded-[24px] p-4 cursor-pointer group flex items-center justify-between"
                         onClick={() => handlePlaySession(session)}
                       >
                         <h3 className="text-base font-semibold text-white">

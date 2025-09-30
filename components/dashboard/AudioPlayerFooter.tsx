@@ -22,7 +22,7 @@ export function AudioPlayerFooter() {
       {/* Left: Track Info */}
       <div className="flex-1 flex items-center gap-2">
         {/* Lighting Icon */}
-        <div className="relative w-12 h-12 bg-white/[0.07] rounded-md flex items-center justify-center overflow-hidden">
+        <div className="relative w-12 h-12 bg-white/[0.07] rounded-[24px] flex items-center justify-center overflow-hidden">
           {/* Gradient background effects */}
           <div
             className="absolute w-14 h-14 -left-7 top-3 mix-blend-screen blur-md"
@@ -37,7 +37,7 @@ export function AudioPlayerFooter() {
 
         {/* Scene Thumbnail */}
         <div
-          className="w-12 h-12 rounded-md shadow-lg"
+          className="w-12 h-12 rounded-[24px] shadow-lg"
           style={{ background: currentTrack.thumbnail }}
         />
 

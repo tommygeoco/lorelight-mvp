@@ -29,7 +29,7 @@ export function EmptyState({
   icon,
 }: EmptyStateProps) {
   return (
-    <div className="rounded-lg border-2 border-dashed border-neutral-800 p-12 text-center">
+    <div className="rounded-[24px] border-2 border-dashed border-neutral-800 p-12 text-center">
       {icon && <div className="mb-4 flex justify-center">{icon}</div>}
       <h3 className="text-lg font-medium text-white">{title}</h3>
       {description && (
