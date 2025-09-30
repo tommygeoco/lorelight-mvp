@@ -19,7 +19,7 @@ export default function SessionsPage({
   const resolvedParams = use(params)
   const router = useRouter()
   const { campaigns, fetchCampaigns } = useCampaignStore()
-  const { sessions, fetchSessionsForCampaign, createSession } = useSessionStore()
+  const { sessions, fetchSessionsForCampaign, createSession, fetchedCampaigns, isLoading } = useSessionStore()
   const [isCreating, setIsCreating] = useState(false)
 
   const campaign = campaigns.get(resolvedParams.id)
@@ -34,9 +34,11 @@ export default function SessionsPage({
   }, [campaigns.size, fetchCampaigns])
 
   useEffect(() => {
-    // Always fetch sessions (even if persisted data exists, it might be stale)
-    fetchSessionsForCampaign(resolvedParams.id)
-  }, [resolvedParams.id, fetchSessionsForCampaign])
+    // Only fetch if we haven't fetched this campaign's sessions yet
+    if (!fetchedCampaigns.has(resolvedParams.id) && !isLoading) {
+      fetchSessionsForCampaign(resolvedParams.id)
+    }
+  }, [resolvedParams.id, fetchedCampaigns, isLoading, fetchSessionsForCampaign])
 
   // If no campaign data and campaigns haven't loaded yet, redirect
   if (!campaign && campaigns.size === 0) {
@@ -51,14 +53,14 @@ export default function SessionsPage({
   const handleCreateSession = async () => {
     setIsCreating(true)
     try {
-      const newSession = await createSession({
+      await createSession({
         campaign_id: resolvedParams.id,
         title: `Session ${campaignSessions.length + 1}`,
         description: null,
       })
-      router.push(`/campaigns/${resolvedParams.id}/sessions/${newSession.id}/play`)
     } catch (error) {
       console.error('Failed to create session:', error)
+    } finally {
       setIsCreating(false)
     }
   }
