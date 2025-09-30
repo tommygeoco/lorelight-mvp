@@ -171,7 +171,7 @@ export default function SessionsPage({
                         <div className="flex items-center gap-2">
                           <button
                             onClick={(e) => handleDeleteSession(session.id, e)}
-                            className="w-8 h-8 rounded-[8px] hover:bg-red-500/10 flex items-center justify-center transition-colors opacity-0 group-hover:opacity-100"
+                            className="w-9 h-9 rounded-[8px] hover:bg-red-500/10 flex items-center justify-center transition-colors opacity-0 group-hover:opacity-100"
                             aria-label="Delete session"
                           >
                             <Trash2 className="w-4 h-4 text-white/40 hover:text-red-400" />
