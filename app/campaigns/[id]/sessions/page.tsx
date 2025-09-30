@@ -10,7 +10,6 @@ import { PageHeader } from '@/components/ui/PageHeader'
 import { AudioPlayerFooter } from '@/components/dashboard/AudioPlayerFooter'
 import type { Session } from '@/types'
 import { STRINGS } from '@/lib/constants/strings'
-import { CampaignCardSkeleton } from '@/components/ui/Skeleton'
 
 export default function SessionsPage({
   params,
@@ -35,18 +34,13 @@ export default function SessionsPage({
   }, [campaigns.size, fetchCampaigns])
 
   useEffect(() => {
+    // Always fetch sessions (even if persisted data exists, it might be stale)
     fetchSessionsForCampaign(resolvedParams.id)
   }, [resolvedParams.id, fetchSessionsForCampaign])
 
+  // If no campaign data and campaigns haven't loaded yet, redirect
   if (!campaign && campaigns.size === 0) {
-    return (
-      <div className="h-screen bg-[#111111] flex items-center justify-center">
-        <div className="space-y-4">
-          <CampaignCardSkeleton />
-          <CampaignCardSkeleton />
-        </div>
-      </div>
-    )
+    return null
   }
 
   if (!campaign) {

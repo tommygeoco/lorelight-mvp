@@ -17,8 +17,11 @@ export function DashboardView() {
   const [editingCampaign, setEditingCampaign] = useState<Campaign | undefined>(undefined)
 
   useEffect(() => {
-    fetchCampaigns()
-  }, [fetchCampaigns])
+    // Only fetch if we don't have data yet (persisted state loads immediately)
+    if (campaigns.size === 0 && !isLoading) {
+      fetchCampaigns()
+    }
+  }, [campaigns.size, isLoading, fetchCampaigns])
 
   const campaignArray = Array.from(campaigns.values())
 
@@ -74,9 +77,7 @@ export function DashboardView() {
           {/* Campaign List Section */}
           <section className="flex-1 overflow-y-auto" aria-label="Campaign list">
             <div className="w-[640px] mx-auto pt-[40px] pb-[40px]">
-              {isLoading ? (
-                <p className="text-center py-8 text-neutral-400">Loading campaigns...</p>
-              ) : campaignArray.length === 0 ? (
+              {campaignArray.length === 0 ? (
                 <div className="text-center py-8">
                   <p className="text-neutral-400">No campaigns yet</p>
                   <p className="text-xs text-neutral-500 mt-1">Create your first campaign to get started</p>

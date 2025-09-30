@@ -62,6 +62,33 @@ body {
   font-family: var(--font-inter), system-ui, sans-serif;
 }
 
+/* Prevent layout shift */
+html {
+  overflow-y: scroll; /* Always show scrollbar space */
+}
+
+* {
+  /* Prevent font loading causing layout shift */
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Smooth view transitions to mask any micro-shifts */
+@supports (view-transition-name: none) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation-duration: 0s;
+  }
+}
+
+/* Prevent content jumping during hydration */
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
 button {
   cursor: pointer;
 }
