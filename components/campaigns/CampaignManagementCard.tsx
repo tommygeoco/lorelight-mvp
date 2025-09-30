@@ -13,7 +13,11 @@ interface CampaignCardProps {
   onSelect: (campaign: Campaign) => void
 }
 
-export function CampaignCard({ campaign, onEdit, onSelect }: CampaignCardProps) {
+/**
+ * CampaignManagementCard - Used in campaign management pages
+ * Shows edit/delete actions and detailed campaign info
+ */
+export function CampaignManagementCard({ campaign, onEdit, onSelect }: CampaignCardProps) {
   const [isDeleting, setIsDeleting] = useState(false)
   const deleteCampaign = useCampaignStore(state => state.deleteCampaign)
 

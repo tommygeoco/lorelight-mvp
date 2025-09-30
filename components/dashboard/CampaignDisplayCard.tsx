@@ -27,7 +27,11 @@ function getCampaignGradient(campaignId: string): string {
   return campaignGradients[hash % campaignGradients.length]
 }
 
-export function CampaignCard({ campaign }: CampaignCardProps) {
+/**
+ * CampaignDisplayCard - Used in dashboard for campaign selection
+ * Shows gradient thumbnail and navigation to campaign play view
+ */
+export function CampaignDisplayCard({ campaign }: CampaignCardProps) {
   const { fetchScenesForCampaign } = useSceneStore()
 
   const handleMouseEnter = () => {

@@ -4,7 +4,7 @@ import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useCampaignStore } from '@/store/campaignStore'
 import { ChevronLeft, CirclePlay, BookOpen, Music, Flame } from 'lucide-react'
-import { CampaignCard } from './CampaignCard'
+import { CampaignDisplayCard } from './CampaignDisplayCard'
 import { PageHeader } from '@/components/ui/PageHeader'
 
 export function DashboardView() {
@@ -75,7 +75,7 @@ export function DashboardView() {
                 <ul className="flex flex-col gap-4" role="list">
                   {campaignArray.map((campaign) => (
                     <li key={campaign.id}>
-                      <CampaignCard campaign={campaign} />
+                      <CampaignDisplayCard campaign={campaign} />
                     </li>
                   ))}
                 </ul>

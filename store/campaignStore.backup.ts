@@ -26,9 +26,6 @@ interface CampaignState {
 /**
  * Campaign store with Zustand + Immer
  * Context7: Optimistic updates with local state + database sync
- *
- * NOTE: This store uses the old manual implementation.
- * TODO: Migrate to createEntityStore factory in future refactor.
  */
 export const useCampaignStore = create<CampaignState>()(
   persist(
@@ -59,6 +56,7 @@ export const useCampaignStore = create<CampaignState>()(
 
       createCampaign: async (campaign) => {
         set({ error: null })
+        // Optimistic ID (will be replaced by real ID from database)
         const tempId = `temp-${Date.now()}`
         const optimisticCampaign = {
           id: tempId,
@@ -68,18 +66,21 @@ export const useCampaignStore = create<CampaignState>()(
           ...campaign,
         }
 
+        // Optimistically add to state
         set(state => {
           state.campaigns.set(tempId, optimisticCampaign)
         })
 
         try {
           const newCampaign = await campaignService.create(campaign)
+          // Replace optimistic entry with real data
           set(state => {
             state.campaigns.delete(tempId)
             state.campaigns.set(newCampaign.id, newCampaign)
           })
           return newCampaign
         } catch (error) {
+          // Rollback on error
           set(state => {
             state.campaigns.delete(tempId)
             state.error = error instanceof Error ? error.message : 'Failed to create campaign'
@@ -90,9 +91,11 @@ export const useCampaignStore = create<CampaignState>()(
 
       updateCampaign: async (id, updates) => {
         set({ error: null })
+        // Store original for rollback
         const original = get().campaigns.get(id)
         if (!original) return
 
+        // Optimistically update
         set(state => {
           state.campaigns.set(id, { ...original, ...updates, updated_at: new Date().toISOString() })
         })
@@ -103,6 +106,7 @@ export const useCampaignStore = create<CampaignState>()(
             state.campaigns.set(id, updated)
           })
         } catch (error) {
+          // Rollback on error
           set(state => {
             state.campaigns.set(id, original)
             state.error = error instanceof Error ? error.message : 'Failed to update campaign'
@@ -113,9 +117,11 @@ export const useCampaignStore = create<CampaignState>()(
 
       deleteCampaign: async (id) => {
         set({ error: null })
+        // Store original for rollback
         const original = get().campaigns.get(id)
         if (!original) return
 
+        // Optimistically remove
         set(state => {
           state.campaigns.delete(id)
           if (state.currentCampaignId === id) {
@@ -126,6 +132,7 @@ export const useCampaignStore = create<CampaignState>()(
         try {
           await campaignService.delete(id)
         } catch (error) {
+          // Rollback on error
           set(state => {
             state.campaigns.set(id, original)
             state.error = error instanceof Error ? error.message : 'Failed to delete campaign'

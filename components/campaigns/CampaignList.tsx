@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useCampaignStore } from '@/store/campaignStore'
-import { CampaignCard } from './CampaignCard'
+import { CampaignManagementCard } from './CampaignManagementCard'
 import { CampaignForm } from './CampaignForm'
 import { Button } from '@/components/ui/button'
 import {
@@ -103,7 +103,7 @@ export function CampaignList() {
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {campaignArray.map((campaign) => (
-            <CampaignCard
+            <CampaignManagementCard
               key={campaign.id}
               campaign={campaign}
               onEdit={setEditingCampaign}
