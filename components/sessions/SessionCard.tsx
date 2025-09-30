@@ -3,6 +3,8 @@
 import { useState } from 'react'
 import { Card, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
+import { useConfirmDialog } from '@/hooks/useConfirmDialog'
 import type { Session } from '@/types'
 import { useSessionStore } from '@/store/sessionStore'
 import { Trash2, Edit, Play, Pause } from 'lucide-react'
@@ -16,10 +18,19 @@ export function SessionCard({ session, onEdit }: SessionCardProps) {
   const [isDeleting, setIsDeleting] = useState(false)
   const [isActivating, setIsActivating] = useState(false)
   const { deleteSession, setActiveSession } = useSessionStore()
+  const { confirm, dialogProps } = useConfirmDialog()
 
   const handleDelete = async (e: React.MouseEvent) => {
     e.stopPropagation()
-    if (!confirm(`Delete session "${session.title}"?`)) return
+
+    const confirmed = await confirm({
+      title: 'Delete Session',
+      description: `Are you sure you want to delete "${session.title}"? This action cannot be undone.`,
+      variant: 'destructive',
+      confirmText: 'Delete',
+    })
+
+    if (!confirmed) return
 
     setIsDeleting(true)
     try {
@@ -63,7 +74,8 @@ export function SessionCard({ session, onEdit }: SessionCardProps) {
   const isActive = session.status === 'active'
 
   return (
-    <Card
+    <>
+      <Card
       className={`transition-colors ${
         isActive ? 'border-green-500 bg-neutral-900' : ''
       }`}
@@ -130,5 +142,7 @@ export function SessionCard({ session, onEdit }: SessionCardProps) {
         </Button>
       </CardFooter>
     </Card>
+    <ConfirmDialog {...dialogProps} />
+    </>
   )
 }

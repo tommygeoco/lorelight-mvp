@@ -3,6 +3,8 @@
 import { useState } from 'react'
 import { Card, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
+import { useConfirmDialog } from '@/hooks/useConfirmDialog'
 import type { Campaign } from '@/types'
 import { useCampaignStore } from '@/store/campaignStore'
 import { Trash2, Edit } from 'lucide-react'
@@ -20,10 +22,19 @@ interface CampaignCardProps {
 export function CampaignManagementCard({ campaign, onEdit, onSelect }: CampaignCardProps) {
   const [isDeleting, setIsDeleting] = useState(false)
   const deleteCampaign = useCampaignStore(state => state.deleteCampaign)
+  const { confirm, dialogProps } = useConfirmDialog()
 
   const handleDelete = async (e: React.MouseEvent) => {
     e.stopPropagation()
-    if (!confirm(`Delete campaign "${campaign.name}"?`)) return
+
+    const confirmed = await confirm({
+      title: 'Delete Campaign',
+      description: `Are you sure you want to delete "${campaign.name}"? This action cannot be undone.`,
+      variant: 'destructive',
+      confirmText: 'Delete',
+    })
+
+    if (!confirmed) return
 
     setIsDeleting(true)
     try {
@@ -40,36 +51,41 @@ export function CampaignManagementCard({ campaign, onEdit, onSelect }: CampaignC
   }
 
   return (
-    <Card
-      className="cursor-pointer transition-colors hover:border-neutral-600 hover:bg-neutral-900"
-      onClick={() => onSelect(campaign)}
-    >
-      <CardHeader>
-        <CardTitle className="text-xl">{campaign.name}</CardTitle>
-        {campaign.description && (
-          <CardDescription className="line-clamp-2">
-            {campaign.description}
-          </CardDescription>
-        )}
-      </CardHeader>
-      <CardFooter className="justify-end gap-2">
-        <Button
-          size="sm"
-          variant="ghost"
-          onClick={handleEdit}
-          disabled={isDeleting}
-        >
-          <Edit className="h-4 w-4" />
-        </Button>
-        <Button
-          size="sm"
-          variant="ghost"
-          onClick={handleDelete}
-          disabled={isDeleting}
-        >
-          <Trash2 className="h-4 w-4" />
-        </Button>
-      </CardFooter>
-    </Card>
+    <>
+      <Card
+        className="cursor-pointer transition-colors hover:border-neutral-600 hover:bg-neutral-900"
+        onClick={() => onSelect(campaign)}
+      >
+        <CardHeader>
+          <CardTitle className="text-xl">{campaign.name}</CardTitle>
+          {campaign.description && (
+            <CardDescription className="line-clamp-2">
+              {campaign.description}
+            </CardDescription>
+          )}
+        </CardHeader>
+        <CardFooter className="justify-end gap-2">
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={handleEdit}
+            disabled={isDeleting}
+            aria-label="Edit campaign"
+          >
+            <Edit className="h-4 w-4" />
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={handleDelete}
+            disabled={isDeleting}
+            aria-label="Delete campaign"
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        </CardFooter>
+      </Card>
+      <ConfirmDialog {...dialogProps} />
+    </>
   )
 }

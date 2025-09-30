@@ -3,6 +3,8 @@
 import { useState } from 'react'
 import { TableRow, TableCell } from '@/components/ui/table'
 import { Button } from '@/components/ui/button'
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
+import { useConfirmDialog } from '@/hooks/useConfirmDialog'
 import type { Scene } from '@/types'
 import { useSceneStore } from '@/store/sceneStore'
 import { Trash2, Edit, Play, Pause, Music, Lightbulb } from 'lucide-react'
@@ -16,9 +18,17 @@ export function SceneRow({ scene, onEdit }: SceneRowProps) {
   const [isDeleting, setIsDeleting] = useState(false)
   const [isActivating, setIsActivating] = useState(false)
   const { deleteScene, setActiveScene } = useSceneStore()
+  const { confirm, dialogProps } = useConfirmDialog()
 
   const handleDelete = async () => {
-    if (!confirm(`Delete scene "${scene.name}"?`)) return
+    const confirmed = await confirm({
+      title: 'Delete Scene',
+      description: `Are you sure you want to delete "${scene.name}"? This action cannot be undone.`,
+      variant: 'destructive',
+      confirmText: 'Delete',
+    })
+
+    if (!confirmed) return
 
     setIsDeleting(true)
     try {
@@ -58,7 +68,8 @@ export function SceneRow({ scene, onEdit }: SceneRowProps) {
   const isActive = scene.is_active
 
   return (
-    <TableRow className={isActive ? 'bg-green-950/20' : ''}>
+    <>
+      <TableRow className={isActive ? 'bg-green-950/20' : ''}>
       <TableCell className="font-medium">
         <div className="flex items-center gap-2">
           {scene.name}
@@ -132,5 +143,7 @@ export function SceneRow({ scene, onEdit }: SceneRowProps) {
         </div>
       </TableCell>
     </TableRow>
+    <ConfirmDialog {...dialogProps} />
+    </>
   )
 }

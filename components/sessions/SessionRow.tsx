@@ -3,6 +3,8 @@
 import { useState } from 'react'
 import { TableRow, TableCell } from '@/components/ui/table'
 import { Button } from '@/components/ui/button'
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
+import { useConfirmDialog } from '@/hooks/useConfirmDialog'
 import type { Session } from '@/types'
 import { useSessionStore } from '@/store/sessionStore'
 import { Trash2, Edit, Play, Pause } from 'lucide-react'
@@ -16,9 +18,17 @@ export function SessionRow({ session, onEdit }: SessionRowProps) {
   const [isDeleting, setIsDeleting] = useState(false)
   const [isActivating, setIsActivating] = useState(false)
   const { deleteSession, setActiveSession } = useSessionStore()
+  const { confirm, dialogProps } = useConfirmDialog()
 
   const handleDelete = async () => {
-    if (!confirm(`Delete session "${session.title}"?`)) return
+    const confirmed = await confirm({
+      title: 'Delete Session',
+      description: `Are you sure you want to delete "${session.title}"? This action cannot be undone.`,
+      variant: 'destructive',
+      confirmText: 'Delete',
+    })
+
+    if (!confirmed) return
 
     setIsDeleting(true)
     try {
@@ -58,7 +68,8 @@ export function SessionRow({ session, onEdit }: SessionRowProps) {
   const isActive = session.status === 'active'
 
   return (
-    <TableRow className={isActive ? 'bg-green-950/20' : ''}>
+    <>
+      <TableRow className={isActive ? 'bg-green-950/20' : ''}>
       <TableCell className="font-medium">
         <div className="flex items-center gap-2">
           {session.title}
@@ -119,5 +130,7 @@ export function SessionRow({ session, onEdit }: SessionRowProps) {
         </div>
       </TableCell>
     </TableRow>
+    <ConfirmDialog {...dialogProps} />
+    </>
   )
 }

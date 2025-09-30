@@ -3,6 +3,8 @@
 import { useState } from 'react'
 import { Card, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
+import { useConfirmDialog } from '@/hooks/useConfirmDialog'
 import type { Scene } from '@/types'
 import { useSceneStore } from '@/store/sceneStore'
 import { Trash2, Edit, Play, Pause, Music, Lightbulb } from 'lucide-react'
@@ -16,10 +18,19 @@ export function SceneCard({ scene, onEdit }: SceneCardProps) {
   const [isDeleting, setIsDeleting] = useState(false)
   const [isActivating, setIsActivating] = useState(false)
   const { deleteScene, setActiveScene } = useSceneStore()
+  const { confirm, dialogProps } = useConfirmDialog()
 
   const handleDelete = async (e: React.MouseEvent) => {
     e.stopPropagation()
-    if (!confirm(`Delete scene "${scene.name}"?`)) return
+
+    const confirmed = await confirm({
+      title: 'Delete Scene',
+      description: `Are you sure you want to delete "${scene.name}"? This action cannot be undone.`,
+      variant: 'destructive',
+      confirmText: 'Delete',
+    })
+
+    if (!confirmed) return
 
     setIsDeleting(true)
     try {
@@ -62,7 +73,8 @@ export function SceneCard({ scene, onEdit }: SceneCardProps) {
   const isActive = scene.is_active
 
   return (
-    <Card
+    <>
+      <Card
       className={`transition-colors ${
         isActive ? 'border-green-500 bg-neutral-900' : ''
       }`}
@@ -133,5 +145,7 @@ export function SceneCard({ scene, onEdit }: SceneCardProps) {
         </Button>
       </CardFooter>
     </Card>
+    <ConfirmDialog {...dialogProps} />
+    </>
   )
 }
