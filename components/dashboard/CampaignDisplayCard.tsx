@@ -4,27 +4,10 @@ import Link from 'next/link'
 import { ChevronRight } from 'lucide-react'
 import type { Campaign } from '@/types'
 import { useSceneStore } from '@/store/sceneStore'
+import { getCampaignGradient } from '@/lib/utils/gradients'
 
 interface CampaignCardProps {
   campaign: Campaign
-}
-
-// Placeholder gradient colors for campaigns
-const campaignGradients = [
-  'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-  'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
-  'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
-  'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
-  'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
-  'linear-gradient(135deg, #30cfd0 0%, #330867 100%)',
-  'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)',
-  'linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%)',
-]
-
-function getCampaignGradient(campaignId: string): string {
-  // Use campaign ID to consistently pick a gradient
-  const hash = campaignId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0)
-  return campaignGradients[hash % campaignGradients.length]
 }
 
 /**

@@ -2,6 +2,7 @@
 
 import { Play } from 'lucide-react'
 import type { Scene } from '@/types'
+import { getSceneGradientColors } from '@/lib/utils/gradients'
 
 interface SceneListItemProps {
   scene: Scene
@@ -11,26 +12,13 @@ interface SceneListItemProps {
   onPlay?: () => void
 }
 
-// Generate gradient thumbnail based on scene type with multiple gradient blobs
-function getSceneThumbnail(scene: Scene): { primary: string; secondary: string; tertiary?: string } {
-  const colors = {
-    Story: { primary: '#8B5CF6', secondary: '#EC4899' },
-    Encounter: { primary: '#EF4444', secondary: '#F59E0B', tertiary: '#10B981' },
-    Event: { primary: '#F59E0B', secondary: '#8B5CF6' },
-    Location: { primary: '#6366F1', secondary: '#EC4899' },
-    Rest: { primary: '#F59E0B', secondary: '#EF4444' },
-    default: { primary: '#6B7280', secondary: '#9CA3AF' }
-  }
-  return colors[scene.scene_type as keyof typeof colors] || colors.default
-}
-
 export function SceneListItem({
   scene,
   isActive = false,
   onClick,
   onPlay
 }: SceneListItemProps) {
-  const gradientColors = getSceneThumbnail(scene)
+  const gradientColors = getSceneGradientColors(scene.scene_type)
 
   return (
     <button

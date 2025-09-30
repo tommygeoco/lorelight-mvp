@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { X } from 'lucide-react'
 import { useSceneStore } from '@/store/sceneStore'
+import { Textarea } from '@/components/ui/textarea'
 
 interface SceneModalProps {
   isOpen: boolean
@@ -60,7 +61,7 @@ export function SceneModal({ isOpen, onClose, campaignId }: SceneModalProps) {
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
       onClick={handleBackdropClick}
     >
-      <div className="bg-[#222222] border border-white/10 rounded-[24px] w-[402px] max-h-[90vh] overflow-y-auto shadow-2xl">
+      <div className="bg-[var(--card-surface)] border border-white/10 rounded-[24px] w-[402px] max-h-[90vh] overflow-y-auto shadow-2xl">
         <form onSubmit={handleSubmit} className="flex flex-col">
           {/* Header */}
           <div className="flex items-center justify-between px-6 py-5 border-b border-white/10">
@@ -97,13 +98,13 @@ export function SceneModal({ isOpen, onClose, campaignId }: SceneModalProps) {
               <label htmlFor="scene-description" className="block text-[14px] font-semibold text-[#eeeeee]">
                 Description
               </label>
-              <textarea
+              <Textarea
                 id="scene-description"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="Enter description..."
                 rows={4}
-                className="w-full px-4 py-3 bg-[rgba(255,255,255,0.07)] border border-[#3a3a3a] rounded-[8px] text-[14px] text-white placeholder:text-[#606060] focus:outline-none focus:border-white/20 transition-colors resize-none"
+                className="resize-none"
               />
             </div>
           </div>

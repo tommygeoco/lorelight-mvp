@@ -25,7 +25,7 @@ export function BaseModal({
       onClick={onClose}
     >
       <div
-        className={`bg-[#222222] border border-white/10 rounded-[24px] ${width} shadow-2xl`}
+        className={`bg-[var(--card-surface)] border border-white/10 rounded-[24px] ${width} shadow-2xl`}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}

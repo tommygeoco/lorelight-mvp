@@ -13,7 +13,7 @@ export function AmbienceCard({ type, title, subtitle, thumbnail }: AmbienceCardP
   const isLighting = type === 'lighting'
 
   return (
-    <div className="bg-[#222222] rounded-xl relative overflow-hidden shadow-lg h-[164px]">
+    <div className="bg-[var(--card-surface)] rounded-xl relative overflow-hidden shadow-lg h-[164px]">
       {/* Gradient decorations for lighting */}
       {isLighting && (
         <>

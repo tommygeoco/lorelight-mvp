@@ -9,7 +9,7 @@ interface NoteCardProps {
 export function NoteCard({ title, content, className = '' }: NoteCardProps) {
   return (
     <div
-      className={`bg-[#222222] rounded-xl p-4 h-[169px] shadow-lg overflow-hidden ${className}`}
+      className={`bg-[var(--card-surface)] rounded-xl p-4 h-[169px] shadow-lg overflow-hidden ${className}`}
     >
       <div className="font-bold text-white text-base mb-2 line-clamp-2">
         {title}
