@@ -4,6 +4,8 @@ import { useState } from 'react'
 import { X } from 'lucide-react'
 import { useCampaignStore } from '@/store/campaignStore'
 import { Textarea } from '@/components/ui/textarea'
+import { logger } from '@/lib/utils/logger'
+import { STRINGS } from '@/lib/constants/strings'
 
 interface CampaignModalProps {
   isOpen: boolean
@@ -34,7 +36,7 @@ export function CampaignModal({ isOpen, onClose }: CampaignModalProps) {
       setDescription('')
       onClose()
     } catch (error) {
-      console.error('Failed to create campaign:', error)
+      logger.error('Failed to create campaign', error, { campaignName: name })
     } finally {
       setIsSubmitting(false)
     }
@@ -55,7 +57,7 @@ export function CampaignModal({ isOpen, onClose }: CampaignModalProps) {
         <form onSubmit={handleSubmit} className="flex flex-col">
           {/* Header */}
           <div className="flex items-center justify-between px-6 py-5 border-b border-white/10">
-            <h2 className="text-[16px] font-semibold text-white">New Campaign</h2>
+            <h2 className="text-[16px] font-semibold text-white">{STRINGS.campaigns.create}</h2>
             <button
               type="button"
               onClick={onClose}
@@ -70,14 +72,14 @@ export function CampaignModal({ isOpen, onClose }: CampaignModalProps) {
             {/* Name Field */}
             <div className="space-y-2">
               <label htmlFor="name" className="block text-[14px] font-semibold text-[#eeeeee]">
-                Name
+                {STRINGS.campaigns.nameLabel}
               </label>
               <input
                 id="name"
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Enter campaign name..."
+                placeholder={STRINGS.campaigns.namePlaceholder}
                 required
                 className="w-full px-4 py-3 bg-[rgba(255,255,255,0.07)] border border-[#3a3a3a] rounded-[8px] text-[14px] text-white placeholder:text-[#606060] focus:outline-none focus:border-white/20 transition-colors"
               />
@@ -86,13 +88,13 @@ export function CampaignModal({ isOpen, onClose }: CampaignModalProps) {
             {/* Description Field */}
             <div className="space-y-2">
               <label htmlFor="description" className="block text-[14px] font-semibold text-[#eeeeee]">
-                Description
+                {STRINGS.campaigns.descriptionLabel}
               </label>
               <Textarea
                 id="description"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="Enter description..."
+                placeholder={STRINGS.campaigns.descriptionPlaceholder}
                 rows={6}
                 className="resize-none"
               />
@@ -106,14 +108,14 @@ export function CampaignModal({ isOpen, onClose }: CampaignModalProps) {
               onClick={onClose}
               className="px-4 py-2 text-[14px] font-medium text-white/70 hover:text-white hover:bg-white/5 rounded-[8px] transition-colors"
             >
-              Cancel
+              {STRINGS.common.cancel}
             </button>
             <button
               type="submit"
               disabled={!name.trim() || isSubmitting}
               className="px-4 py-2 text-[14px] font-semibold text-black bg-white rounded-[8px] hover:bg-white/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
-              {isSubmitting ? 'Creating...' : 'Create Campaign'}
+              {isSubmitting ? STRINGS.common.creating : STRINGS.campaigns.create}
             </button>
           </div>
         </form>

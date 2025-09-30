@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { logger } from '@/lib/utils/logger'
 
 interface UseEntityActivationOptions<T> {
   entityId: string
@@ -25,7 +26,7 @@ export function useEntityActivation<T extends Record<string, unknown>>({
     try {
       await setActiveFn(entityId, campaignId)
     } catch (error) {
-      console.error('Failed to activate:', error)
+      logger.error('Failed to activate entity', error, { entityId, campaignId })
     } finally {
       setIsActivating(false)
     }
@@ -37,7 +38,7 @@ export function useEntityActivation<T extends Record<string, unknown>>({
     try {
       await updateFn(entityId, { [activeKey]: false } as Partial<T>)
     } catch (error) {
-      console.error('Failed to deactivate:', error)
+      logger.error('Failed to deactivate entity', error, { entityId })
     } finally {
       setIsActivating(false)
     }

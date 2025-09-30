@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { logger } from '@/lib/utils/logger'
 
 interface UseEntityDeletionOptions {
   entityName: string
@@ -61,7 +62,7 @@ export function useEntityDeletion({
       await deleteFn(id)
       onSuccess?.()
     } catch (error) {
-      console.error(`Failed to delete ${entityName}:`, error)
+      logger.error(`Failed to delete ${entityName}`, error, { entityId: id, entityName: name })
       setIsDeleting(false)
     }
   }

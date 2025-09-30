@@ -4,6 +4,8 @@ import { useState } from 'react'
 import { X } from 'lucide-react'
 import { useSceneStore } from '@/store/sceneStore'
 import { Textarea } from '@/components/ui/textarea'
+import { logger } from '@/lib/utils/logger'
+import { STRINGS } from '@/lib/constants/strings'
 
 interface SceneModalProps {
   isOpen: boolean
@@ -40,8 +42,7 @@ export function SceneModal({ isOpen, onClose, campaignId }: SceneModalProps) {
       setDescription('')
       onClose()
     } catch (error) {
-      console.error('Failed to create scene:', error)
-      console.error('Error details:', JSON.stringify(error, null, 2))
+      logger.error('Failed to create scene', error, { campaignId, sceneName: name })
       if (error && typeof error === 'object' && 'message' in error) {
         alert(`Failed to create scene: ${(error as Error).message}`)
       }
@@ -65,7 +66,7 @@ export function SceneModal({ isOpen, onClose, campaignId }: SceneModalProps) {
         <form onSubmit={handleSubmit} className="flex flex-col">
           {/* Header */}
           <div className="flex items-center justify-between px-6 py-5 border-b border-white/10">
-            <h2 className="text-[16px] font-semibold text-white">New Scene</h2>
+            <h2 className="text-[16px] font-semibold text-white">{STRINGS.scenes.create}</h2>
             <button
               type="button"
               onClick={onClose}
@@ -80,14 +81,14 @@ export function SceneModal({ isOpen, onClose, campaignId }: SceneModalProps) {
             {/* Name Field */}
             <div className="space-y-2">
               <label htmlFor="scene-name" className="block text-[14px] font-semibold text-[#eeeeee]">
-                Name
+                {STRINGS.scenes.nameLabel}
               </label>
               <input
                 id="scene-name"
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Enter scene name..."
+                placeholder={STRINGS.scenes.namePlaceholder}
                 required
                 className="w-full px-4 py-3 bg-[rgba(255,255,255,0.07)] border border-[#3a3a3a] rounded-[8px] text-[14px] text-white placeholder:text-[#606060] focus:outline-none focus:border-white/20 transition-colors"
               />
@@ -96,13 +97,13 @@ export function SceneModal({ isOpen, onClose, campaignId }: SceneModalProps) {
             {/* Description Field */}
             <div className="space-y-2">
               <label htmlFor="scene-description" className="block text-[14px] font-semibold text-[#eeeeee]">
-                Description
+                {STRINGS.scenes.descriptionLabel}
               </label>
               <Textarea
                 id="scene-description"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="Enter description..."
+                placeholder={STRINGS.scenes.descriptionPlaceholder}
                 rows={4}
                 className="resize-none"
               />
@@ -116,14 +117,14 @@ export function SceneModal({ isOpen, onClose, campaignId }: SceneModalProps) {
               onClick={onClose}
               className="px-4 py-2 text-[14px] font-medium text-white/70 hover:text-white hover:bg-white/5 rounded-[8px] transition-colors"
             >
-              Cancel
+              {STRINGS.common.cancel}
             </button>
             <button
               type="submit"
               disabled={!name.trim() || isSubmitting}
               className="px-4 py-2 text-[14px] font-semibold text-black bg-white rounded-[8px] hover:bg-white/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
-              {isSubmitting ? 'Creating...' : 'Create Scene'}
+              {isSubmitting ? STRINGS.common.creating : STRINGS.scenes.create}
             </button>
           </div>
         </form>
