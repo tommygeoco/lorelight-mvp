@@ -1,8 +1,9 @@
 'use client'
 
 import { useEffect, useState, useRef } from 'react'
-import { Upload, Music, Trash2, Play, Pause, X } from 'lucide-react'
+import { Upload, Music, Trash2, Play, Pause, X, Folder, ChevronRight } from 'lucide-react'
 import { useAudioFileStore } from '@/store/audioFileStore'
+import { useAudioFolderStore } from '@/store/audioFolderStore'
 import { useAudioStore } from '@/store/audioStore'
 import { logger } from '@/lib/utils/logger'
 import type { AudioFile } from '@/types'
@@ -17,6 +18,7 @@ export function AudioLibrary({ isOpen, onClose, onSelect }: AudioLibraryProps) {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [uploadName, setUploadName] = useState('')
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [currentFolderId, setCurrentFolderId] = useState<string | null>(null)
 
   const {
     audioFiles,
@@ -27,18 +29,34 @@ export function AudioLibrary({ isOpen, onClose, onSelect }: AudioLibraryProps) {
     deleteAudioFile,
   } = useAudioFileStore()
 
+  const {
+    fetchAllFolders,
+    getFolderPath,
+    getSubfolders,
+  } = useAudioFolderStore()
+
   const { currentTrackId, isPlaying, loadTrack, togglePlay } = useAudioStore()
 
   // Ensure audioFiles is a Map
   const audioFileMap = audioFiles instanceof Map ? audioFiles : new Map()
-  // Filter out broken audio files (missing file_url)
-  const audioFileArray = Array.from(audioFileMap.values()).filter(f => f.file_url && f.file_url.length > 0)
+
+  // Filter audio files by current folder
+  const audioFileArray = Array.from(audioFileMap.values()).filter(f => {
+    if (!f.file_url || f.file_url.length === 0) return false
+    // Show files that match current folder (null = root folder)
+    return f.folder_id === currentFolderId
+  })
+
+  // Get breadcrumb path and subfolders
+  const breadcrumbPath = currentFolderId ? getFolderPath(currentFolderId) : []
+  const subfolders = getSubfolders(currentFolderId)
 
   useEffect(() => {
     if (isOpen) {
       fetchAudioFiles()
+      fetchAllFolders()
     }
-  }, [isOpen, fetchAudioFiles])
+  }, [isOpen, fetchAudioFiles, fetchAllFolders])
 
   if (!isOpen) return null
 
@@ -136,6 +154,32 @@ export function AudioLibrary({ isOpen, onClose, onSelect }: AudioLibraryProps) {
           </button>
         </div>
 
+        {/* Breadcrumb Navigation */}
+        <div className="px-6 py-3 border-b border-white/10 flex items-center gap-2 text-sm">
+          <button
+            onClick={() => setCurrentFolderId(null)}
+            className={`hover:text-white transition-colors ${
+              currentFolderId === null ? 'text-white font-medium' : 'text-white/60'
+            }`}
+          >
+            <Folder className="w-4 h-4 inline mr-1" />
+            Root
+          </button>
+          {breadcrumbPath.map((folder) => (
+            <div key={folder.id} className="flex items-center gap-2">
+              <ChevronRight className="w-4 h-4 text-white/40" />
+              <button
+                onClick={() => setCurrentFolderId(folder.id)}
+                className={`hover:text-white transition-colors ${
+                  currentFolderId === folder.id ? 'text-white font-medium' : 'text-white/60'
+                }`}
+              >
+                {folder.name}
+              </button>
+            </div>
+          ))}
+        </div>
+
         {/* Upload Section */}
         <div className="px-6 py-4 border-b border-white/10">
           <input
@@ -190,17 +234,39 @@ export function AudioLibrary({ isOpen, onClose, onSelect }: AudioLibraryProps) {
           )}
         </div>
 
-        {/* Audio List */}
+        {/* Folders and Audio List */}
         <div className="flex-1 overflow-y-auto px-6 py-4">
           {isLoading ? (
             <div className="text-center py-8 text-white/40">Loading...</div>
-          ) : audioFileArray.length === 0 ? (
-            <div className="text-center py-8 text-white/40">
-              No audio files yet. Upload your first track!
-            </div>
           ) : (
             <div className="space-y-2">
-              {audioFileArray.map((audioFile) => (
+              {/* Subfolder List */}
+              {subfolders.length > 0 && (
+                <div className="space-y-2 mb-4">
+                  {subfolders.map((folder) => (
+                    <div
+                      key={folder.id}
+                      onClick={() => setCurrentFolderId(folder.id)}
+                      className="w-full flex items-center gap-4 px-4 py-3 bg-white/[0.02] hover:bg-white/[0.07] rounded-[8px] transition-colors cursor-pointer"
+                    >
+                      <Folder className="w-5 h-5 text-white/70" />
+                      <div className="flex-1">
+                        <div className="text-[14px] font-medium text-white">
+                          {folder.name}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Audio Files */}
+              {audioFileArray.length === 0 && subfolders.length === 0 ? (
+                <div className="text-center py-8 text-white/40">
+                  {currentFolderId ? 'No audio files in this folder' : 'No audio files yet. Upload your first track!'}
+                </div>
+              ) : (
+                audioFileArray.map((audioFile) => (
                 <div
                   key={audioFile.id}
                   onClick={() => onSelect?.(audioFile)}
@@ -239,7 +305,8 @@ export function AudioLibrary({ isOpen, onClose, onSelect }: AudioLibraryProps) {
                     <Trash2 className="w-4 h-4 text-white/40 hover:text-red-400" />
                   </button>
                 </div>
-              ))}
+              ))
+              )}
             </div>
           )}
         </div>
