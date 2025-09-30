@@ -25,7 +25,7 @@ export function CampaignDisplayCard({ campaign }: CampaignCardProps) {
   return (
     <article className="bg-white/[0.02] hover:bg-white/[0.05] transition-all rounded-xl">
       <Link
-        href={`/campaigns/${campaign.id}/play`}
+        href={`/campaigns/${campaign.id}/sessions`}
         className="group flex items-center gap-4 p-4"
         onMouseEnter={handleMouseEnter}
         prefetch={true}
