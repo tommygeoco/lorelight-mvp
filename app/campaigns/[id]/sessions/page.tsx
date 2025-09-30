@@ -122,77 +122,80 @@ export default function SessionsPage({
           {/* Sessions Content */}
           <div className="flex-1 overflow-y-auto">
             <div className="w-[640px] mx-auto pt-[40px] pb-[40px]">
-              {/* Header with create button */}
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-semibold text-white">Sessions</h2>
-                <Button
-                  onClick={handleCreateSession}
-                  disabled={isCreating}
-                  className="bg-white text-black hover:bg-white/90"
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  {isCreating ? STRINGS.common.creating : 'New Session'}
-                </Button>
-              </div>
-
-              {/* Sessions grid */}
-              {campaignSessions.length === 0 ? (
-                <div className="rounded-lg border-2 border-dashed border-neutral-800 p-12 text-center">
-                  <h3 className="text-lg font-medium text-white">No sessions yet</h3>
-                  <p className="mt-2 text-sm text-neutral-400">
-                    Create your first session to start playing
-                  </p>
-                  <Button className="mt-4" onClick={handleCreateSession} disabled={isCreating}>
-                    <Plus className="w-4 h-4 mr-2" />
-                    Create Session
+              <section aria-labelledby="sessions-heading">
+                <header className="h-[48px] pt-[24px] flex items-center justify-between">
+                  <h2 id="sessions-heading" className="text-base font-semibold text-white leading-6">Sessions</h2>
+                  <Button
+                    onClick={handleCreateSession}
+                    disabled={isCreating}
+                    className="bg-white text-black hover:bg-white/90 h-8 px-3 text-sm"
+                  >
+                    <Plus className="w-4 h-4 mr-1" />
+                    {isCreating ? STRINGS.common.creating : 'New'}
                   </Button>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {campaignSessions.map((session) => (
-                    <article
-                      key={session.id}
-                      className="bg-white/[0.02] hover:bg-white/[0.05] transition-all rounded-xl p-6 cursor-pointer group"
-                      onClick={() => handlePlaySession(session)}
-                    >
-                      <div className="flex items-start justify-between mb-4">
-                        <div className="flex-1">
-                          <h3 className="text-lg font-semibold text-white mb-1">
-                            {session.title}
-                          </h3>
-                          {session.description && (
-                            <p className="text-sm text-white/50 line-clamp-2">
-                              {session.description}
-                            </p>
+                </header>
+
+                {/* Sessions list */}
+                {campaignSessions.length === 0 ? (
+                  <div className="pt-[24px]">
+                    <div className="rounded-lg border-2 border-dashed border-neutral-800 p-12 text-center">
+                      <h3 className="text-lg font-medium text-white">No sessions yet</h3>
+                      <p className="mt-2 text-sm text-neutral-400">
+                        Create your first session to start playing
+                      </p>
+                      <Button className="mt-4" onClick={handleCreateSession} disabled={isCreating}>
+                        <Plus className="w-4 h-4 mr-2" />
+                        Create Session
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="pt-[24px] space-y-4">
+                    {campaignSessions.map((session) => (
+                      <article
+                        key={session.id}
+                        className="bg-white/[0.02] hover:bg-white/[0.05] transition-all rounded-xl p-6 cursor-pointer group"
+                        onClick={() => handlePlaySession(session)}
+                      >
+                        <div className="flex items-start justify-between mb-4">
+                          <div className="flex-1">
+                            <h3 className="text-lg font-semibold text-white mb-1">
+                              {session.title}
+                            </h3>
+                            {session.description && (
+                              <p className="text-sm text-white/50 line-clamp-2">
+                                {session.description}
+                              </p>
+                            )}
+                          </div>
+                          {session.status === 'active' && (
+                            <span className="px-2 py-1 text-xs font-medium text-green-400 bg-green-400/10 rounded-md">
+                              Active
+                            </span>
                           )}
                         </div>
-                        {session.status === 'active' && (
-                          <span className="px-2 py-1 text-xs font-medium text-green-400 bg-green-400/10 rounded-md">
-                            Active
-                          </span>
-                        )}
-                      </div>
 
-                      <div className="flex items-center gap-2">
-                        <Button
-                          size="sm"
-                          className="bg-white/10 hover:bg-white/20 text-white"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            handlePlaySession(session)
-                          }}
-                        >
-                          <Play className="w-4 h-4 mr-2" fill="currentColor" />
-                          Play
-                        </Button>
-                        <span className="text-xs text-white/40">
-                          {new Date(session.created_at).toLocaleDateString()}
-                        </span>
-                      </div>
-                    </article>
-                  ))}
-                </div>
-              )}
+                        <div className="flex items-center gap-2">
+                          <Button
+                            size="sm"
+                            className="bg-white/10 hover:bg-white/20 text-white"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              handlePlaySession(session)
+                            }}
+                          >
+                            <Play className="w-4 h-4 mr-2" fill="currentColor" />
+                            Play
+                          </Button>
+                          <span className="text-xs text-white/40">
+                            {new Date(session.created_at).toLocaleDateString()}
+                          </span>
+                        </div>
+                      </article>
+                    ))}
+                  </div>
+                )}
+              </section>
             </div>
           </div>
         </main>
