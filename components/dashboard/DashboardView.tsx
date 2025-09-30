@@ -22,9 +22,10 @@ export function DashboardView() {
   return (
     <div className="bg-[#111111] rounded-2xl h-screen flex flex-col relative overflow-hidden">
       <div className="flex flex-1 overflow-hidden">
-        {/* Sidebar */}
-        <div className="flex gap-2 p-2">
-          <div className="bg-[#191919] rounded-lg p-2 flex flex-col gap-2">
+        {/* Sidebar and Main Content Container */}
+        <div className="flex gap-2 p-2 flex-1">
+          {/* Sidebar */}
+          <div className="bg-[#191919] rounded-lg p-2 flex flex-col gap-2 shrink-0">
             <button
               onClick={() => router.push('/')}
               className="w-10 h-10 rounded-lg hover:bg-white/5 flex items-center justify-center transition-colors"
