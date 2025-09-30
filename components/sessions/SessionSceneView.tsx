@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
-import { useSceneStore } from '@/store/sceneStore'
+import { useSessionSceneStore } from '@/store/sessionSceneStore'
 import { useAudioStore } from '@/store/audioStore'
 import { useAudioFileStore } from '@/store/audioFileStore'
 import { ChevronLeft, CirclePlay, Music, Flame, Plus, Settings } from 'lucide-react'
@@ -18,17 +18,17 @@ import { AudioPlayerFooter } from '@/components/dashboard/AudioPlayerFooter'
 
 interface SessionSceneViewProps {
   campaignId: string
+  sessionId: string
 }
 
-export function SessionSceneView({ campaignId }: SessionSceneViewProps) {
+export function SessionSceneView({ campaignId, sessionId }: SessionSceneViewProps) {
   const router = useRouter()
   const {
-    scenes,
+    sessionScenes,
     isLoading,
-    fetchScenesForCampaign,
-    setActiveScene,
-    fetchedCampaigns
-  } = useSceneStore()
+    fetchScenesForSession,
+    fetchedSessions
+  } = useSessionSceneStore()
 
   const { loadTrack } = useAudioStore()
 
@@ -44,9 +44,10 @@ export function SessionSceneView({ campaignId }: SessionSceneViewProps) {
   const [isHueSetupOpen, setIsHueSetupOpen] = useState(false)
   const [editingScene, setEditingScene] = useState<Scene | undefined>(undefined)
 
+  // Get session-specific scenes from sessionSceneStore
   const sceneArray = useMemo(
-    () => Array.from(scenes.values()).filter(s => s.campaign_id === campaignId),
-    [scenes, campaignId]
+    () => sessionScenes.get(sessionId) || [],
+    [sessionScenes, sessionId]
   )
 
   const sortedScenes = useMemo(() => {
@@ -60,14 +61,14 @@ export function SessionSceneView({ campaignId }: SessionSceneViewProps) {
   }, [sceneArray])
 
   const selectedScene = selectedSceneId
-    ? scenes.get(selectedSceneId)
+    ? sceneArray.find(s => s.id === selectedSceneId)
     : sortedScenes.find(s => s.is_active) || sortedScenes[0]
 
   useEffect(() => {
-    if (!fetchedCampaigns.has(campaignId) && !isLoading) {
-      fetchScenesForCampaign(campaignId)
+    if (!fetchedSessions.has(sessionId) && !isLoading) {
+      fetchScenesForSession(sessionId)
     }
-  }, [campaignId, fetchedCampaigns, isLoading, fetchScenesForCampaign])
+  }, [sessionId, fetchedSessions, isLoading, fetchScenesForSession])
 
   // Set active scene as default selection on mount
   useEffect(() => {
@@ -101,7 +102,7 @@ export function SessionSceneView({ campaignId }: SessionSceneViewProps) {
   }
 
   const handlePlayScene = async (scene: Scene) => {
-    await setActiveScene(scene.id, campaignId)
+    // TODO: Implement setActiveScene for session-specific scenes
     setSelectedSceneId(scene.id)
   }
 

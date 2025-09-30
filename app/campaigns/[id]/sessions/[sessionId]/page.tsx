@@ -14,6 +14,7 @@ export default function SessionDetailPage({
     <div className="h-screen bg-black overflow-hidden">
       <SessionSceneView
         campaignId={resolvedParams.id}
+        sessionId={resolvedParams.sessionId}
       />
     </div>
   )
