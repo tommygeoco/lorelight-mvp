@@ -23,9 +23,9 @@ export default function SessionsPage({
   const [isCreating, setIsCreating] = useState(false)
 
   const campaign = campaigns.get(resolvedParams.id)
-  const campaignSessions = Array.from(sessions.values()).filter(
-    (s) => s.campaign_id === resolvedParams.id
-  )
+  const campaignSessions = Array.from(sessions.values())
+    .filter((s) => s.campaign_id === resolvedParams.id)
+    .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())
 
   useEffect(() => {
     if (campaigns.size === 0) {
