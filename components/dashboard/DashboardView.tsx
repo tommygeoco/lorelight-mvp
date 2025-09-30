@@ -32,7 +32,7 @@ export function DashboardView() {
 
   return (
     <div className="h-screen w-full bg-[#111111] flex flex-col">
-      <div className="flex-1 min-h-0 flex overflow-hidden gap-2 px-2 pt-2">
+      <div className="flex-1 min-h-0 flex overflow-hidden gap-2 px-2 pt-2 pb-2">
         {/* Navigation Sidebar */}
         <nav className="w-14 flex-shrink-0" aria-label="Main navigation">
           <div className="bg-[#191919] rounded-lg p-2 h-full flex flex-col gap-2">
