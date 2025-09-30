@@ -79,7 +79,7 @@ export function SceneForm({ scene, onSubmit, onCancel }: SceneFormProps) {
           value={sceneType}
           onChange={(e) => setSceneType(e.target.value)}
           disabled={isSubmitting}
-          className="flex h-10 w-full rounded-[24px] border border-neutral-700 bg-black px-3 py-2 text-sm text-white placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-black disabled:cursor-not-allowed disabled:opacity-50"
+          className="flex h-10 w-full rounded-[8px] border border-neutral-700 bg-black px-3 py-2 text-sm text-white placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-black disabled:cursor-not-allowed disabled:opacity-50"
         >
           {SCENE_TYPES.map((type) => (
             <option key={type} value={type}>
@@ -108,7 +108,7 @@ export function SceneForm({ scene, onSubmit, onCancel }: SceneFormProps) {
           onChange={(e) => setNotes(e.target.value)}
           placeholder="Scene setup notes, key NPCs, important details..."
           disabled={isSubmitting}
-          className="flex min-h-[100px] w-full rounded-[24px] border border-neutral-700 bg-black px-3 py-2 text-sm text-white placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-black disabled:cursor-not-allowed disabled:opacity-50"
+          className="flex min-h-[100px] w-full rounded-[8px] border border-neutral-700 bg-black px-3 py-2 text-sm text-white placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-black disabled:cursor-not-allowed disabled:opacity-50"
           rows={4}
         />
       </div>

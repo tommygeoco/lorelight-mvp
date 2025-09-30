@@ -58,7 +58,7 @@ export function CampaignForm({ campaign, onSubmit, onCancel }: CampaignFormProps
           onChange={(e) => setDescription(e.target.value)}
           placeholder="A classic D&D adventure for first-time players..."
           disabled={isSubmitting}
-          className="flex min-h-[80px] w-full rounded-[24px] border border-neutral-700 bg-black px-3 py-2 text-sm text-white placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-black disabled:cursor-not-allowed disabled:opacity-50"
+          className="flex min-h-[80px] w-full rounded-[8px] border border-neutral-700 bg-black px-3 py-2 text-sm text-white placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-black disabled:cursor-not-allowed disabled:opacity-50"
           rows={3}
         />
       </div>
