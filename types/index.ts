@@ -62,18 +62,8 @@ export interface HueLight {
   }
 }
 
-// Scene with populated relations
-export interface SceneWithRelations extends Scene {
-  audio_file?: AudioFile | null
-  light_config?: LightConfig | null
-}
-
-// Session with populated relations
-export interface SessionWithRelations extends Session {
-  scenes?: Scene[]
-}
-
 // Campaign with populated relations
 export interface CampaignWithRelations extends Campaign {
   sessions?: Session[]
+  scenes?: Scene[]
 }

@@ -1,47 +1,36 @@
 import { createClient } from '@/lib/auth/supabase'
-import type { Scene, SceneInsert, SceneUpdate, SceneWithRelations } from '@/types'
+import type { Scene, SceneInsert, SceneUpdate } from '@/types'
 
 /**
  * Scene service for CRUD operations
- * Context7: Optimized for scene management with optional relations
+ * Context7: Optimized for scene management within campaigns
  */
 class SceneService {
   private supabase = createClient()
 
   /**
-   * Get all scenes for a session
+   * Get all scenes for a campaign
    */
-  async listBySession(sessionId: string): Promise<Scene[]> {
+  async listByCampaign(campaignId: string): Promise<Scene[]> {
+    const { data: { user } } = await this.supabase.auth.getUser()
+    console.log('Current user when fetching scenes:', user?.id)
+
     const { data, error } = await this.supabase
       .from('scenes')
       .select('*')
-      .eq('session_id', sessionId)
-      .order('scene_order', { ascending: true })
+      .eq('campaign_id', campaignId)
+      .order('order_index', { ascending: true })
+
+    console.log('Scene fetch result:', { data, error, campaignId })
 
     if (error) {
-      console.error('Error fetching scenes:', error)
-      throw error
-    }
-
-    return data || []
-  }
-
-  /**
-   * Get all scenes for a session with audio and light config relations
-   */
-  async listBySessionWithRelations(sessionId: string): Promise<SceneWithRelations[]> {
-    const { data, error } = await this.supabase
-      .from('scenes')
-      .select(`
-        *,
-        audio_file:audio_files(*),
-        light_config:light_configs(*)
-      `)
-      .eq('session_id', sessionId)
-      .order('scene_order', { ascending: true })
-
-    if (error) {
-      console.error('Error fetching scenes with relations:', error)
+      console.error('Error fetching scenes:', {
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+        code: error.code,
+        fullError: JSON.stringify(error),
+      })
       throw error
     }
 
@@ -67,21 +56,22 @@ class SceneService {
   }
 
   /**
-   * Get a single scene with relations
+   * Get the active scene for a campaign
    */
-  async getWithRelations(id: string): Promise<SceneWithRelations | null> {
+  async getActive(campaignId: string): Promise<Scene | null> {
     const { data, error } = await this.supabase
       .from('scenes')
-      .select(`
-        *,
-        audio_file:audio_files(*),
-        light_config:light_configs(*)
-      `)
-      .eq('id', id)
+      .select('*')
+      .eq('campaign_id', campaignId)
+      .eq('is_active', true)
       .single()
 
     if (error) {
-      console.error('Error fetching scene with relations:', error)
+      // No active scene is not an error
+      if (error.code === 'PGRST116') {
+        return null
+      }
+      console.error('Error fetching active scene:', error)
       return null
     }
 
@@ -98,28 +88,37 @@ class SceneService {
       throw new Error('User not authenticated')
     }
 
-    // Get the next scene_order number
+    // Get the next order_index number
     const { data: scenes } = await this.supabase
       .from('scenes')
-      .select('scene_order')
-      .eq('session_id', scene.session_id)
-      .order('scene_order', { ascending: false })
+      .select('order_index')
+      .eq('campaign_id', scene.campaign_id)
+      .order('order_index', { ascending: false })
       .limit(1)
 
-    const nextOrder = scenes && scenes.length > 0 ? (scenes[0].scene_order || 0) + 1 : 0
+    const nextOrder = scenes && scenes.length > 0 ? (scenes[0].order_index || 0) + 1 : 0
+
+    const insertData = {
+      ...scene,
+      user_id: user.id,
+      order_index: scene.order_index ?? nextOrder,
+    }
+    console.log('Creating scene with data:', insertData)
 
     const { data, error } = await this.supabase
       .from('scenes')
-      .insert({
-        ...scene,
-        user_id: user.id,
-        scene_order: scene.scene_order ?? nextOrder,
-      })
+      .insert(insertData)
       .select()
       .single()
 
     if (error) {
-      console.error('Error creating scene:', error)
+      console.error('Error creating scene:', {
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+        code: error.code,
+        fullError: JSON.stringify(error),
+      })
       throw error
     }
 
@@ -146,20 +145,35 @@ class SceneService {
   }
 
   /**
-   * Reorder scenes within a session
+   * Set a scene as active (and deactivate others in the campaign)
    */
-  async reorder(sessionId: string, sceneIds: string[]): Promise<void> {
+  async setActive(id: string, campaignId: string): Promise<Scene> {
+    // First, deactivate all scenes in the campaign
+    await this.supabase
+      .from('scenes')
+      .update({ is_active: false })
+      .eq('campaign_id', campaignId)
+      .eq('is_active', true)
+
+    // Then activate the target scene
+    return this.update(id, { is_active: true })
+  }
+
+  /**
+   * Reorder scenes within a campaign
+   */
+  async reorder(campaignId: string, sceneIds: string[]): Promise<void> {
     const updates = sceneIds.map((id, index) => ({
       id,
-      scene_order: index,
+      order_index: index,
     }))
 
     for (const update of updates) {
       await this.supabase
         .from('scenes')
-        .update({ scene_order: update.scene_order })
+        .update({ order_index: update.order_index })
         .eq('id', update.id)
-        .eq('session_id', sessionId)
+        .eq('campaign_id', campaignId)
     }
   }
 

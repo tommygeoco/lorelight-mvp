@@ -146,42 +146,66 @@ export interface Database {
       scenes: {
         Row: {
           id: string
-          session_id: string
-          user_id: string
+          campaign_id: string
+          user_id: string | null
           name: string
           description: string | null
-          audio_file_id: string | null
-          light_config_id: string | null
-          thumbnail_url: string | null
-          scene_order: number
-          created_at: string
-          updated_at: string
+          light_settings: Json | null
+          audio_settings: Json | null
+          light_config: Json
+          audio_config: Json | null
+          scene_audio_files: Json | null
+          encounters: Json | null
+          notes: string
+          tags: string[]
+          is_global: boolean
+          is_active: boolean
+          scene_type: string
+          order_index: number
+          created_at: string | null
+          updated_at: string | null
         }
         Insert: {
           id?: string
-          session_id: string
-          user_id: string
+          campaign_id: string
+          user_id?: string | null
           name: string
           description?: string | null
-          audio_file_id?: string | null
-          light_config_id?: string | null
-          thumbnail_url?: string | null
-          scene_order?: number
-          created_at?: string
-          updated_at?: string
+          light_settings?: Json | null
+          audio_settings?: Json | null
+          light_config?: Json
+          audio_config?: Json | null
+          scene_audio_files?: Json | null
+          encounters?: Json | null
+          notes?: string
+          tags?: string[]
+          is_global?: boolean
+          is_active?: boolean
+          scene_type: string
+          order_index?: number
+          created_at?: string | null
+          updated_at?: string | null
         }
         Update: {
           id?: string
-          session_id?: string
-          user_id?: string
+          campaign_id?: string
+          user_id?: string | null
           name?: string
           description?: string | null
-          audio_file_id?: string | null
-          light_config_id?: string | null
-          thumbnail_url?: string | null
-          scene_order?: number
-          created_at?: string
-          updated_at?: string
+          light_settings?: Json | null
+          audio_settings?: Json | null
+          light_config?: Json
+          audio_config?: Json | null
+          scene_audio_files?: Json | null
+          encounters?: Json | null
+          notes?: string
+          tags?: string[]
+          is_global?: boolean
+          is_active?: boolean
+          scene_type?: string
+          order_index?: number
+          created_at?: string | null
+          updated_at?: string | null
         }
       }
       hue_settings: {
