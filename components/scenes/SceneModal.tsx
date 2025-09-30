@@ -180,7 +180,7 @@ export function SceneModal({ isOpen, onClose, campaignId, scene }: SceneModalPro
             </div>
 
             {/* Form Fields */}
-            <div className="px-6 py-6 space-y-5 overflow-y-auto flex-1">
+            <div className="px-6 py-6 space-y-5 overflow-y-auto flex-1 scrollbar-hide">
               {/* Preset Selector - Only show in create mode */}
               {!isEditMode && allPresets.length > 0 && (
                 <div className="space-y-2">
