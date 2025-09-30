@@ -25,7 +25,7 @@ export function BaseModal({
       onClick={onClose}
     >
       <div
-        className={`bg-[var(--card-surface)] border border-white/10 rounded-lg ${width} shadow-2xl`}
+        className={`bg-[var(--card-surface)] border border-white/10 rounded-[8px] ${width} shadow-2xl`}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -33,7 +33,7 @@ export function BaseModal({
           <h2 className="text-lg font-semibold text-white">{title}</h2>
           <button
             onClick={onClose}
-            className="rounded-lg p-1 hover:bg-white/5 transition-colors"
+            className="rounded-[8px] p-1 hover:bg-white/5 transition-colors"
             aria-label="Close modal"
           >
             <X className="w-5 h-5 text-white/70" />

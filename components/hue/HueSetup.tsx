@@ -74,7 +74,7 @@ export function HueSetup({ isOpen, onClose }: HueSetupProps) {
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
       onClick={handleBackdropClick}
     >
-      <div className="bg-[var(--card-surface)] border border-white/10 rounded-[24px] w-[500px] shadow-2xl">
+      <div className="bg-[var(--card-surface)] border border-white/10 rounded-[8px] w-[500px] shadow-2xl">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-5 border-b border-white/10">
           <div className="flex items-center gap-2">
@@ -83,7 +83,7 @@ export function HueSetup({ isOpen, onClose }: HueSetupProps) {
           </div>
           <button
             onClick={onClose}
-            className="w-10 h-10 rounded-[24px] hover:bg-white/5 flex items-center justify-center transition-colors"
+            className="w-10 h-10 rounded-[8px] hover:bg-white/5 flex items-center justify-center transition-colors"
           >
             <X className="w-[18px] h-[18px] text-white/70" />
           </button>

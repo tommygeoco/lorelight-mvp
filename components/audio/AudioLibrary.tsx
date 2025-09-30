@@ -142,13 +142,13 @@ export function AudioLibrary({ isOpen, onClose, onSelect }: AudioLibraryProps) {
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
       onClick={handleBackdropClick}
     >
-      <div className="bg-[var(--card-surface)] border border-white/10 rounded-[24px] w-[800px] max-h-[90vh] overflow-hidden shadow-2xl flex flex-col">
+      <div className="bg-[var(--card-surface)] border border-white/10 rounded-[8px] w-[800px] max-h-[90vh] overflow-hidden shadow-2xl flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-5 border-b border-white/10">
           <h2 className="text-[16px] font-semibold text-white">Audio Library</h2>
           <button
             onClick={onClose}
-            className="w-10 h-10 rounded-[24px] hover:bg-white/5 flex items-center justify-center transition-colors"
+            className="w-10 h-10 rounded-[8px] hover:bg-white/5 flex items-center justify-center transition-colors"
           >
             <X className="w-[18px] h-[18px] text-white/70" />
           </button>
@@ -275,7 +275,7 @@ export function AudioLibrary({ isOpen, onClose, onSelect }: AudioLibraryProps) {
                   {/* Play Button */}
                   <button
                     onClick={(e) => handlePlay(audioFile, e)}
-                    className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors flex-shrink-0"
+                    className="w-10 h-10 rounded-[8px] bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors flex-shrink-0"
                   >
                     {currentTrackId === audioFile.id && isPlaying ? (
                       <Pause className="w-4 h-4 text-white" />
@@ -300,7 +300,7 @@ export function AudioLibrary({ isOpen, onClose, onSelect }: AudioLibraryProps) {
                   {/* Delete Button */}
                   <button
                     onClick={(e) => handleDelete(audioFile, e)}
-                    className="w-8 h-8 rounded-full hover:bg-red-500/10 flex items-center justify-center transition-colors opacity-0 group-hover:opacity-100"
+                    className="w-8 h-8 rounded-[8px] hover:bg-red-500/10 flex items-center justify-center transition-colors opacity-0 group-hover:opacity-100"
                   >
                     <Trash2 className="w-4 h-4 text-white/40 hover:text-red-400" />
                   </button>

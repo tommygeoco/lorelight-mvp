@@ -14,7 +14,7 @@ export default function Home() {
           </p>
         </div>
 
-        <div className="space-y-4 rounded-[24px] border border-neutral-800 bg-black p-8 shadow-lg">
+        <div className="space-y-4 rounded-[8px] border border-neutral-800 bg-black p-8 shadow-lg">
           <div className="space-y-2">
             <h2 className="text-2xl font-semibold text-white">
               Scene Management Made Simple

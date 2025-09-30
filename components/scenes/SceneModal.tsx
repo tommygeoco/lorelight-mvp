@@ -152,10 +152,10 @@ export function SceneModal({ isOpen, onClose, campaignId, scene }: SceneModalPro
         className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
         onClick={handleBackdropClick}
       >
-        <div className="bg-[var(--card-surface)] border border-white/10 rounded-[24px] w-[402px] max-h-[85vh] overflow-hidden shadow-2xl flex flex-col">
-          <form onSubmit={handleSubmit} className="flex flex-col">
+        <div className="bg-[var(--card-surface)] border border-white/10 rounded-[8px] w-[402px] max-h-[85vh] shadow-2xl flex flex-col">
+          <form onSubmit={handleSubmit} className="flex flex-col max-h-[85vh]">
             {/* Header */}
-            <div className="flex items-center justify-between px-6 py-5 border-b border-white/10">
+            <div className="flex items-center justify-between px-6 py-5 border-b border-white/10 flex-shrink-0">
               <h2 className="text-[16px] font-semibold text-white">
                 {isEditMode ? STRINGS.scenes.edit : STRINGS.scenes.create}
               </h2>
@@ -164,7 +164,7 @@ export function SceneModal({ isOpen, onClose, campaignId, scene }: SceneModalPro
                   <button
                     type="button"
                     onClick={() => setIsDeleteDialogOpen(true)}
-                    className="w-10 h-10 rounded-[24px] hover:bg-red-500/10 flex items-center justify-center transition-colors group"
+                    className="w-10 h-10 rounded-[8px] hover:bg-red-500/10 flex items-center justify-center transition-colors group"
                   >
                     <Trash2 className="w-[18px] h-[18px] text-white/40 group-hover:text-red-400" />
                   </button>
@@ -172,7 +172,7 @@ export function SceneModal({ isOpen, onClose, campaignId, scene }: SceneModalPro
                 <button
                   type="button"
                   onClick={onClose}
-                  className="w-10 h-10 rounded-[24px] hover:bg-white/5 flex items-center justify-center transition-colors"
+                  className="w-10 h-10 rounded-[8px] hover:bg-white/5 flex items-center justify-center transition-colors"
                 >
                   <X className="w-[18px] h-[18px] text-white/70" />
                 </button>
@@ -193,7 +193,7 @@ export function SceneModal({ isOpen, onClose, campaignId, scene }: SceneModalPro
                         key={preset.id}
                         type="button"
                         onClick={() => setSelectedPresetId(preset.id === selectedPresetId ? null : preset.id)}
-                        className={`px-3 py-2 rounded-[24px] text-[14px] font-medium transition-colors flex items-center justify-center ${
+                        className={`px-3 py-2 rounded-[8px] text-[14px] font-medium transition-colors flex items-center justify-center ${
                           selectedPresetId === preset.id
                             ? 'bg-white text-black'
                             : 'bg-white/5 text-white/70 hover:bg-white/10'
@@ -240,7 +240,7 @@ export function SceneModal({ isOpen, onClose, campaignId, scene }: SceneModalPro
                       key={type}
                       type="button"
                       onClick={() => setSceneType(type)}
-                      className={`px-3 py-2 rounded-[24px] text-[14px] font-medium transition-colors ${
+                      className={`px-3 py-2 rounded-[8px] text-[14px] font-medium transition-colors ${
                         sceneType === type
                           ? 'bg-white text-black'
                           : 'bg-white/5 text-white/70 hover:bg-white/10'
@@ -317,18 +317,18 @@ export function SceneModal({ isOpen, onClose, campaignId, scene }: SceneModalPro
             </div>
 
             {/* Footer */}
-            <div className="flex items-center justify-end gap-3 px-6 py-5 border-t border-white/10">
+            <div className="flex items-center justify-end gap-3 px-6 py-5 border-t border-white/10 flex-shrink-0">
               <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-2 text-[14px] font-medium text-white/70 hover:text-white hover:bg-white/5 rounded-[24px] transition-colors"
+                className="px-4 py-2 text-[14px] font-medium text-white/70 hover:text-white hover:bg-white/5 rounded-[8px] transition-colors"
               >
                 {STRINGS.common.cancel}
               </button>
               <button
                 type="submit"
                 disabled={!name.trim() || isSubmitting}
-                className="px-4 py-2 text-[14px] font-semibold text-black bg-white rounded-[24px] hover:bg-white/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="px-4 py-2 text-[14px] font-semibold text-black bg-white rounded-[8px] hover:bg-white/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 {isSubmitting
                   ? isEditMode

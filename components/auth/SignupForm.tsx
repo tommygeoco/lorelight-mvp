@@ -98,7 +98,7 @@ export function SignupForm() {
       </div>
 
       {error && (
-        <div className="rounded-[24px] border border-red-900 bg-red-950 p-3 text-sm text-red-200">
+        <div className="rounded-[8px] border border-red-900 bg-red-950 p-3 text-sm text-red-200">
           {error}
         </div>
       )}

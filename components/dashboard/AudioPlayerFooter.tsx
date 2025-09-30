@@ -41,7 +41,7 @@ export function AudioPlayerFooter() {
       {/* Left: Track Info */}
       <div className="flex-1 flex items-center gap-2">
         {/* Lighting Icon */}
-        <div className="relative w-12 h-12 bg-white/[0.07] rounded-lg flex items-center justify-center overflow-hidden">
+        <div className="relative w-12 h-12 bg-white/[0.07] rounded-[8px] flex items-center justify-center overflow-hidden">
           {/* Gradient background effects */}
           <div
             className="absolute w-14 h-14 -left-7 top-3 mix-blend-screen blur-md"
@@ -56,7 +56,7 @@ export function AudioPlayerFooter() {
 
         {/* Scene Thumbnail */}
         <div
-          className="w-12 h-12 rounded-lg shadow-lg"
+          className="w-12 h-12 rounded-[8px] shadow-lg"
           style={{ background: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)' }}
         />
 
@@ -79,7 +79,7 @@ export function AudioPlayerFooter() {
         </div>
 
         {/* Progress Bar */}
-        <div className="flex-1 max-w-md h-[5px] rounded-full overflow-hidden flex">
+        <div className="flex-1 max-w-md h-[5px] rounded-[8px] overflow-hidden flex">
           <div
             className="bg-white transition-all duration-150"
             style={{ width: `${progress}%` }}
@@ -111,7 +111,7 @@ export function AudioPlayerFooter() {
         {/* Play/Pause Button */}
         <button
           onClick={togglePlay}
-          className="w-8 h-8 bg-[#eeeeee] rounded-full flex items-center justify-center hover:bg-white transition-colors"
+          className="w-8 h-8 bg-[#eeeeee] rounded-[8px] flex items-center justify-center hover:bg-white transition-colors"
         >
           {isPlaying ? (
             <Pause className="w-[18px] h-[18px] text-black" />

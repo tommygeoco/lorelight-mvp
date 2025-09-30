@@ -10,14 +10,14 @@ interface SkeletonProps {
  * Usage:
  * ```tsx
  * <Skeleton className="h-4 w-full" />
- * <Skeleton className="h-10 w-10 rounded-full" />
+ * <Skeleton className="h-10 w-10 rounded-[8px]" />
  * ```
  */
 export function Skeleton({ className }: SkeletonProps) {
   return (
     <div
       className={cn(
-        'animate-pulse rounded-[24px] bg-white/[0.05]',
+        'animate-pulse rounded-[8px] bg-white/[0.05]',
         className
       )}
     />
@@ -29,9 +29,9 @@ export function Skeleton({ className }: SkeletonProps) {
  */
 export function CampaignCardSkeleton() {
   return (
-    <div className="bg-white/[0.02] rounded-[24px] p-4">
+    <div className="bg-white/[0.02] rounded-[8px] p-4">
       <div className="flex items-center gap-4">
-        <Skeleton className="w-14 h-14 rounded-[24px] flex-shrink-0" />
+        <Skeleton className="w-14 h-14 rounded-[8px] flex-shrink-0" />
         <div className="flex-1 space-y-2">
           <Skeleton className="h-6 w-3/4" />
           <Skeleton className="h-5 w-full" />
@@ -48,7 +48,7 @@ export function CampaignCardSkeleton() {
 export function SceneListItemSkeleton() {
   return (
     <div className="flex items-center gap-4 px-2 py-3">
-      <Skeleton className="w-10 h-10 rounded-[24px] flex-shrink-0" />
+      <Skeleton className="w-10 h-10 rounded-[8px] flex-shrink-0" />
       <div className="flex-1 space-y-2">
         <Skeleton className="h-4 w-32" />
         <Skeleton className="h-3 w-20" />
@@ -74,9 +74,9 @@ export function TableRowSkeleton() {
       </td>
       <td className="px-4 py-3">
         <div className="flex items-center gap-2 justify-end">
-          <Skeleton className="h-8 w-8 rounded-[24px]" />
-          <Skeleton className="h-8 w-8 rounded-[24px]" />
-          <Skeleton className="h-8 w-8 rounded-[24px]" />
+          <Skeleton className="h-8 w-8 rounded-[8px]" />
+          <Skeleton className="h-8 w-8 rounded-[8px]" />
+          <Skeleton className="h-8 w-8 rounded-[8px]" />
         </div>
       </td>
     </tr>
@@ -88,8 +88,8 @@ export function TableRowSkeleton() {
  */
 export function CardSkeleton() {
   return (
-    <div className="bg-[var(--card-surface)] rounded-[24px] p-4 h-[164px]">
-      <Skeleton className="w-16 h-16 rounded-[24px] mb-6" />
+    <div className="bg-[var(--card-surface)] rounded-[8px] p-4 h-[164px]">
+      <Skeleton className="w-16 h-16 rounded-[8px] mb-6" />
       <Skeleton className="h-6 w-3/4 mb-2" />
       <Skeleton className="h-5 w-1/2" />
     </div>

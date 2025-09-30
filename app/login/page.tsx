@@ -13,7 +13,7 @@ export default function LoginPage() {
           </p>
         </div>
 
-        <div className="rounded-[24px] border border-neutral-800 bg-black p-8 shadow-sm">
+        <div className="rounded-[8px] border border-neutral-800 bg-black p-8 shadow-sm">
           <LoginForm />
         </div>
       </div>

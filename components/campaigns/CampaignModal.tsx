@@ -97,7 +97,7 @@ export function CampaignModal({ isOpen, onClose, campaign }: CampaignModalProps)
         className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
         onClick={handleBackdropClick}
       >
-        <div className="bg-[var(--card-surface)] border border-white/10 rounded-[24px] w-[402px] max-h-[90vh] overflow-y-auto shadow-2xl">
+        <div className="bg-[var(--card-surface)] border border-white/10 rounded-[8px] w-[402px] max-h-[90vh] overflow-y-auto shadow-2xl">
           <form onSubmit={handleSubmit} className="flex flex-col">
             {/* Header */}
             <div className="flex items-center justify-between px-6 py-5 border-b border-white/10">
@@ -109,7 +109,7 @@ export function CampaignModal({ isOpen, onClose, campaign }: CampaignModalProps)
                   <button
                     type="button"
                     onClick={() => setIsDeleteDialogOpen(true)}
-                    className="w-10 h-10 rounded-[24px] hover:bg-red-500/10 flex items-center justify-center transition-colors group"
+                    className="w-10 h-10 rounded-[8px] hover:bg-red-500/10 flex items-center justify-center transition-colors group"
                   >
                     <Trash2 className="w-[18px] h-[18px] text-white/40 group-hover:text-red-400" />
                   </button>
@@ -117,7 +117,7 @@ export function CampaignModal({ isOpen, onClose, campaign }: CampaignModalProps)
                 <button
                   type="button"
                   onClick={onClose}
-                  className="w-10 h-10 rounded-[24px] hover:bg-white/5 flex items-center justify-center transition-colors"
+                  className="w-10 h-10 rounded-[8px] hover:bg-white/5 flex items-center justify-center transition-colors"
                 >
                   <X className="w-[18px] h-[18px] text-white/70" />
                 </button>
@@ -163,14 +163,14 @@ export function CampaignModal({ isOpen, onClose, campaign }: CampaignModalProps)
               <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-2 text-[14px] font-medium text-white/70 hover:text-white hover:bg-white/5 rounded-[24px] transition-colors"
+                className="px-4 py-2 text-[14px] font-medium text-white/70 hover:text-white hover:bg-white/5 rounded-[8px] transition-colors"
               >
                 {STRINGS.common.cancel}
               </button>
               <button
                 type="submit"
                 disabled={!name.trim() || isSubmitting}
-                className="px-4 py-2 text-[14px] font-semibold text-black bg-white rounded-[24px] hover:bg-white/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="px-4 py-2 text-[14px] font-semibold text-black bg-white rounded-[8px] hover:bg-white/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 {isSubmitting
                   ? isEditMode
