@@ -1,21 +1,30 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useCampaignStore } from '@/store/campaignStore'
 import { ChevronLeft, CirclePlay, BookOpen, Music, Flame } from 'lucide-react'
 import { CampaignDisplayCard } from './CampaignDisplayCard'
+import { CampaignModal } from '@/components/campaigns/CampaignModal'
 import { PageHeader } from '@/components/ui/PageHeader'
+import type { Campaign } from '@/types'
 
 export function DashboardView() {
   const router = useRouter()
   const { campaigns, isLoading, fetchCampaigns } = useCampaignStore()
+  const [isCampaignModalOpen, setIsCampaignModalOpen] = useState(false)
+  const [editingCampaign, setEditingCampaign] = useState<Campaign | undefined>(undefined)
 
   useEffect(() => {
     fetchCampaigns()
   }, [fetchCampaigns])
 
   const campaignArray = Array.from(campaigns.values())
+
+  const handleEditCampaign = (campaign: Campaign) => {
+    setEditingCampaign(campaign)
+    setIsCampaignModalOpen(true)
+  }
 
   return (
     <div className="h-screen w-full bg-[#111111]">
@@ -75,7 +84,7 @@ export function DashboardView() {
                 <ul className="flex flex-col gap-4" role="list">
                   {campaignArray.map((campaign) => (
                     <li key={campaign.id}>
-                      <CampaignDisplayCard campaign={campaign} />
+                      <CampaignDisplayCard campaign={campaign} onEdit={handleEditCampaign} />
                     </li>
                   ))}
                 </ul>
@@ -84,6 +93,15 @@ export function DashboardView() {
           </section>
         </main>
       </div>
+
+      <CampaignModal
+        isOpen={isCampaignModalOpen}
+        onClose={() => {
+          setIsCampaignModalOpen(false)
+          setEditingCampaign(undefined)
+        }}
+        campaign={editingCampaign}
+      />
     </div>
   )
 }
