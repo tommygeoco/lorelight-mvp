@@ -15,6 +15,7 @@ interface SceneListItemProps {
 export function SceneListItem({
   scene,
   isActive = false,
+  isSelected = false,
   onClick,
   onPlay
 }: SceneListItemProps) {
@@ -23,14 +24,14 @@ export function SceneListItem({
   return (
     <button
       onClick={onClick}
-      className={`w-full flex items-center gap-4 px-2 py-3 rounded-[24px] transition-all ${
-        isActive
-          ? 'bg-white/[0.07] border border-[#3a3a3a]'
-          : 'hover:bg-white/5'
+      className={`w-full flex items-center gap-4 px-2 py-3 rounded-[8px] transition-colors ${
+        isSelected
+          ? 'bg-white/[0.10]'
+          : 'hover:bg-white/[0.05]'
       }`}
     >
       {/* Scene Thumbnail with Gradient Blobs */}
-      <div className="w-10 h-10 rounded-[24px] bg-white/[0.07] flex-shrink-0 relative overflow-hidden">
+      <div className="w-10 h-10 rounded-[8px] bg-white/[0.07] flex-shrink-0 relative overflow-hidden">
         {/* Gradient blobs with mix-blend-screen */}
         <div
           className="absolute w-14 h-14 -left-7 -top-9 opacity-100 mix-blend-screen rounded-full blur-md"

@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { immer } from 'zustand/middleware/immer'
-import { enableMapSet } from 'immer'
+import { enableMapSet, castDraft } from 'immer'
 import type { Scene, SceneInsert } from '@/types'
 import { sceneService } from '@/lib/services/browser/sceneService'
 
@@ -52,7 +52,7 @@ export const useSceneStore = create<SceneState>()(
             })
             // Add new scenes
             scenes.forEach(scene => {
-              state.scenes.set(scene.id, scene)
+              state.scenes.set(scene.id, castDraft(scene))
             })
             state.fetchedCampaigns.add(campaignId)
             state.isLoading = false
@@ -70,7 +70,7 @@ export const useSceneStore = create<SceneState>()(
         try {
           const newScene = await sceneService.create(scene)
           set(state => {
-            state.scenes.set(newScene.id, newScene)
+            state.scenes.set(newScene.id, castDraft(newScene))
           })
           return newScene
         } catch (error) {
@@ -85,18 +85,19 @@ export const useSceneStore = create<SceneState>()(
         const original = get().scenes.get(id)
         if (!original) return
 
+        const optimisticUpdate = { ...original, ...updates, updated_at: new Date().toISOString() }
         set(state => {
-          state.scenes.set(id, { ...original, ...updates, updated_at: new Date().toISOString() })
+          state.scenes.set(id, castDraft(optimisticUpdate))
         })
 
         try {
           const updated = await sceneService.update(id, updates)
           set(state => {
-            state.scenes.set(id, updated)
+            state.scenes.set(id, castDraft(updated))
           })
         } catch (error) {
           set(state => {
-            state.scenes.set(id, original)
+            state.scenes.set(id, castDraft(original))
             state.error = error instanceof Error ? error.message : 'Failed to update scene'
           })
           throw error
@@ -119,7 +120,7 @@ export const useSceneStore = create<SceneState>()(
           await sceneService.delete(id)
         } catch (error) {
           set(state => {
-            state.scenes.set(id, original)
+            state.scenes.set(id, castDraft(original))
             state.error = error instanceof Error ? error.message : 'Failed to delete scene'
           })
           throw error
@@ -135,9 +136,10 @@ export const useSceneStore = create<SceneState>()(
             state.scenes.forEach((scene, sceneId) => {
               if (scene.campaign_id === campaignId) {
                 if (sceneId === id) {
-                  state.scenes.set(sceneId, updated)
+                  state.scenes.set(sceneId, castDraft(updated))
                 } else {
-                  state.scenes.set(sceneId, { ...scene, is_active: false })
+                  const deactivated = { ...scene, is_active: false }
+                  state.scenes.set(sceneId, castDraft(deactivated))
                 }
               }
             })
@@ -159,7 +161,8 @@ export const useSceneStore = create<SceneState>()(
             sceneIds.forEach((id, index) => {
               const scene = state.scenes.get(id)
               if (scene) {
-                state.scenes.set(id, { ...scene, order_index: index })
+                const reordered = { ...scene, order_index: index }
+                state.scenes.set(id, castDraft(reordered))
               }
             })
           })

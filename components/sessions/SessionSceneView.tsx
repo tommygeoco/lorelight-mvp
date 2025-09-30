@@ -3,13 +3,18 @@
 import { useEffect, useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { useSceneStore } from '@/store/sceneStore'
+import { useAudioStore } from '@/store/audioStore'
+import { useAudioFileStore } from '@/store/audioFileStore'
 import { ChevronLeft, CirclePlay, Music, Flame, Plus, Settings } from 'lucide-react'
 import type { Scene } from '@/types'
 import { SceneListItem } from '@/components/scenes/SceneListItem'
 import { AmbienceCard } from '@/components/scenes/AmbienceCard'
 import { NoteCard } from '@/components/scenes/NoteCard'
 import { SceneModal } from '@/components/scenes/SceneModal'
+import { AudioLibrary } from '@/components/audio/AudioLibrary'
+import { HueSetup } from '@/components/hue/HueSetup'
 import { PageHeader } from '@/components/ui/PageHeader'
+import { AudioPlayerFooter } from '@/components/dashboard/AudioPlayerFooter'
 
 interface SessionSceneViewProps {
   campaignId: string
@@ -22,24 +27,27 @@ export function SessionSceneView({ campaignId }: SessionSceneViewProps) {
     isLoading,
     fetchScenesForCampaign,
     setActiveScene,
-    currentSceneId,
     fetchedCampaigns
   } = useSceneStore()
 
-  const [selectedSceneId, setSelectedSceneId] = useState<string | null>(currentSceneId)
+  const { loadTrack } = useAudioStore()
+
+  const { audioFiles } = useAudioFileStore()
+  const audioFileMap = useMemo(
+    () => (audioFiles instanceof Map ? audioFiles : new Map()),
+    [audioFiles]
+  )
+
+  const [selectedSceneId, setSelectedSceneId] = useState<string | null>(null)
   const [isSceneModalOpen, setIsSceneModalOpen] = useState(false)
+  const [isAudioLibraryOpen, setIsAudioLibraryOpen] = useState(false)
+  const [isHueSetupOpen, setIsHueSetupOpen] = useState(false)
   const [editingScene, setEditingScene] = useState<Scene | undefined>(undefined)
 
   const sceneArray = useMemo(
     () => Array.from(scenes.values()).filter(s => s.campaign_id === campaignId),
     [scenes, campaignId]
   )
-
-  useEffect(() => {
-    if (!fetchedCampaigns.has(campaignId) && !isLoading) {
-      fetchScenesForCampaign(campaignId)
-    }
-  }, [campaignId, fetchedCampaigns, isLoading, fetchScenesForCampaign])
 
   const sortedScenes = useMemo(() => {
     const sorted = [...sceneArray]
@@ -55,10 +63,41 @@ export function SessionSceneView({ campaignId }: SessionSceneViewProps) {
     ? scenes.get(selectedSceneId)
     : sortedScenes.find(s => s.is_active) || sortedScenes[0]
 
+  useEffect(() => {
+    if (!fetchedCampaigns.has(campaignId) && !isLoading) {
+      fetchScenesForCampaign(campaignId)
+    }
+  }, [campaignId, fetchedCampaigns, isLoading, fetchScenesForCampaign])
+
+  // Set active scene as default selection on mount
+  useEffect(() => {
+    if (selectedSceneId === null && sceneArray.length > 0) {
+      const activeScene = sceneArray.find(s => s.is_active)
+      if (activeScene) {
+        setSelectedSceneId(activeScene.id)
+      } else if (sceneArray[0]) {
+        setSelectedSceneId(sceneArray[0].id)
+      }
+    }
+  }, [selectedSceneId, sceneArray])
+
+  // Load audio when selected scene changes
+  useEffect(() => {
+    if (selectedScene && selectedScene.audio_config) {
+      const audioConfig = selectedScene.audio_config as { audio_id?: string } | null
+      const audioId = audioConfig?.audio_id
+
+      if (audioId) {
+        const audioFile = audioFileMap.get(audioId)
+        if (audioFile) {
+          loadTrack(audioFile.id, audioFile.file_url)
+        }
+      }
+    }
+  }, [selectedScene, audioFileMap, loadTrack])
+
   const handleSceneClick = async (scene: Scene) => {
     setSelectedSceneId(scene.id)
-    setEditingScene(scene)
-    setIsSceneModalOpen(true)
   }
 
   const handlePlayScene = async (scene: Scene) => {
@@ -96,7 +135,7 @@ export function SessionSceneView({ campaignId }: SessionSceneViewProps) {
 
   return (
     <div className="h-screen w-full bg-[#111111] flex flex-col">
-      <div className="flex-1 min-h-0 flex overflow-hidden gap-2 p-2">
+      <div className="flex-1 min-h-0 flex overflow-hidden gap-2 px-2 pt-2">
         {/* Navigation Sidebar */}
         <nav className="w-14 flex-shrink-0" aria-label="Main navigation">
           <div className="bg-[#191919] rounded-[24px] p-2 h-full flex flex-col gap-2">
@@ -121,12 +160,14 @@ export function SessionSceneView({ campaignId }: SessionSceneViewProps) {
               <Settings className="w-[18px] h-[18px] text-white/70" />
             </button>
             <button
+              onClick={() => setIsAudioLibraryOpen(true)}
               className="w-10 h-10 rounded-[24px] hover:bg-white/5 flex items-center justify-center transition-colors"
               aria-label="Music library"
             >
               <Music className="w-[18px] h-[18px] text-white/70" />
             </button>
             <button
+              onClick={() => setIsHueSetupOpen(true)}
               className="w-10 h-10 rounded-[24px] hover:bg-white/5 flex items-center justify-center transition-colors"
               aria-label="Lighting effects"
             >
@@ -158,12 +199,13 @@ export function SessionSceneView({ campaignId }: SessionSceneViewProps) {
                 <p className="text-xs text-neutral-500 mt-1">Click + to create your first scene</p>
               </div>
             ) : (
-              <ul role="list">
+              <ul role="list" className="space-y-2">
                 {sortedScenes.map((scene) => (
                   <li key={scene.id}>
                     <SceneListItem
                       scene={scene}
                       isActive={scene.is_active}
+                      isSelected={selectedSceneId === scene.id}
                       onClick={() => handleSceneClick(scene)}
                       onPlay={() => handlePlayScene(scene)}
                     />
@@ -175,7 +217,7 @@ export function SessionSceneView({ campaignId }: SessionSceneViewProps) {
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1 bg-[#191919] rounded-tl-lg rounded-tr-2xl flex flex-col overflow-hidden">
+        <main className="flex-1 bg-[#191919] rounded-[24px] flex flex-col overflow-hidden">
           {selectedScene ? (
             <>
               <PageHeader title={selectedScene.name} description={selectedScene.description || undefined} />
@@ -237,41 +279,9 @@ export function SessionSceneView({ campaignId }: SessionSceneViewProps) {
       </div>
 
       {/* Audio Player Footer */}
-      {selectedScene && (
-        <footer className="h-20 flex-shrink-0 bg-[#111111] border-t border-white/10 flex items-center px-6 gap-6" role="region" aria-label="Audio player">
-          <div className="flex-1 flex items-center gap-2">
-              <div className="w-12 h-12 bg-white/[0.07] rounded-[24px] overflow-hidden flex-shrink-0">
-                <div className="w-full h-full bg-gradient-to-br from-pink-500/50 to-purple-500/50" />
-              </div>
-              <div className="flex flex-col min-w-0">
-                <p className="text-[#eeeeee] font-medium truncate">{selectedScene.name}</p>
-                <p className="text-xs text-[#7b7b7b] font-medium truncate">
-                  {selectedScene.scene_type || 'Scene'}
-                </p>
-              </div>
-            </div>
-
-            <div className="flex-1 flex items-center gap-4 justify-center">
-              <span className="text-[#7b7b7b] font-medium whitespace-nowrap">1:24</span>
-              <div className="flex-1 h-[5px] bg-white/20 rounded-full overflow-hidden flex">
-                <div className="flex-1 bg-white" />
-                <div className="flex-1 bg-white opacity-20" />
-              </div>
-              <span className="text-[#7b7b7b] font-medium whitespace-nowrap">3:48</span>
-            </div>
-
-            <div className="flex-1 flex items-center gap-6 justify-end">
-              <Music className="w-6 h-6 text-white/70" />
-              <Music className="w-6 h-6 text-white/70" />
-              <div className="w-8 h-8 bg-[#eeeeee] rounded-full flex items-center justify-center">
-                <div className="w-3 h-3 flex gap-0.5">
-                  <div className="w-1 bg-black" />
-                  <div className="w-1 bg-black" />
-                </div>
-              </div>
-            </div>
-        </footer>
-      )}
+      <footer className="flex-shrink-0 bg-[#111111] px-2 pb-2">
+        <AudioPlayerFooter />
+      </footer>
 
       <SceneModal
         isOpen={isSceneModalOpen}
@@ -281,6 +291,16 @@ export function SessionSceneView({ campaignId }: SessionSceneViewProps) {
         }}
         campaignId={campaignId}
         scene={editingScene}
+      />
+
+      <AudioLibrary
+        isOpen={isAudioLibraryOpen}
+        onClose={() => setIsAudioLibraryOpen(false)}
+      />
+
+      <HueSetup
+        isOpen={isHueSetupOpen}
+        onClose={() => setIsHueSetupOpen(false)}
       />
     </div>
   )

@@ -1,7 +1,7 @@
 import { create, StateCreator } from 'zustand'
 import { persist, PersistOptions } from 'zustand/middleware'
 import { immer } from 'zustand/middleware/immer'
-import { enableMapSet } from 'immer'
+import { enableMapSet, castDraft } from 'immer'
 
 // Enable Immer MapSet plugin for Map/Set support
 enableMapSet()
@@ -136,11 +136,11 @@ export function createEntityStore<T extends BaseEntity, TInsert = Partial<T>>(
 
           // Add new entities
           entities.forEach(entity => {
-            state.entities.set(entity.id, entity)
+            state.entities.set(entity.id, castDraft(entity))
           })
 
           if (enableFetchTracking && campaignId) {
-            (state as State & { fetchedCampaigns: Set<string> }).fetchedCampaigns.add(campaignId)
+            (state as unknown as State & { fetchedCampaigns: Set<string> }).fetchedCampaigns.add(campaignId)
           }
 
           state.isLoading = false
@@ -165,11 +165,11 @@ export function createEntityStore<T extends BaseEntity, TInsert = Partial<T>>(
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
           ...data,
-        } as T
+        } as unknown as T
 
         // Optimistically add to state
         set(state => {
-          state.entities.set(tempId, optimisticEntity)
+          state.entities.set(tempId, castDraft(optimisticEntity))
         })
 
         try {
@@ -177,7 +177,7 @@ export function createEntityStore<T extends BaseEntity, TInsert = Partial<T>>(
           // Replace optimistic entry with real data
           set(state => {
             state.entities.delete(tempId)
-            state.entities.set(newEntity.id, newEntity)
+            state.entities.set(newEntity.id, castDraft(newEntity))
           })
           return newEntity
         } catch (error) {
@@ -193,7 +193,7 @@ export function createEntityStore<T extends BaseEntity, TInsert = Partial<T>>(
         try {
           const newEntity = await service.create(data)
           set(state => {
-            state.entities.set(newEntity.id, newEntity)
+            state.entities.set(newEntity.id, castDraft(newEntity))
           })
           return newEntity
         } catch (error) {
@@ -211,18 +211,18 @@ export function createEntityStore<T extends BaseEntity, TInsert = Partial<T>>(
 
       // Optimistically update
       set(state => {
-        state.entities.set(id, { ...original, ...updates, updated_at: new Date().toISOString() })
+        state.entities.set(id, castDraft({ ...original, ...updates, updated_at: new Date().toISOString() }))
       })
 
       try {
         const updated = await service.update(id, updates)
         set(state => {
-          state.entities.set(id, updated)
+          state.entities.set(id, castDraft(updated))
         })
       } catch (error) {
         // Rollback on error
         set(state => {
-          state.entities.set(id, original)
+          state.entities.set(id, castDraft(original))
           state.error = error instanceof Error ? error.message : `Failed to update ${name}`
         })
         throw error
@@ -247,7 +247,7 @@ export function createEntityStore<T extends BaseEntity, TInsert = Partial<T>>(
       } catch (error) {
         // Rollback on error
         set(state => {
-          state.entities.set(id, original)
+          state.entities.set(id, castDraft(original))
           state.error = error instanceof Error ? error.message : `Failed to delete ${name}`
         })
         throw error
@@ -264,7 +264,7 @@ export function createEntityStore<T extends BaseEntity, TInsert = Partial<T>>(
             state.entities.forEach((entity, entityId) => {
               if ('campaign_id' in entity && (entity as T & { campaign_id: string }).campaign_id === campaignId) {
                 if (entityId === id) {
-                  state.entities.set(entityId, updated)
+                  state.entities.set(entityId, castDraft(updated))
                 } else {
                   // Deactivate logic depends on entity type
                   const deactivated = { ...entity }
@@ -274,7 +274,7 @@ export function createEntityStore<T extends BaseEntity, TInsert = Partial<T>>(
                   if ('status' in deactivated) {
                     (deactivated as T & { status: string }).status = 'planning'
                   }
-                  state.entities.set(entityId, deactivated)
+                  state.entities.set(entityId, castDraft(deactivated as T))
                 }
               }
             })
@@ -298,7 +298,7 @@ export function createEntityStore<T extends BaseEntity, TInsert = Partial<T>>(
             ids.forEach((id, index) => {
               const entity = state.entities.get(id)
               if (entity && 'order_index' in entity) {
-                state.entities.set(id, { ...entity, order_index: index } as T)
+                state.entities.set(id, castDraft({ ...entity, order_index: index } as T))
               }
             })
           })
@@ -319,19 +319,22 @@ export function createEntityStore<T extends BaseEntity, TInsert = Partial<T>>(
     },
   } as State)
 
-  const defaultPartialize = (state: State) => ({
+  const defaultPartialize = (state: State): Partial<State> => ({
     currentEntityId: state.currentEntityId,
-  })
+  } as Partial<State>)
 
   const persistConfig: PersistOptions<State> = {
     name: `${name}-store`,
-    partialize: partialize || defaultPartialize,
+    partialize: (partialize || defaultPartialize) as (state: State) => State,
   }
 
+  // Type assertion needed due to Zustand middleware type complexity with immer+persist
   return create<State>()(
-    persist(
-      immer(storeCreator),
-      persistConfig
+    immer(
+      persist(
+        storeCreator as any,
+        persistConfig
+      )
     )
   )
 }

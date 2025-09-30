@@ -49,7 +49,13 @@ export const useAudioStore = create<AudioPlayerState>()(
       audioElement: null,
 
       loadTrack: (trackId, trackUrl) => {
+        console.log('loadTrack called:', { trackId, trackUrl })
         const { audioElement, volume, isLooping } = get()
+
+        if (!trackUrl) {
+          console.error('loadTrack: trackUrl is undefined!')
+          return
+        }
 
         set(state => {
           state.currentTrackId = trackId
@@ -59,21 +65,48 @@ export const useAudioStore = create<AudioPlayerState>()(
         })
 
         if (audioElement) {
+          console.log('Setting audio src to:', trackUrl)
           audioElement.src = trackUrl
           audioElement.volume = volume
           audioElement.loop = isLooping
+          console.log('Audio src after setting:', audioElement.src)
+          console.log('About to call audioElement.load()')
           audioElement.load()
+          console.log('audioElement.load() completed')
+        } else {
+          console.error('loadTrack: audioElement is null!')
         }
       },
 
       play: () => {
-        const { audioElement } = get()
+        const { audioElement, volume, isMuted } = get()
         if (audioElement) {
+          console.log('play() called - current src:', audioElement.src)
+          console.log('play() - volume before:', audioElement.volume)
+          console.log('play() - muted before:', audioElement.muted)
+          console.log('play() - readyState:', audioElement.readyState)
+
+          // Ensure audio is not muted and has proper volume
+          audioElement.muted = isMuted
+          if (!isMuted && audioElement.volume === 0) {
+            audioElement.volume = volume
+          }
+
+          console.log('play() - volume after:', audioElement.volume)
+          console.log('play() - muted after:', audioElement.muted)
+
           audioElement.play().catch(err => {
             console.error('Error playing audio:', err)
             set({ isPlaying: false })
+
+            // Show user-friendly error message
+            if (err.name === 'NotSupportedError') {
+              alert('This audio file appears to be corrupted or unavailable. Please try deleting and re-uploading it.')
+            }
           })
           set({ isPlaying: true })
+        } else {
+          console.error('play() - audioElement is null!')
         }
       },
 
@@ -121,13 +154,14 @@ export const useAudioStore = create<AudioPlayerState>()(
       },
 
       toggleMute: () => {
-        const { audioElement, isMuted, volume } = get()
+        const { audioElement, isMuted } = get()
+        const newMuted = !isMuted
 
         if (audioElement) {
-          audioElement.volume = isMuted ? volume : 0
+          audioElement.muted = newMuted
         }
 
-        set({ isMuted: !isMuted })
+        set({ isMuted: newMuted })
       },
 
       toggleLoop: () => {

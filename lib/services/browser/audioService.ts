@@ -129,7 +129,7 @@ class AudioService {
   /**
    * Upload an audio file to R2
    */
-  async upload(file: File): Promise<{ fileUrl: string; fileName: string }> {
+  async upload(file: File): Promise<{ fileUrl: string; fileName: string; fileSize: number }> {
     const formData = new FormData()
     formData.append('file', file)
 

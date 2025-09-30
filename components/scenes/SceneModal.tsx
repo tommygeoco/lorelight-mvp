@@ -1,10 +1,12 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { X, Trash2 } from 'lucide-react'
+import { X, Trash2, Music } from 'lucide-react'
 import { useSceneStore } from '@/store/sceneStore'
+import { useAudioFileStore } from '@/store/audioFileStore'
 import { Textarea } from '@/components/ui/textarea'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
+import { AudioLibrary } from '@/components/audio/AudioLibrary'
 import { logger } from '@/lib/utils/logger'
 import { STRINGS } from '@/lib/constants/strings'
 import type { Scene } from '@/types'
@@ -20,10 +22,14 @@ const SCENE_TYPES = ['Story', 'Encounter', 'Event', 'Location', 'Rest'] as const
 
 export function SceneModal({ isOpen, onClose, campaignId, scene }: SceneModalProps) {
   const { createScene, updateScene, deleteScene } = useSceneStore()
+  const { audioFiles } = useAudioFileStore()
+  const audioFileMap = audioFiles instanceof Map ? audioFiles : new Map()
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
   const [sceneType, setSceneType] = useState<string>('Story')
   const [notes, setNotes] = useState('')
+  const [selectedAudioId, setSelectedAudioId] = useState<string | null>(null)
+  const [isAudioLibraryOpen, setIsAudioLibraryOpen] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
@@ -37,12 +43,16 @@ export function SceneModal({ isOpen, onClose, campaignId, scene }: SceneModalPro
       setDescription(scene.description || '')
       setSceneType(scene.scene_type || 'Story')
       setNotes(scene.notes || '')
+      // Extract audio_id from audio_config JSON
+      const audioConfig = scene.audio_config as { audio_id?: string } | null
+      setSelectedAudioId(audioConfig?.audio_id || null)
     } else {
       // Reset form in create mode
       setName('')
       setDescription('')
       setSceneType('Story')
       setNotes('')
+      setSelectedAudioId(null)
     }
   }, [isEditMode, scene])
 
@@ -54,6 +64,8 @@ export function SceneModal({ isOpen, onClose, campaignId, scene }: SceneModalPro
 
     setIsSubmitting(true)
     try {
+      const audioConfig = selectedAudioId ? { audio_id: selectedAudioId } : null
+
       if (isEditMode && scene) {
         // Update existing scene
         await updateScene(scene.id, {
@@ -61,6 +73,7 @@ export function SceneModal({ isOpen, onClose, campaignId, scene }: SceneModalPro
           description: description.trim() || null,
           scene_type: sceneType,
           notes: notes.trim() || '',
+          audio_config: audioConfig,
         })
       } else {
         // Create new scene
@@ -71,6 +84,7 @@ export function SceneModal({ isOpen, onClose, campaignId, scene }: SceneModalPro
           scene_type: sceneType,
           notes: notes.trim() || '',
           light_config: {},
+          audio_config: audioConfig,
           is_active: false,
           order_index: 0,
         })
@@ -155,7 +169,7 @@ export function SceneModal({ isOpen, onClose, campaignId, scene }: SceneModalPro
                   onChange={(e) => setName(e.target.value)}
                   placeholder={STRINGS.scenes.namePlaceholder}
                   required
-                  className="w-full px-4 py-3 bg-[rgba(255,255,255,0.07)] border border-[#3a3a3a] rounded-[24px] text-[14px] text-white placeholder:text-[#606060] focus:outline-none focus:border-white/20 transition-colors"
+                  className="w-full px-4 py-3 bg-[rgba(255,255,255,0.07)] border border-[#3a3a3a] rounded-[8px] text-[14px] text-white placeholder:text-[#606060] focus:outline-none focus:border-white/20 transition-colors"
                 />
               </div>
 
@@ -195,6 +209,39 @@ export function SceneModal({ isOpen, onClose, campaignId, scene }: SceneModalPro
                   rows={3}
                   className="resize-none"
                 />
+              </div>
+
+              {/* Audio Selection */}
+              <div className="space-y-2">
+                <label className="block text-[14px] font-semibold text-[#eeeeee]">
+                  Scene Audio
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setIsAudioLibraryOpen(true)}
+                  className="w-full px-4 py-3 bg-[rgba(255,255,255,0.07)] border border-[#3a3a3a] rounded-[8px] text-[14px] text-white hover:bg-white/10 transition-colors flex items-center justify-between"
+                >
+                  <div className="flex items-center gap-2">
+                    <Music className="w-4 h-4 text-white/70" />
+                    <span className="text-white/70">
+                      {selectedAudioId && audioFileMap.get(selectedAudioId)
+                        ? audioFileMap.get(selectedAudioId)!.name
+                        : 'Select audio track...'}
+                    </span>
+                  </div>
+                  {selectedAudioId && (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        setSelectedAudioId(null)
+                      }}
+                      className="text-white/40 hover:text-white/70"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  )}
+                </button>
               </div>
 
               {/* Notes Field */}
@@ -253,6 +300,16 @@ export function SceneModal({ isOpen, onClose, campaignId, scene }: SceneModalPro
           isLoading={isDeleting}
         />
       )}
+
+      {/* Audio Library Modal */}
+      <AudioLibrary
+        isOpen={isAudioLibraryOpen}
+        onClose={() => setIsAudioLibraryOpen(false)}
+        onSelect={(audioFile) => {
+          setSelectedAudioId(audioFile.id)
+          setIsAudioLibraryOpen(false)
+        }}
+      />
     </>
   )
 }

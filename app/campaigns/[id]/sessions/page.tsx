@@ -7,6 +7,7 @@ import { useSessionStore } from '@/store/sessionStore'
 import { Button } from '@/components/ui/button'
 import { Plus, Play, ChevronLeft, CirclePlay, Settings, Music, Flame } from 'lucide-react'
 import { PageHeader } from '@/components/ui/PageHeader'
+import { AudioPlayerFooter } from '@/components/dashboard/AudioPlayerFooter'
 import type { Session } from '@/types'
 import { STRINGS } from '@/lib/constants/strings'
 import { CampaignCardSkeleton } from '@/components/ui/Skeleton'
@@ -74,7 +75,7 @@ export default function SessionsPage({
 
   return (
     <div className="h-screen w-full bg-[#111111] flex flex-col">
-      <div className="flex-1 min-h-0 flex overflow-hidden gap-2 p-2">
+      <div className="flex-1 min-h-0 flex overflow-hidden gap-2 px-2 pt-2">
         {/* Navigation Sidebar */}
         <nav className="w-14 flex-shrink-0" aria-label="Main navigation">
           <div className="bg-[#191919] rounded-[24px] p-2 h-full flex flex-col gap-2">
@@ -180,6 +181,11 @@ export default function SessionsPage({
           </div>
         </main>
       </div>
+
+      {/* Audio Player Footer */}
+      <footer className="flex-shrink-0 bg-[#111111] px-2 pb-2">
+        <AudioPlayerFooter />
+      </footer>
     </div>
   )
 }

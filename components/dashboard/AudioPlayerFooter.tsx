@@ -1,21 +1,44 @@
 'use client'
 
 import { Lightbulb, Volume2, VolumeX, Pause, Play } from 'lucide-react'
-import { useState } from 'react'
+import { useAudioStore } from '@/store/audioStore'
+import { useAudioFileStore } from '@/store/audioFileStore'
 
 export function AudioPlayerFooter() {
-  const [isPlaying, setIsPlaying] = useState(false)
-  const [isMuted, setIsMuted] = useState(false)
-  const [progress] = useState(42) // 0-100, will be dynamic later
+  const {
+    isPlaying,
+    isMuted,
+    currentTime,
+    duration,
+    currentTrackId,
+    togglePlay,
+    toggleMute
+  } = useAudioStore()
 
-  // Mock data - will be replaced with actual audio store
-  const currentTrack = {
-    title: 'Ambush in the Night',
-    type: 'Encounter',
-    currentTime: '1:24',
-    duration: '3:48',
-    thumbnail: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
+  const { audioFiles } = useAudioFileStore()
+
+  // Get current track info
+  const audioFileMap = audioFiles instanceof Map ? audioFiles : new Map()
+  const currentTrack = currentTrackId ? audioFileMap.get(currentTrackId) : null
+
+  // Show minimal footer if no track is loaded
+  if (!currentTrack) {
+    return (
+      <div className="flex items-center justify-center px-6 py-4">
+        <div className="text-sm text-white/40">No audio playing</div>
+      </div>
+    )
   }
+
+  // Format time as MM:SS
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60)
+    const secs = Math.floor(seconds % 60)
+    return `${mins}:${secs.toString().padStart(2, '0')}`
+  }
+
+  // Calculate progress percentage
+  const progress = duration > 0 ? (currentTime / duration) * 100 : 0
 
   return (
     <div className="flex items-center gap-6 px-6 py-4">
@@ -38,16 +61,16 @@ export function AudioPlayerFooter() {
         {/* Scene Thumbnail */}
         <div
           className="w-12 h-12 rounded-[24px] shadow-lg"
-          style={{ background: currentTrack.thumbnail }}
+          style={{ background: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)' }}
         />
 
         {/* Track Info */}
         <div className="flex flex-col">
           <div className="text-sm font-medium text-[#eeeeee]">
-            {currentTrack.title}
+            {currentTrack.name}
           </div>
           <div className="text-xs font-medium text-[#7b7b7b]">
-            {currentTrack.type}
+            Audio Track
           </div>
         </div>
       </div>
@@ -56,7 +79,7 @@ export function AudioPlayerFooter() {
       <div className="flex-1 flex items-center justify-center gap-4">
         {/* Current Time */}
         <div className="text-sm font-medium text-[#7b7b7b]">
-          {currentTrack.currentTime}
+          {formatTime(currentTime)}
         </div>
 
         {/* Progress Bar */}
@@ -70,15 +93,15 @@ export function AudioPlayerFooter() {
 
         {/* Duration */}
         <div className="text-sm font-medium text-[#7b7b7b]">
-          {currentTrack.duration}
+          {formatTime(duration)}
         </div>
       </div>
 
       {/* Right: Volume & Play Controls */}
       <div className="flex-1 flex items-center justify-end gap-6">
-        {/* Speaker Icon */}
+        {/* Mute Button */}
         <button
-          onClick={() => setIsMuted(!isMuted)}
+          onClick={toggleMute}
           className="w-6 h-6 flex items-center justify-center text-white/70 hover:text-white transition-colors"
         >
           {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
@@ -91,7 +114,7 @@ export function AudioPlayerFooter() {
 
         {/* Play/Pause Button */}
         <button
-          onClick={() => setIsPlaying(!isPlaying)}
+          onClick={togglePlay}
           className="w-8 h-8 bg-[#eeeeee] rounded-full flex items-center justify-center hover:bg-white transition-colors"
         >
           {isPlaying ? (

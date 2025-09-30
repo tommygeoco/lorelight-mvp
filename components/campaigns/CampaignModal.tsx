@@ -138,7 +138,7 @@ export function CampaignModal({ isOpen, onClose, campaign }: CampaignModalProps)
                   onChange={(e) => setName(e.target.value)}
                   placeholder={STRINGS.campaigns.namePlaceholder}
                   required
-                  className="w-full px-4 py-3 bg-[rgba(255,255,255,0.07)] border border-[#3a3a3a] rounded-[24px] text-[14px] text-white placeholder:text-[#606060] focus:outline-none focus:border-white/20 transition-colors"
+                  className="w-full px-4 py-3 bg-[rgba(255,255,255,0.07)] border border-[#3a3a3a] rounded-[8px] text-[14px] text-white placeholder:text-[#606060] focus:outline-none focus:border-white/20 transition-colors"
                 />
               </div>
 

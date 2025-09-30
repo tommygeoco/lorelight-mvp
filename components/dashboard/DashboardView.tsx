@@ -7,6 +7,7 @@ import { ChevronLeft, CirclePlay, BookOpen, Music, Flame } from 'lucide-react'
 import { CampaignDisplayCard } from './CampaignDisplayCard'
 import { CampaignModal } from '@/components/campaigns/CampaignModal'
 import { PageHeader } from '@/components/ui/PageHeader'
+import { AudioPlayerFooter } from './AudioPlayerFooter'
 import type { Campaign } from '@/types'
 
 export function DashboardView() {
@@ -27,10 +28,10 @@ export function DashboardView() {
   }
 
   return (
-    <div className="h-screen w-full bg-[#111111]">
-      <div className="h-full flex overflow-hidden">
+    <div className="h-screen w-full bg-[#111111] flex flex-col">
+      <div className="flex-1 min-h-0 flex overflow-hidden gap-2 px-2 pt-2">
         {/* Navigation Sidebar */}
-        <nav className="w-[72px] flex-shrink-0 p-2" aria-label="Main navigation">
+        <nav className="w-14 flex-shrink-0" aria-label="Main navigation">
           <div className="bg-[#191919] rounded-[24px] p-2 h-full flex flex-col gap-2">
             <button
               onClick={() => router.push('/')}
@@ -67,7 +68,7 @@ export function DashboardView() {
         </nav>
 
         {/* Main Content */}
-        <main className="flex-1 bg-[#191919] rounded-tl-lg rounded-tr-2xl mt-2 mr-2 mb-2 overflow-hidden flex flex-col">
+        <main className="flex-1 bg-[#191919] rounded-[24px] overflow-hidden flex flex-col">
           <PageHeader title="Campaigns" description="Text description" />
 
           {/* Campaign List Section */}
@@ -93,6 +94,11 @@ export function DashboardView() {
           </section>
         </main>
       </div>
+
+      {/* Audio Player Footer */}
+      <footer className="flex-shrink-0 bg-[#111111] px-2 pb-2">
+        <AudioPlayerFooter />
+      </footer>
 
       <CampaignModal
         isOpen={isCampaignModalOpen}
