@@ -14,7 +14,7 @@ export function NoteCard({ title, content, className = '' }: NoteCardProps) {
       <div className="font-bold text-white text-base mb-2 line-clamp-2">
         {title}
       </div>
-      <div className="text-xs text-[#b4b4b4] font-medium leading-[18px] line-clamp-6">
+      <div className="text-xs text-[#b4b4b4] font-medium line-clamp-6">
         {content}
       </div>
     </div>

@@ -5,7 +5,7 @@ interface PageHeaderProps {
 
 export function PageHeader({ title, description }: PageHeaderProps) {
   return (
-    <header className="relative h-[200px] flex items-center justify-center overflow-hidden flex-shrink-0">
+    <header className="relative h-auto flex justify-center overflow-hidden flex-shrink-0">
       {/* Radial Gradient Background - Matching Figma exactly */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         {/* Left pink ellipse */}
@@ -35,15 +35,15 @@ export function PageHeader({ title, description }: PageHeaderProps) {
       </div>
 
       {/* Title - 640px wide centered */}
-      <div className="relative w-[640px]">
+      <div className="relative w-[640px] pt-24">
         <h1
-          className="text-[60px] font-normal text-white leading-[72px] tracking-[-1.2px]"
+          className="text-[60px] font-normal text-white tracking-[-1.2px]"
           style={{ fontFamily: '"PP Mondwest", sans-serif' }}
         >
           {title}
         </h1>
         {description && (
-          <p className="text-sm text-[#eeeeee] leading-5 font-normal mt-1 whitespace-pre-line">
+          <p className="text-[#eeeeee] font-normal mt-1 whitespace-pre-line">
             {description}
           </p>
         )}

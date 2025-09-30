@@ -50,10 +50,10 @@ export function AmbienceCard({ type, title, subtitle, thumbnail }: AmbienceCardP
 
         {/* Content - 104px from top (16px padding + 64px thumbnail + 24px gap) */}
         <div className="mt-6">
-          <div className="font-bold text-white text-base leading-6 truncate">
+          <div className="font-bold text-white text-base truncate">
             {title}
           </div>
-          <div className="font-medium text-sm text-white/70 mix-blend-overlay leading-5 truncate">
+          <div className="font-medium text-white/70 mix-blend-overlay truncate">
             {subtitle}
           </div>
         </div>

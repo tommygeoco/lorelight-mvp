@@ -65,10 +65,10 @@ export function DashboardView() {
           <section className="flex-1 overflow-y-auto" aria-label="Campaign list">
             <div className="w-[640px] mx-auto pt-[40px] pb-[40px]">
               {isLoading ? (
-                <p className="text-center py-8 text-sm text-neutral-400">Loading campaigns...</p>
+                <p className="text-center py-8 text-neutral-400">Loading campaigns...</p>
               ) : campaignArray.length === 0 ? (
                 <div className="text-center py-8">
-                  <p className="text-sm text-neutral-400">No campaigns yet</p>
+                  <p className="text-neutral-400">No campaigns yet</p>
                   <p className="text-xs text-neutral-500 mt-1">Create your first campaign to get started</p>
                 </div>
               ) : (

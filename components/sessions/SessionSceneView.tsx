@@ -148,7 +148,7 @@ export function SessionSceneView({ campaignId }: SessionSceneViewProps) {
 
             {sortedScenes.length === 0 ? (
               <div className="text-center py-8 px-4">
-                <p className="text-sm text-neutral-400">No scenes yet</p>
+                <p className="text-neutral-400">No scenes yet</p>
                 <p className="text-xs text-neutral-500 mt-1">Click + to create your first scene</p>
               </div>
             ) : (
@@ -180,7 +180,7 @@ export function SessionSceneView({ campaignId }: SessionSceneViewProps) {
                   {/* Ambience Section */}
                   <section aria-labelledby="ambience-heading">
                     <header className="h-[48px] pt-[24px]">
-                      <h2 id="ambience-heading" className="text-base font-semibold text-white leading-6">Ambience</h2>
+                      <h2 id="ambience-heading" className="text-base font-semibold text-white">Ambience</h2>
                     </header>
                     <div className="grid grid-cols-2 gap-4 pt-[24px]">
                       <AmbienceCard
@@ -200,7 +200,7 @@ export function SessionSceneView({ campaignId }: SessionSceneViewProps) {
                   {notes.length > 0 && (
                     <section aria-labelledby="notes-heading" className="mt-4">
                       <header className="h-[48px] pt-[24px]">
-                        <h2 id="notes-heading" className="text-base font-semibold text-white leading-6">Notes</h2>
+                        <h2 id="notes-heading" className="text-base font-semibold text-white">Notes</h2>
                       </header>
                       <ul className="grid grid-cols-3 gap-4 pt-[24px] pb-[40px]" role="list">
                         {notes.map((note, index) => (
@@ -221,7 +221,7 @@ export function SessionSceneView({ campaignId }: SessionSceneViewProps) {
             <div className="flex items-center justify-center h-full">
               <p className="text-center">
                 <span className="block text-lg font-medium text-white mb-2">No scene selected</span>
-                <span className="block text-sm text-neutral-400">
+                <span className="block text-neutral-400">
                   Select a scene from the sidebar to view details
                 </span>
               </p>
@@ -238,20 +238,20 @@ export function SessionSceneView({ campaignId }: SessionSceneViewProps) {
                 <div className="w-full h-full bg-gradient-to-br from-pink-500/50 to-purple-500/50" />
               </div>
               <div className="flex flex-col min-w-0">
-                <p className="text-sm text-[#eeeeee] font-medium leading-5 truncate">{selectedScene.name}</p>
-                <p className="text-xs text-[#7b7b7b] font-medium leading-[18px] truncate">
+                <p className="text-[#eeeeee] font-medium truncate">{selectedScene.name}</p>
+                <p className="text-xs text-[#7b7b7b] font-medium truncate">
                   {selectedScene.scene_type || 'Scene'}
                 </p>
               </div>
             </div>
 
             <div className="flex-1 flex items-center gap-4 justify-center">
-              <span className="text-sm text-[#7b7b7b] font-medium leading-5 whitespace-nowrap">1:24</span>
+              <span className="text-[#7b7b7b] font-medium whitespace-nowrap">1:24</span>
               <div className="flex-1 h-[5px] bg-white/20 rounded-full overflow-hidden flex">
                 <div className="flex-1 bg-white" />
                 <div className="flex-1 bg-white opacity-20" />
               </div>
-              <span className="text-sm text-[#7b7b7b] font-medium leading-5 whitespace-nowrap">3:48</span>
+              <span className="text-[#7b7b7b] font-medium whitespace-nowrap">3:48</span>
             </div>
 
             <div className="flex-1 flex items-center gap-6 justify-end">

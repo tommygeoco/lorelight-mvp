@@ -43,10 +43,10 @@ export function AudioPlayerFooter() {
 
         {/* Track Info */}
         <div className="flex flex-col">
-          <div className="text-sm font-medium text-[#eeeeee] leading-5">
+          <div className="text-sm font-medium text-[#eeeeee]">
             {currentTrack.title}
           </div>
-          <div className="text-xs font-medium text-[#7b7b7b] leading-[18px]">
+          <div className="text-xs font-medium text-[#7b7b7b]">
             {currentTrack.type}
           </div>
         </div>
@@ -55,7 +55,7 @@ export function AudioPlayerFooter() {
       {/* Center: Playback Controls */}
       <div className="flex-1 flex items-center justify-center gap-4">
         {/* Current Time */}
-        <div className="text-sm font-medium text-[#7b7b7b] leading-5">
+        <div className="text-sm font-medium text-[#7b7b7b]">
           {currentTrack.currentTime}
         </div>
 
@@ -69,7 +69,7 @@ export function AudioPlayerFooter() {
         </div>
 
         {/* Duration */}
-        <div className="text-sm font-medium text-[#7b7b7b] leading-5">
+        <div className="text-sm font-medium text-[#7b7b7b]">
           {currentTrack.duration}
         </div>
       </div>

@@ -56,7 +56,7 @@ export function SceneListItem({
 
       {/* Scene Info */}
       <div className="flex-1 text-left min-w-0">
-        <div className={`font-medium text-sm truncate ${
+        <div className={`font-medium truncate ${
           isActive ? 'text-[#eeeeee]' : 'text-white'
         }`}>
           {scene.name}
