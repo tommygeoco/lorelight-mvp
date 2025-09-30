@@ -1,7 +1,7 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
-import { Music } from 'lucide-react'
+import Link from 'next/link'
+import { ChevronRight } from 'lucide-react'
 import type { Campaign } from '@/types'
 
 interface CampaignCardProps {
@@ -27,51 +27,31 @@ function getCampaignGradient(campaignId: string): string {
 }
 
 export function CampaignCard({ campaign }: CampaignCardProps) {
-  const router = useRouter()
-
-  const handleClick = () => {
-    router.push(`/campaigns/${campaign.id}/play`)
-  }
-
   return (
-    <button
-      onClick={handleClick}
-      className="group relative flex flex-col gap-6 p-4 rounded-xl overflow-hidden text-left transition-transform hover:scale-[1.02] shadow-[0px_4px_4px_0px_rgba(0,0,0,0.25)]"
-    >
-      {/* Background with gradient */}
-      <div className="absolute inset-0 rounded-xl" style={{ background: getCampaignGradient(campaign.id) }} />
-
-      {/* Backdrop blur overlay */}
-      <div className="absolute inset-0 backdrop-blur-[50px] bg-white/[0.01]" />
-
-      {/* Content */}
-      <div className="relative z-10">
-        {/* Campaign Icon/Thumbnail */}
+    <article className="bg-white/[0.02] hover:bg-white/[0.05] transition-all rounded-xl">
+      <Link
+        href={`/campaigns/${campaign.id}/play`}
+        className="group flex items-center gap-4 p-4"
+      >
         <div
-          className="w-16 h-16 rounded-md shadow-lg"
+          className="w-14 h-14 rounded-lg flex-shrink-0 shadow-lg"
           style={{
             background: getCampaignGradient(campaign.id),
-            boxShadow: '0px 32px 9px 0px rgba(0,0,0,0), 0px 20px 8px 0px rgba(0,0,0,0.02), 0px 11px 7px 0px rgba(0,0,0,0.06), 0px 5px 5px 0px rgba(0,0,0,0.09), 0px 1px 3px 0px rgba(0,0,0,0.11)'
           }}
+          aria-hidden="true"
         />
-      </div>
 
-      {/* Campaign Info */}
-      <div className="relative z-10 flex flex-col gap-1.5">
-        <div className="flex flex-col">
-          <h3 className="text-base font-bold text-white leading-6 truncate">
+        <div className="flex-1 min-w-0">
+          <h3 className="text-base font-semibold text-white leading-6 truncate mb-1">
             {campaign.name}
           </h3>
-          <p className="text-sm font-medium text-white/60 leading-5 mix-blend-overlay">
+          <p className="text-sm text-white/50 leading-5 truncate">
             {campaign.description || 'No description'}
           </p>
         </div>
-      </div>
 
-      {/* Music Icon (top right) */}
-      <div className="absolute top-4 right-4 opacity-40 z-10">
-        <Music className="w-[18px] h-[18px] text-white" />
-      </div>
-    </button>
+        <ChevronRight className="w-5 h-5 text-white flex-shrink-0 opacity-30 group-hover:opacity-50 transition-opacity" aria-hidden="true" />
+      </Link>
+    </article>
   )
 }

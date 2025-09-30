@@ -13,17 +13,17 @@ export function AmbienceCard({ type, title, subtitle, thumbnail }: AmbienceCardP
   const isLighting = type === 'lighting'
 
   return (
-    <div className="bg-[#222222] rounded-xl p-4 relative overflow-hidden shadow-lg">
+    <div className="bg-[#222222] rounded-xl relative overflow-hidden shadow-lg h-[164px]">
       {/* Gradient decorations for lighting */}
       {isLighting && (
         <>
           <div
-            className="absolute w-40 h-40 -top-11 right-8 opacity-30 blur-2xl pointer-events-none"
-            style={{ background: 'radial-gradient(circle, rgba(139, 92, 246, 0.5) 0%, transparent 70%)' }}
+            className="absolute w-[250.43px] h-[200.85px] -top-[45.5px] left-[146.45px] opacity-100 mix-blend-screen blur-2xl pointer-events-none"
+            style={{ background: 'radial-gradient(circle, rgba(139, 92, 246, 0.6) 0%, transparent 70%)' }}
           />
           <div
-            className="absolute w-40 h-40 -top-11 left-8 opacity-30 blur-2xl pointer-events-none"
-            style={{ background: 'radial-gradient(circle, rgba(236, 72, 153, 0.5) 0%, transparent 70%)' }}
+            className="absolute w-[250.43px] h-[200.85px] -top-[45.5px] left-[236.47px] opacity-100 mix-blend-screen blur-2xl pointer-events-none"
+            style={{ background: 'radial-gradient(circle, rgba(236, 72, 153, 0.6) 0%, transparent 70%)' }}
           />
         </>
       )}
@@ -36,28 +36,29 @@ export function AmbienceCard({ type, title, subtitle, thumbnail }: AmbienceCardP
         </>
       )}
 
-      <div className={isLighting ? '' : 'relative'}>
-        {/* Thumbnail */}
+      {/* Content with 16px padding */}
+      <div className="relative p-4 flex flex-col h-full">
+        {/* Thumbnail - 64x64 at top */}
         {thumbnail ? (
           <div
-            className="w-16 h-16 rounded-md mb-6 shadow-md bg-cover bg-center"
+            className="w-16 h-16 rounded-md shadow-md bg-cover bg-center flex-shrink-0"
             style={{ backgroundImage: `url(${thumbnail})` }}
           />
         ) : (
-          <div className="w-16 h-16 rounded-md bg-gradient-to-br from-purple-500/20 to-pink-500/20 mb-6 shadow-md" />
+          <div className="w-16 h-16 rounded-md bg-gradient-to-br from-purple-500/20 to-pink-500/20 shadow-md flex-shrink-0" />
         )}
 
-        {/* Content */}
-        <div className="space-y-1.5">
-          <div className="font-bold text-white text-base truncate">
+        {/* Content - 104px from top (16px padding + 64px thumbnail + 24px gap) */}
+        <div className="mt-6">
+          <div className="font-bold text-white text-base leading-6 truncate">
             {title}
           </div>
-          <div className="font-medium text-sm text-white/70 mix-blend-overlay truncate">
+          <div className="font-medium text-sm text-white/70 mix-blend-overlay leading-5 truncate">
             {subtitle}
           </div>
         </div>
 
-        {/* Icon */}
+        {/* Icon - absolute at top-right with 16px padding */}
         {isLighting ? (
           <Lightbulb className="absolute top-4 right-4 w-[18px] h-[18px] text-white/40" />
         ) : (
