@@ -2,9 +2,16 @@
 
 import { useEffect, useState } from 'react'
 import { useSceneStore } from '@/store/sceneStore'
-import { SceneCard } from './SceneCard'
+import { SceneRow } from './SceneRow'
 import { SceneForm } from './SceneForm'
 import { Button } from '@/components/ui/button'
+import {
+  Table,
+  TableBody,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
 import {
   Dialog,
   DialogContent,
@@ -128,14 +135,27 @@ export function SceneList({ campaignId }: SceneListProps) {
           </Button>
         </div>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {sceneArray.map((scene) => (
-            <SceneCard
-              key={scene.id}
-              scene={scene}
-              onEdit={setEditingScene}
-            />
-          ))}
+        <div className="rounded-md border border-neutral-800">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Name</TableHead>
+                <TableHead>Type</TableHead>
+                <TableHead>Description</TableHead>
+                <TableHead className="text-center">Config</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {sceneArray.map((scene) => (
+                <SceneRow
+                  key={scene.id}
+                  scene={scene}
+                  onEdit={setEditingScene}
+                />
+              ))}
+            </TableBody>
+          </Table>
         </div>
       )}
 

@@ -2,9 +2,16 @@
 
 import { useEffect, useState } from 'react'
 import { useSessionStore } from '@/store/sessionStore'
-import { SessionCard } from './SessionCard'
+import { SessionRow } from './SessionRow'
 import { SessionForm } from './SessionForm'
 import { Button } from '@/components/ui/button'
+import {
+  Table,
+  TableBody,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
 import {
   Dialog,
   DialogContent,
@@ -121,14 +128,26 @@ export function SessionList({ campaignId }: SessionListProps) {
           </Button>
         </div>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {sessionArray.map((session) => (
-            <SessionCard
-              key={session.id}
-              session={session}
-              onEdit={setEditingSession}
-            />
-          ))}
+        <div className="rounded-md border border-neutral-800">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Name</TableHead>
+                <TableHead>Date</TableHead>
+                <TableHead>Description</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {sessionArray.map((session) => (
+                <SessionRow
+                  key={session.id}
+                  session={session}
+                  onEdit={setEditingSession}
+                />
+              ))}
+            </TableBody>
+          </Table>
         </div>
       )}
 
