@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/auth/supabase'
+import type { SupabaseClient } from '@supabase/supabase-js'
 import type { AudioFile, AudioFileInsert, AudioFileUpdate } from '@/types'
 
 /**
@@ -6,7 +7,14 @@ import type { AudioFile, AudioFileInsert, AudioFileUpdate } from '@/types'
  * Context7: Efficient audio file management with R2 integration
  */
 class AudioService {
-  private supabase = createClient()
+  private _supabase?: SupabaseClient
+
+  private get supabase() {
+    if (!this._supabase) {
+      this._supabase = createClient()
+    }
+    return this._supabase
+  }
 
   /**
    * Get all audio files for the current user
@@ -18,7 +26,6 @@ class AudioService {
       .order('created_at', { ascending: false })
 
     if (error) {
-      console.error('Error fetching audio files:', error)
       throw error
     }
 
@@ -36,7 +43,6 @@ class AudioService {
       .order('created_at', { ascending: false })
 
     if (error) {
-      console.error('Error fetching audio files by tags:', error)
       throw error
     }
 
@@ -54,7 +60,6 @@ class AudioService {
       .single()
 
     if (error) {
-      console.error('Error fetching audio file:', error)
       return null
     }
 
@@ -82,7 +87,6 @@ class AudioService {
       .single()
 
     if (error) {
-      console.error('Error creating audio file:', error)
       throw error
     }
 
@@ -101,7 +105,6 @@ class AudioService {
       .single()
 
     if (error) {
-      console.error('Error updating audio file:', error)
       throw error
     }
 
@@ -119,7 +122,6 @@ class AudioService {
       .eq('id', id)
 
     if (error) {
-      console.error('Error deleting audio file:', error)
       throw error
     }
   }

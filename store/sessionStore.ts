@@ -1,10 +1,11 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import { immer } from 'zustand/middleware/immer'
 import type { Session, SessionInsert } from '@/types'
 import { sessionService } from '@/lib/services/browser/sessionService'
 
 interface SessionState {
-  sessions: Record<string, Session>
+  sessions: Map<string, Session>
   isLoading: boolean
   error: string | null
   currentSessionId: string | null
@@ -20,14 +21,13 @@ interface SessionState {
 }
 
 /**
- * Session store with Zustand
+ * Session store with Zustand + Immer
  * Context7: Quick session switching with minimal state
- * Using Record instead of Map for better Zustand compatibility
  */
 export const useSessionStore = create<SessionState>()(
   persist(
-    (set) => ({
-      sessions: {},
+    immer((set, get) => ({
+      sessions: new Map(),
       isLoading: false,
       error: null,
       currentSessionId: null,
@@ -36,13 +36,12 @@ export const useSessionStore = create<SessionState>()(
         set({ isLoading: true, error: null })
         try {
           const sessions = await sessionService.listByCampaign(campaignId)
-          const sessionsRecord = sessions.reduce((acc, session) => {
-            acc[session.id] = session
-            return acc
-          }, {} as Record<string, Session>)
-          set({
-            sessions: sessionsRecord,
-            isLoading: false
+          set(state => {
+            state.sessions.clear()
+            sessions.forEach(session => {
+              state.sessions.set(session.id, session)
+            })
+            state.isLoading = false
           })
         } catch (error) {
           set({
@@ -56,13 +55,9 @@ export const useSessionStore = create<SessionState>()(
         set({ error: null })
         try {
           const newSession = await sessionService.create(session)
-          set(state => ({
-            ...state,
-            sessions: {
-              ...state.sessions,
-              [newSession.id]: newSession
-            }
-          }))
+          set(state => {
+            state.sessions.set(newSession.id, newSession)
+          })
           return newSession
         } catch (error) {
           const message = error instanceof Error ? error.message : 'Failed to create session'
@@ -73,38 +68,46 @@ export const useSessionStore = create<SessionState>()(
 
       updateSession: async (id, updates) => {
         set({ error: null })
+        const original = get().sessions.get(id)
+        if (!original) return
+
+        set(state => {
+          state.sessions.set(id, { ...original, ...updates, updated_at: new Date().toISOString() })
+        })
+
         try {
           const updated = await sessionService.update(id, updates)
-          set(state => ({
-            ...state,
-            sessions: {
-              ...state.sessions,
-              [id]: updated
-            }
-          }))
+          set(state => {
+            state.sessions.set(id, updated)
+          })
         } catch (error) {
-          const message = error instanceof Error ? error.message : 'Failed to update session'
-          set({ error: message })
+          set(state => {
+            state.sessions.set(id, original)
+            state.error = error instanceof Error ? error.message : 'Failed to update session'
+          })
           throw error
         }
       },
 
       deleteSession: async (id) => {
         set({ error: null })
+        const original = get().sessions.get(id)
+        if (!original) return
+
+        set(state => {
+          state.sessions.delete(id)
+          if (state.currentSessionId === id) {
+            state.currentSessionId = null
+          }
+        })
+
         try {
           await sessionService.delete(id)
-          set(state => {
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            const { [id]: _, ...restSessions } = state.sessions
-            return {
-              ...state,
-              sessions: restSessions,
-              currentSessionId: state.currentSessionId === id ? null : state.currentSessionId
-            }
-          })
         } catch (error) {
-          const message = error instanceof Error ? error.message : 'Failed to delete session'
-          set({ error: message })
+          set(state => {
+            state.sessions.set(id, original)
+            state.error = error instanceof Error ? error.message : 'Failed to delete session'
+          })
           throw error
         }
       },
@@ -115,21 +118,16 @@ export const useSessionStore = create<SessionState>()(
           const updated = await sessionService.setActive(id, campaignId)
           set(state => {
             // Update all sessions - deactivate others, activate target
-            const updatedSessions = { ...state.sessions }
-            Object.entries(updatedSessions).forEach(([sessionId, session]) => {
+            state.sessions.forEach((session, sessionId) => {
               if (session.campaign_id === campaignId) {
                 if (sessionId === id) {
-                  updatedSessions[sessionId] = updated
+                  state.sessions.set(sessionId, updated)
                 } else {
-                  updatedSessions[sessionId] = { ...session, status: 'planning' }
+                  state.sessions.set(sessionId, { ...session, status: 'planning' })
                 }
               }
             })
-            return {
-              ...state,
-              sessions: updatedSessions,
-              currentSessionId: id
-            }
+            state.currentSessionId = id
           })
         } catch (error) {
           const message = error instanceof Error ? error.message : 'Failed to set active session'
@@ -145,7 +143,7 @@ export const useSessionStore = create<SessionState>()(
       clearError: () => {
         set({ error: null })
       },
-    }),
+    })),
     {
       name: 'session-store',
       partialize: (state) => ({

@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/auth/supabase'
+import type { SupabaseClient } from '@supabase/supabase-js'
 import type { LightConfig, LightConfigInsert, LightConfigUpdate } from '@/types'
 
 /**
@@ -6,7 +7,14 @@ import type { LightConfig, LightConfigInsert, LightConfigUpdate } from '@/types'
  * Context7: Manages saved Philips Hue light presets
  */
 class LightService {
-  private supabase = createClient()
+  private _supabase?: SupabaseClient
+
+  private get supabase() {
+    if (!this._supabase) {
+      this._supabase = createClient()
+    }
+    return this._supabase
+  }
 
   /**
    * Get all light configs for the current user
@@ -18,7 +26,6 @@ class LightService {
       .order('created_at', { ascending: false })
 
     if (error) {
-      console.error('Error fetching light configs:', error)
       throw error
     }
 
@@ -36,7 +43,6 @@ class LightService {
       .single()
 
     if (error) {
-      console.error('Error fetching light config:', error)
       return null
     }
 
@@ -63,7 +69,6 @@ class LightService {
       .single()
 
     if (error) {
-      console.error('Error creating light config:', error)
       throw error
     }
 
@@ -82,7 +87,6 @@ class LightService {
       .single()
 
     if (error) {
-      console.error('Error updating light config:', error)
       throw error
     }
 
@@ -99,7 +103,6 @@ class LightService {
       .eq('id', id)
 
     if (error) {
-      console.error('Error deleting light config:', error)
       throw error
     }
   }
@@ -122,7 +125,6 @@ class LightService {
         throw new Error(error.message || 'Failed to apply light configuration')
       }
     } catch (error) {
-      console.error('Error applying light config:', error)
       throw error
     }
   }

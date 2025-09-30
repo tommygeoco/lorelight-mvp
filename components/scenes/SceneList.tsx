@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { useSceneStore } from '@/store/sceneStore'
 import { SceneRow } from './SceneRow'
 import { SceneForm } from './SceneForm'
@@ -39,13 +39,17 @@ export function SceneList({ campaignId }: SceneListProps) {
   const [isCreateOpen, setIsCreateOpen] = useState(false)
   const [editingScene, setEditingScene] = useState<Scene | null>(null)
 
+  const sceneArray = useMemo(
+    () => Array.from(scenes.values()).filter(s => s.campaign_id === campaignId),
+    [scenes, campaignId]
+  )
+
   useEffect(() => {
     // Only fetch if we don't have scenes for this campaign
-    const hasScenes = Object.values(scenes).some(s => s.campaign_id === campaignId)
-    if (!hasScenes && !isLoading) {
+    if (sceneArray.length === 0 && !isLoading) {
       fetchScenesForCampaign(campaignId)
     }
-  }, [campaignId, fetchScenesForCampaign, scenes, isLoading])
+  }, [campaignId, sceneArray.length, isLoading, fetchScenesForCampaign])
 
   const handleCreate = async (data: {
     name: string
@@ -83,16 +87,16 @@ export function SceneList({ campaignId }: SceneListProps) {
     setEditingScene(null)
   }
 
-  const sceneArray = Object.values(scenes).filter(
-    (s) => s.campaign_id === campaignId
-  )
-
   // Sort: active first, then by order_index
-  sceneArray.sort((a, b) => {
-    if (a.is_active && !b.is_active) return -1
-    if (!a.is_active && b.is_active) return 1
-    return a.order_index - b.order_index
-  })
+  const sortedScenes = useMemo(() => {
+    const sorted = [...sceneArray]
+    sorted.sort((a, b) => {
+      if (a.is_active && !b.is_active) return -1
+      if (!a.is_active && b.is_active) return 1
+      return a.order_index - b.order_index
+    })
+    return sorted
+  }, [sceneArray])
 
   if (isLoading) {
     return (
@@ -123,7 +127,7 @@ export function SceneList({ campaignId }: SceneListProps) {
         </div>
       )}
 
-      {sceneArray.length === 0 ? (
+      {sortedScenes.length === 0 ? (
         <div className="rounded-lg border-2 border-dashed border-neutral-800 p-12 text-center">
           <h3 className="text-lg font-medium text-white">No scenes yet</h3>
           <p className="mt-2 text-sm text-neutral-400">
@@ -147,7 +151,7 @@ export function SceneList({ campaignId }: SceneListProps) {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {sceneArray.map((scene) => (
+              {sortedScenes.map((scene) => (
                 <SceneRow
                   key={scene.id}
                   scene={scene}

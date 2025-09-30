@@ -1,12 +1,20 @@
 import { createClient } from '@/lib/auth/supabase'
 import type { Campaign, CampaignInsert, CampaignUpdate } from '@/types'
+import type { SupabaseClient } from '@supabase/supabase-js'
 
 /**
  * Campaign service for CRUD operations
  * Context7: Direct, efficient database operations
  */
 class CampaignService {
-  private supabase = createClient()
+  private _supabase?: SupabaseClient
+
+  private get supabase() {
+    if (!this._supabase) {
+      this._supabase = createClient()
+    }
+    return this._supabase
+  }
 
   /**
    * Get all campaigns for the current user
@@ -18,7 +26,6 @@ class CampaignService {
       .order('created_at', { ascending: false })
 
     if (error) {
-      console.error('Error fetching campaigns:', error)
       throw error
     }
 
@@ -36,7 +43,6 @@ class CampaignService {
       .single()
 
     if (error) {
-      console.error('Error fetching campaign:', error)
       return null
     }
 
@@ -63,7 +69,6 @@ class CampaignService {
       .single()
 
     if (error) {
-      console.error('Error creating campaign:', error)
       throw error
     }
 
@@ -82,7 +87,6 @@ class CampaignService {
       .single()
 
     if (error) {
-      console.error('Error updating campaign:', error)
       throw error
     }
 
@@ -99,7 +103,6 @@ class CampaignService {
       .eq('id', id)
 
     if (error) {
-      console.error('Error deleting campaign:', error)
       throw error
     }
   }

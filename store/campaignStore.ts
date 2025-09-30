@@ -25,7 +25,7 @@ interface CampaignState {
  */
 export const useCampaignStore = create<CampaignState>()(
   persist(
-    immer((set) => ({
+    immer((set, get) => ({
       campaigns: new Map(),
       isLoading: false,
       error: null,
@@ -36,7 +36,10 @@ export const useCampaignStore = create<CampaignState>()(
         try {
           const campaigns = await campaignService.list()
           set(state => {
-            state.campaigns = new Map(campaigns.map(c => [c.id, c]))
+            state.campaigns.clear()
+            campaigns.forEach(campaign => {
+              state.campaigns.set(campaign.id, campaign)
+            })
             state.isLoading = false
           })
         } catch (error) {
@@ -49,46 +52,87 @@ export const useCampaignStore = create<CampaignState>()(
 
       createCampaign: async (campaign) => {
         set({ error: null })
+        // Optimistic ID (will be replaced by real ID from database)
+        const tempId = `temp-${Date.now()}`
+        const optimisticCampaign = {
+          id: tempId,
+          user_id: '',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          ...campaign,
+        }
+
+        // Optimistically add to state
+        set(state => {
+          state.campaigns.set(tempId, optimisticCampaign)
+        })
+
         try {
           const newCampaign = await campaignService.create(campaign)
+          // Replace optimistic entry with real data
           set(state => {
+            state.campaigns.delete(tempId)
             state.campaigns.set(newCampaign.id, newCampaign)
           })
           return newCampaign
         } catch (error) {
-          const message = error instanceof Error ? error.message : 'Failed to create campaign'
-          set({ error: message })
+          // Rollback on error
+          set(state => {
+            state.campaigns.delete(tempId)
+            state.error = error instanceof Error ? error.message : 'Failed to create campaign'
+          })
           throw error
         }
       },
 
       updateCampaign: async (id, updates) => {
         set({ error: null })
+        // Store original for rollback
+        const original = get().campaigns.get(id)
+        if (!original) return
+
+        // Optimistically update
+        set(state => {
+          state.campaigns.set(id, { ...original, ...updates, updated_at: new Date().toISOString() })
+        })
+
         try {
           const updated = await campaignService.update(id, updates)
           set(state => {
             state.campaigns.set(id, updated)
           })
         } catch (error) {
-          const message = error instanceof Error ? error.message : 'Failed to update campaign'
-          set({ error: message })
+          // Rollback on error
+          set(state => {
+            state.campaigns.set(id, original)
+            state.error = error instanceof Error ? error.message : 'Failed to update campaign'
+          })
           throw error
         }
       },
 
       deleteCampaign: async (id) => {
         set({ error: null })
+        // Store original for rollback
+        const original = get().campaigns.get(id)
+        if (!original) return
+
+        // Optimistically remove
+        set(state => {
+          state.campaigns.delete(id)
+          if (state.currentCampaignId === id) {
+            state.currentCampaignId = null
+          }
+        })
+
         try {
           await campaignService.delete(id)
-          set(state => {
-            state.campaigns.delete(id)
-            if (state.currentCampaignId === id) {
-              state.currentCampaignId = null
-            }
-          })
         } catch (error) {
-          const message = error instanceof Error ? error.message : 'Failed to delete campaign'
-          set({ error: message })
+          // Rollback on error
+          set(state => {
+            state.campaigns.set(id, original)
+            state.error = error instanceof Error ? error.message : 'Failed to delete campaign'
+          })
           throw error
         }
       },

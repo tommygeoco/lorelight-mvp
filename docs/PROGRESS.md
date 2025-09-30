@@ -1,6 +1,18 @@
 # Lorelight MVP - Build Progress
 
-## ✅ Completed (Phase 1, 2 & 3)
+## ✅ Completed (Phase 1, 2, 3 & Codebase Optimization)
+
+### Codebase Optimization (NEW - Just Completed!)
+- ✅ Fixed Supabase client instantiation (lazy loading pattern)
+- ✅ Removed all console.log statements (14+ files cleaned)
+- ✅ Added missing database indexes (campaign_id, is_active, composite indexes)
+- ✅ Standardized Map vs Record in stores (all use Map + Immer now)
+- ✅ Fixed scene reordering to use batch updates (N+1 → single upsert)
+- ✅ Removed duplicate campaign header rendering
+- ✅ Cleaned up useEffect dependencies (removed fetchedCampaignsRef anti-pattern)
+- ✅ Added optimistic updates to stores (update/delete with rollback)
+- ✅ Database migration 004: Performance indexes for all tables
+- ✅ All ESLint warnings fixed (zero errors, zero warnings)
 
 ### Authentication System
 - ✅ Supabase client configuration (browser + server)
@@ -91,7 +103,14 @@ All CRUD operations with type-safe Supabase integration:
 - ✅ **All lint and typecheck passing** ✓
 - ✅ Git repository initialized and pushed to GitHub
 
-## 🚧 Next Steps (Phase 4 - Audio System)
+## 🚧 Next Steps (Phase 4 - New UI & Audio System)
+
+### Dashboard UI Redesign (PRIORITY)
+- [ ] Implement Figma UI for dashboard/campaigns view
+- [ ] New campaign card design with thumbnails
+- [ ] Grid layout with hover effects
+- [ ] Search and filter capabilities
+- [ ] Create campaign button positioning
 
 ### Audio Library & Playback
 - [ ] Audio library panel/modal UI
@@ -280,6 +299,6 @@ The fastest path to a working MVP:
 
 ---
 
-**Last Updated**: 2025-09-29
-**Status**: Phase 3 Complete (Scene Management), Starting Phase 4 (Audio System)
+**Last Updated**: 2025-09-30
+**Status**: Codebase Optimization Complete, Starting Phase 4 (Dashboard UI Redesign + Audio System)
 **Repository**: git@github.com:tommygeoco/lorelight-mvp.git

@@ -55,7 +55,7 @@ export function CampaignList() {
 
   const handleSelect = (campaign: Campaign) => {
     setCurrentCampaign(campaign.id)
-    router.push(`/campaigns/${campaign.id}`)
+    router.push(`/campaigns/${campaign.id}/play`)
   }
 
   const campaignArray = Array.from(campaigns.values())

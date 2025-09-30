@@ -1,10 +1,11 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import { immer } from 'zustand/middleware/immer'
 import type { Scene, SceneInsert } from '@/types'
 import { sceneService } from '@/lib/services/browser/sceneService'
 
 interface SceneState {
-  scenes: Record<string, Scene>
+  scenes: Map<string, Scene>
   isLoading: boolean
   error: string | null
   currentSceneId: string | null
@@ -21,14 +22,13 @@ interface SceneState {
 }
 
 /**
- * Scene store with Zustand
+ * Scene store with Zustand + Immer
  * Context7: Quick scene switching with minimal state
- * Using Record instead of Map for better Zustand compatibility
  */
 export const useSceneStore = create<SceneState>()(
   persist(
-    (set) => ({
-      scenes: {},
+    immer((set, get) => ({
+      scenes: new Map(),
       isLoading: false,
       error: null,
       currentSceneId: null,
@@ -37,13 +37,12 @@ export const useSceneStore = create<SceneState>()(
         set({ isLoading: true, error: null })
         try {
           const scenes = await sceneService.listByCampaign(campaignId)
-          const scenesRecord = scenes.reduce((acc, scene) => {
-            acc[scene.id] = scene
-            return acc
-          }, {} as Record<string, Scene>)
-          set({
-            scenes: scenesRecord,
-            isLoading: false
+          set(state => {
+            state.scenes.clear()
+            scenes.forEach(scene => {
+              state.scenes.set(scene.id, scene)
+            })
+            state.isLoading = false
           })
         } catch (error) {
           set({
@@ -57,13 +56,9 @@ export const useSceneStore = create<SceneState>()(
         set({ error: null })
         try {
           const newScene = await sceneService.create(scene)
-          set(state => ({
-            ...state,
-            scenes: {
-              ...state.scenes,
-              [newScene.id]: newScene
-            }
-          }))
+          set(state => {
+            state.scenes.set(newScene.id, newScene)
+          })
           return newScene
         } catch (error) {
           const message = error instanceof Error ? error.message : 'Failed to create scene'
@@ -74,38 +69,46 @@ export const useSceneStore = create<SceneState>()(
 
       updateScene: async (id, updates) => {
         set({ error: null })
+        const original = get().scenes.get(id)
+        if (!original) return
+
+        set(state => {
+          state.scenes.set(id, { ...original, ...updates, updated_at: new Date().toISOString() })
+        })
+
         try {
           const updated = await sceneService.update(id, updates)
-          set(state => ({
-            ...state,
-            scenes: {
-              ...state.scenes,
-              [id]: updated
-            }
-          }))
+          set(state => {
+            state.scenes.set(id, updated)
+          })
         } catch (error) {
-          const message = error instanceof Error ? error.message : 'Failed to update scene'
-          set({ error: message })
+          set(state => {
+            state.scenes.set(id, original)
+            state.error = error instanceof Error ? error.message : 'Failed to update scene'
+          })
           throw error
         }
       },
 
       deleteScene: async (id) => {
         set({ error: null })
+        const original = get().scenes.get(id)
+        if (!original) return
+
+        set(state => {
+          state.scenes.delete(id)
+          if (state.currentSceneId === id) {
+            state.currentSceneId = null
+          }
+        })
+
         try {
           await sceneService.delete(id)
-          set(state => {
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            const { [id]: _, ...restScenes } = state.scenes
-            return {
-              ...state,
-              scenes: restScenes,
-              currentSceneId: state.currentSceneId === id ? null : state.currentSceneId
-            }
-          })
         } catch (error) {
-          const message = error instanceof Error ? error.message : 'Failed to delete scene'
-          set({ error: message })
+          set(state => {
+            state.scenes.set(id, original)
+            state.error = error instanceof Error ? error.message : 'Failed to delete scene'
+          })
           throw error
         }
       },
@@ -116,21 +119,16 @@ export const useSceneStore = create<SceneState>()(
           const updated = await sceneService.setActive(id, campaignId)
           set(state => {
             // Update all scenes - deactivate others, activate target
-            const updatedScenes = { ...state.scenes }
-            Object.entries(updatedScenes).forEach(([sceneId, scene]) => {
+            state.scenes.forEach((scene, sceneId) => {
               if (scene.campaign_id === campaignId) {
                 if (sceneId === id) {
-                  updatedScenes[sceneId] = updated
+                  state.scenes.set(sceneId, updated)
                 } else {
-                  updatedScenes[sceneId] = { ...scene, is_active: false }
+                  state.scenes.set(sceneId, { ...scene, is_active: false })
                 }
               }
             })
-            return {
-              ...state,
-              scenes: updatedScenes,
-              currentSceneId: id
-            }
+            state.currentSceneId = id
           })
         } catch (error) {
           const message = error instanceof Error ? error.message : 'Failed to set active scene'
@@ -145,16 +143,12 @@ export const useSceneStore = create<SceneState>()(
           await sceneService.reorder(campaignId, sceneIds)
           // Update local state with new order
           set(state => {
-            const updatedScenes = { ...state.scenes }
             sceneIds.forEach((id, index) => {
-              if (updatedScenes[id]) {
-                updatedScenes[id] = { ...updatedScenes[id], order_index: index }
+              const scene = state.scenes.get(id)
+              if (scene) {
+                state.scenes.set(id, { ...scene, order_index: index })
               }
             })
-            return {
-              ...state,
-              scenes: updatedScenes
-            }
           })
         } catch (error) {
           const message = error instanceof Error ? error.message : 'Failed to reorder scenes'
@@ -170,7 +164,7 @@ export const useSceneStore = create<SceneState>()(
       clearError: () => {
         set({ error: null })
       },
-    }),
+    })),
     {
       name: 'scene-store',
       partialize: (state) => ({

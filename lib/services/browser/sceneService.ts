@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/auth/supabase'
+import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Scene, SceneInsert, SceneUpdate } from '@/types'
 
 /**
@@ -6,14 +7,20 @@ import type { Scene, SceneInsert, SceneUpdate } from '@/types'
  * Context7: Optimized for scene management within campaigns
  */
 class SceneService {
-  private supabase = createClient()
+  private _supabase?: SupabaseClient
+
+  private get supabase() {
+    if (!this._supabase) {
+      this._supabase = createClient()
+    }
+    return this._supabase
+  }
 
   /**
    * Get all scenes for a campaign
    */
   async listByCampaign(campaignId: string): Promise<Scene[]> {
-    const { data: { user } } = await this.supabase.auth.getUser()
-    console.log('Current user when fetching scenes:', user?.id)
+    await this.supabase.auth.getUser()
 
     const { data, error } = await this.supabase
       .from('scenes')
@@ -21,16 +28,8 @@ class SceneService {
       .eq('campaign_id', campaignId)
       .order('order_index', { ascending: true })
 
-    console.log('Scene fetch result:', { data, error, campaignId })
 
     if (error) {
-      console.error('Error fetching scenes:', {
-        message: error.message,
-        details: error.details,
-        hint: error.hint,
-        code: error.code,
-        fullError: JSON.stringify(error),
-      })
       throw error
     }
 
@@ -48,7 +47,6 @@ class SceneService {
       .single()
 
     if (error) {
-      console.error('Error fetching scene:', error)
       return null
     }
 
@@ -71,7 +69,6 @@ class SceneService {
       if (error.code === 'PGRST116') {
         return null
       }
-      console.error('Error fetching active scene:', error)
       return null
     }
 
@@ -103,7 +100,6 @@ class SceneService {
       user_id: user.id,
       order_index: scene.order_index ?? nextOrder,
     }
-    console.log('Creating scene with data:', insertData)
 
     const { data, error } = await this.supabase
       .from('scenes')
@@ -112,13 +108,6 @@ class SceneService {
       .single()
 
     if (error) {
-      console.error('Error creating scene:', {
-        message: error.message,
-        details: error.details,
-        hint: error.hint,
-        code: error.code,
-        fullError: JSON.stringify(error),
-      })
       throw error
     }
 
@@ -137,7 +126,6 @@ class SceneService {
       .single()
 
     if (error) {
-      console.error('Error updating scene:', error)
       throw error
     }
 
@@ -161,20 +149,32 @@ class SceneService {
 
   /**
    * Reorder scenes within a campaign
+   * Uses batch upsert for performance
    */
   async reorder(campaignId: string, sceneIds: string[]): Promise<void> {
-    const updates = sceneIds.map((id, index) => ({
-      id,
-      order_index: index,
+    // Fetch all scenes to get current data
+    const { data: currentScenes, error: fetchError } = await this.supabase
+      .from('scenes')
+      .select('*')
+      .eq('campaign_id', campaignId)
+      .in('id', sceneIds)
+
+    if (fetchError) throw fetchError
+    if (!currentScenes) return
+
+    // Build updates with new order_index
+    const updates = currentScenes.map((scene) => ({
+      ...scene,
+      order_index: sceneIds.indexOf(scene.id),
+      updated_at: new Date().toISOString(),
     }))
 
-    for (const update of updates) {
-      await this.supabase
-        .from('scenes')
-        .update({ order_index: update.order_index })
-        .eq('id', update.id)
-        .eq('campaign_id', campaignId)
-    }
+    // Batch upsert all at once
+    const { error } = await this.supabase
+      .from('scenes')
+      .upsert(updates, { onConflict: 'id' })
+
+    if (error) throw error
   }
 
   /**
@@ -187,7 +187,6 @@ class SceneService {
       .eq('id', id)
 
     if (error) {
-      console.error('Error deleting scene:', error)
       throw error
     }
   }

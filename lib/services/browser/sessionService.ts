@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/auth/supabase'
+import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Session, SessionInsert, SessionUpdate } from '@/types'
 
 /**
@@ -6,15 +7,21 @@ import type { Session, SessionInsert, SessionUpdate } from '@/types'
  * Context7: Optimized for session management within campaigns
  */
 class SessionService {
-  private supabase = createClient()
+  private _supabase?: SupabaseClient
+
+  private get supabase() {
+    if (!this._supabase) {
+      this._supabase = createClient()
+    }
+    return this._supabase
+  }
 
   /**
    * Get all sessions for a campaign
    */
   async listByCampaign(campaignId: string): Promise<Session[]> {
     // Check if user is authenticated
-    const { data: { user } } = await this.supabase.auth.getUser()
-    console.log('Current user when fetching sessions:', user?.id)
+    await this.supabase.auth.getUser()
 
     const { data, error } = await this.supabase
       .from('sessions')
@@ -22,16 +29,8 @@ class SessionService {
       .eq('campaign_id', campaignId)
       .order('created_at', { ascending: false })
 
-    console.log('Session fetch result:', { data, error, campaignId })
 
     if (error) {
-      console.error('Error fetching sessions:', {
-        message: error.message,
-        details: error.details,
-        hint: error.hint,
-        code: error.code,
-        fullError: JSON.stringify(error),
-      })
       throw error
     }
 
@@ -49,7 +48,6 @@ class SessionService {
       .single()
 
     if (error) {
-      console.error('Error fetching session:', error)
       return null
     }
 
@@ -72,7 +70,6 @@ class SessionService {
       if (error.code === 'PGRST116') {
         return null
       }
-      console.error('Error fetching active session:', error)
       return null
     }
 
@@ -93,7 +90,6 @@ class SessionService {
       ...session,
       user_id: user.id,
     }
-    console.log('Creating session with data:', insertData)
 
     const { data, error } = await this.supabase
       .from('sessions')
@@ -102,13 +98,6 @@ class SessionService {
       .single()
 
     if (error) {
-      console.error('Error creating session:', {
-        message: error.message,
-        details: error.details,
-        hint: error.hint,
-        code: error.code,
-        fullError: JSON.stringify(error),
-      })
       throw error
     }
 
@@ -127,7 +116,6 @@ class SessionService {
       .single()
 
     if (error) {
-      console.error('Error updating session:', error)
       throw error
     }
 
@@ -159,7 +147,6 @@ class SessionService {
       .eq('id', id)
 
     if (error) {
-      console.error('Error deleting session:', error)
       throw error
     }
   }

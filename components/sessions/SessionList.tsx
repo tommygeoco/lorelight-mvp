@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { useSessionStore } from '@/store/sessionStore'
 import { SessionRow } from './SessionRow'
 import { SessionForm } from './SessionForm'
@@ -39,13 +39,17 @@ export function SessionList({ campaignId }: SessionListProps) {
   const [isCreateOpen, setIsCreateOpen] = useState(false)
   const [editingSession, setEditingSession] = useState<Session | null>(null)
 
+  const sessionArray = useMemo(
+    () => Array.from(sessions.values()).filter(s => s.campaign_id === campaignId),
+    [sessions, campaignId]
+  )
+
   useEffect(() => {
     // Only fetch if we don't have sessions for this campaign
-    const hasSessions = Object.values(sessions).some(s => s.campaign_id === campaignId)
-    if (!hasSessions && !isLoading) {
+    if (sessionArray.length === 0 && !isLoading) {
       fetchSessionsForCampaign(campaignId)
     }
-  }, [campaignId, fetchSessionsForCampaign, sessions, isLoading])
+  }, [campaignId, sessionArray.length, isLoading, fetchSessionsForCampaign])
 
   const handleCreate = async (data: {
     name: string
@@ -75,17 +79,17 @@ export function SessionList({ campaignId }: SessionListProps) {
     setEditingSession(null)
   }
 
-  const sessionArray = Object.values(sessions).filter(
-    (s) => s.campaign_id === campaignId
-  )
-
-  // Sort: active first, then by created date, then by name
-  sessionArray.sort((a, b) => {
-    if (a.status === 'active' && b.status !== 'active') return -1
-    if (a.status !== 'active' && b.status === 'active') return 1
-    // Sort by created_at (most recent first)
-    return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-  })
+  // Sort: active first, then by created date
+  const sortedSessions = useMemo(() => {
+    const sorted = [...sessionArray]
+    sorted.sort((a, b) => {
+      if (a.status === 'active' && b.status !== 'active') return -1
+      if (a.status !== 'active' && b.status === 'active') return 1
+      // Sort by created_at (most recent first)
+      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    })
+    return sorted
+  }, [sessionArray])
 
   if (isLoading) {
     return (
@@ -116,7 +120,7 @@ export function SessionList({ campaignId }: SessionListProps) {
         </div>
       )}
 
-      {sessionArray.length === 0 ? (
+      {sortedSessions.length === 0 ? (
         <div className="rounded-lg border-2 border-dashed border-neutral-800 p-12 text-center">
           <h3 className="text-lg font-medium text-white">No sessions yet</h3>
           <p className="mt-2 text-sm text-neutral-400">
@@ -139,7 +143,7 @@ export function SessionList({ campaignId }: SessionListProps) {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {sessionArray.map((session) => (
+              {sortedSessions.map((session) => (
                 <SessionRow
                   key={session.id}
                   session={session}
