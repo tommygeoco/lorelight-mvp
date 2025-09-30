@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useCampaignStore } from '@/store/campaignStore'
 import { useSessionStore } from '@/store/sessionStore'
 import { Button } from '@/components/ui/button'
-import { Plus, Play, ChevronLeft, CirclePlay, BookOpen, Music, Flame } from 'lucide-react'
+import { Plus, Play, ChevronLeft, CirclePlay, Settings, Music, Flame } from 'lucide-react'
 import { PageHeader } from '@/components/ui/PageHeader'
 import type { Session } from '@/types'
 import { STRINGS } from '@/lib/constants/strings'
@@ -39,9 +39,8 @@ export default function SessionsPage({
 
   if (!campaign && campaigns.size === 0) {
     return (
-      <div className="h-screen bg-[#111111]">
-        <PageHeader title="Sessions" description="Loading..." />
-        <div className="max-w-[1280px] mx-auto px-8 py-8 space-y-4">
+      <div className="h-screen bg-[#111111] flex items-center justify-center">
+        <div className="space-y-4">
           <CampaignCardSkeleton />
           <CampaignCardSkeleton />
         </div>
@@ -74,10 +73,10 @@ export default function SessionsPage({
   }
 
   return (
-    <div className="h-screen w-full bg-[#111111]">
-      <div className="h-full flex overflow-hidden">
+    <div className="h-screen w-full bg-[#111111] flex flex-col">
+      <div className="flex-1 min-h-0 flex overflow-hidden gap-2 p-2">
         {/* Navigation Sidebar */}
-        <nav className="w-[72px] flex-shrink-0 p-2" aria-label="Main navigation">
+        <nav className="w-14 flex-shrink-0" aria-label="Main navigation">
           <div className="bg-[#191919] rounded-lg p-2 h-full flex flex-col gap-2">
             <button
               onClick={() => router.push('/campaigns')}
@@ -88,25 +87,25 @@ export default function SessionsPage({
             </button>
             <button
               className="w-10 h-10 rounded-lg bg-white/[0.07] hover:bg-white/10 flex items-center justify-center transition-colors"
-              aria-label="Play"
+              aria-label="Sessions"
             >
               <CirclePlay className="w-[18px] h-[18px] text-white/70" />
             </button>
             <button
               className="w-10 h-10 rounded-lg hover:bg-white/5 flex items-center justify-center transition-colors"
-              aria-label="Library"
+              aria-label="Campaign settings"
             >
-              <BookOpen className="w-[18px] h-[18px] text-white/70" />
+              <Settings className="w-[18px] h-[18px] text-white/70" />
             </button>
             <button
               className="w-10 h-10 rounded-lg hover:bg-white/5 flex items-center justify-center transition-colors"
-              aria-label="Music"
+              aria-label="Music library"
             >
               <Music className="w-[18px] h-[18px] text-white/70" />
             </button>
             <button
               className="w-10 h-10 rounded-lg hover:bg-white/5 flex items-center justify-center transition-colors"
-              aria-label="Effects"
+              aria-label="Lighting effects"
             >
               <Flame className="w-[18px] h-[18px] text-white/70" />
             </button>
@@ -114,14 +113,15 @@ export default function SessionsPage({
         </nav>
 
         {/* Main Content */}
-        <div className="flex-1 flex flex-col overflow-hidden">
+        <main className="flex-1 bg-[#191919] rounded-tl-lg rounded-tr-2xl flex flex-col overflow-hidden">
           <PageHeader
             title={campaign.name}
             description={campaign.description || 'Select a session to begin playing'}
           />
 
-          <div className="flex-1 overflow-auto">
-            <div className="max-w-[1280px] mx-auto px-8 py-8">
+          {/* Sessions Content */}
+          <div className="flex-1 overflow-y-auto">
+            <div className="w-[640px] mx-auto pt-[40px] pb-[40px]">
               {/* Header with create button */}
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-2xl font-semibold text-white">Sessions</h2>
@@ -148,7 +148,7 @@ export default function SessionsPage({
                   </Button>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-4">
                   {campaignSessions.map((session) => (
                     <article
                       key={session.id}
@@ -195,7 +195,7 @@ export default function SessionsPage({
               )}
             </div>
           </div>
-        </div>
+        </main>
       </div>
     </div>
   )
