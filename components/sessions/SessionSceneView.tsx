@@ -138,37 +138,37 @@ export function SessionSceneView({ campaignId }: SessionSceneViewProps) {
       <div className="flex-1 min-h-0 flex overflow-hidden gap-2 px-2 pt-2">
         {/* Navigation Sidebar */}
         <nav className="w-14 flex-shrink-0" aria-label="Main navigation">
-          <div className="bg-[#191919] rounded-[24px] p-2 h-full flex flex-col gap-2">
+          <div className="bg-[#191919] rounded-lg p-2 h-full flex flex-col gap-2">
             <button
               onClick={() => router.back()}
-              className="w-10 h-10 rounded-[24px] hover:bg-white/5 flex items-center justify-center transition-colors"
+              className="w-10 h-10 rounded-lg hover:bg-white/5 flex items-center justify-center transition-colors"
               aria-label="Navigate back"
             >
               <ChevronLeft className="w-[18px] h-[18px] text-white/70" />
             </button>
             <button
-              className="w-10 h-10 rounded-[24px] bg-white/[0.07] hover:bg-white/10 flex items-center justify-center transition-colors"
+              className="w-10 h-10 rounded-lg bg-white/[0.07] hover:bg-white/10 flex items-center justify-center transition-colors"
               aria-label="Play scene"
             >
               <CirclePlay className="w-[18px] h-[18px] text-white/70" />
             </button>
             <button
               onClick={() => router.push(`/campaigns/${campaignId}`)}
-              className="w-10 h-10 rounded-[24px] hover:bg-white/5 flex items-center justify-center transition-colors"
+              className="w-10 h-10 rounded-lg hover:bg-white/5 flex items-center justify-center transition-colors"
               aria-label="Campaign settings"
             >
               <Settings className="w-[18px] h-[18px] text-white/70" />
             </button>
             <button
               onClick={() => setIsAudioLibraryOpen(true)}
-              className="w-10 h-10 rounded-[24px] hover:bg-white/5 flex items-center justify-center transition-colors"
+              className="w-10 h-10 rounded-lg hover:bg-white/5 flex items-center justify-center transition-colors"
               aria-label="Music library"
             >
               <Music className="w-[18px] h-[18px] text-white/70" />
             </button>
             <button
               onClick={() => setIsHueSetupOpen(true)}
-              className="w-10 h-10 rounded-[24px] hover:bg-white/5 flex items-center justify-center transition-colors"
+              className="w-10 h-10 rounded-lg hover:bg-white/5 flex items-center justify-center transition-colors"
               aria-label="Lighting effects"
             >
               <Flame className="w-[18px] h-[18px] text-white/70" />
@@ -178,7 +178,7 @@ export function SessionSceneView({ campaignId }: SessionSceneViewProps) {
 
         {/* Scenes List Sidebar */}
         <aside className="w-80 flex-shrink-0" aria-label="Scenes list">
-          <div className="bg-[#191919] rounded-[24px] p-3 h-full flex flex-col overflow-y-auto">
+          <div className="bg-[#191919] rounded-lg p-3 h-full flex flex-col overflow-y-auto">
             <header className="flex items-center justify-between p-2 mb-2">
               <h2 className="text-[#b4b4b4] font-semibold text-base">Scenes</h2>
               <button
@@ -217,7 +217,7 @@ export function SessionSceneView({ campaignId }: SessionSceneViewProps) {
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1 bg-[#191919] rounded-[24px] flex flex-col overflow-hidden">
+        <main className="flex-1 bg-[#191919] rounded-lg flex flex-col overflow-hidden">
           {selectedScene ? (
             <>
               <PageHeader title={selectedScene.name} description={selectedScene.description || undefined} />
@@ -278,10 +278,8 @@ export function SessionSceneView({ campaignId }: SessionSceneViewProps) {
         </main>
       </div>
 
-      {/* Audio Player Footer */}
-      <footer className="flex-shrink-0 bg-[#111111] px-2 pb-2">
-        <AudioPlayerFooter />
-      </footer>
+      {/* Audio Player Footer - Only show when track is loaded */}
+      <AudioPlayerFooter />
 
       <SceneModal
         isOpen={isSceneModalOpen}

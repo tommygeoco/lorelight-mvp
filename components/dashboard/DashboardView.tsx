@@ -35,34 +35,34 @@ export function DashboardView() {
       <div className="flex-1 min-h-0 flex overflow-hidden gap-2 px-2 pt-2">
         {/* Navigation Sidebar */}
         <nav className="w-14 flex-shrink-0" aria-label="Main navigation">
-          <div className="bg-[#191919] rounded-[24px] p-2 h-full flex flex-col gap-2">
+          <div className="bg-[#191919] rounded-lg p-2 h-full flex flex-col gap-2">
             <button
               onClick={() => router.push('/')}
-              className="w-10 h-10 rounded-[24px] hover:bg-white/5 flex items-center justify-center transition-colors"
+              className="w-10 h-10 rounded-lg hover:bg-white/5 flex items-center justify-center transition-colors"
               aria-label="Navigate back"
             >
               <ChevronLeft className="w-[18px] h-[18px] text-white/70" />
             </button>
             <button
-              className="w-10 h-10 rounded-[24px] bg-white/[0.07] hover:bg-white/10 flex items-center justify-center transition-colors"
+              className="w-10 h-10 rounded-lg bg-white/[0.07] hover:bg-white/10 flex items-center justify-center transition-colors"
               aria-label="Play"
             >
               <CirclePlay className="w-[18px] h-[18px] text-white/70" />
             </button>
             <button
-              className="w-10 h-10 rounded-[24px] hover:bg-white/5 flex items-center justify-center transition-colors"
+              className="w-10 h-10 rounded-lg hover:bg-white/5 flex items-center justify-center transition-colors"
               aria-label="Library"
             >
               <BookOpen className="w-[18px] h-[18px] text-white/70" />
             </button>
             <button
-              className="w-10 h-10 rounded-[24px] hover:bg-white/5 flex items-center justify-center transition-colors"
+              className="w-10 h-10 rounded-lg hover:bg-white/5 flex items-center justify-center transition-colors"
               aria-label="Music"
             >
               <Music className="w-[18px] h-[18px] text-white/70" />
             </button>
             <button
-              className="w-10 h-10 rounded-[24px] hover:bg-white/5 flex items-center justify-center transition-colors"
+              className="w-10 h-10 rounded-lg hover:bg-white/5 flex items-center justify-center transition-colors"
               aria-label="Effects"
             >
               <Flame className="w-[18px] h-[18px] text-white/70" />
@@ -71,7 +71,7 @@ export function DashboardView() {
         </nav>
 
         {/* Main Content */}
-        <main className="flex-1 bg-[#191919] rounded-[24px] overflow-hidden flex flex-col">
+        <main className="flex-1 bg-[#191919] rounded-lg overflow-hidden flex flex-col">
           <PageHeader title="Campaigns" description="Text description" />
 
           {/* Campaign List Section */}
@@ -96,10 +96,8 @@ export function DashboardView() {
         </main>
       </div>
 
-      {/* Audio Player Footer */}
-      <footer className="flex-shrink-0 bg-[#111111] px-2 pb-2">
-        <AudioPlayerFooter />
-      </footer>
+      {/* Audio Player Footer - Only show when track is loaded */}
+      <AudioPlayerFooter />
 
       <CampaignModal
         isOpen={isCampaignModalOpen}

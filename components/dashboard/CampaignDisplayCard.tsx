@@ -30,7 +30,7 @@ export function CampaignDisplayCard({ campaign, onEdit }: CampaignCardProps) {
   }
 
   return (
-    <article className="bg-white/[0.02] hover:bg-white/[0.05] transition-all rounded-[24px]">
+    <article className="bg-white/[0.02] hover:bg-white/[0.05] transition-all rounded-lg">
       <Link
         href={`/campaigns/${campaign.id}/sessions`}
         className="group flex items-center gap-4 p-4"
@@ -38,7 +38,7 @@ export function CampaignDisplayCard({ campaign, onEdit }: CampaignCardProps) {
         prefetch={true}
       >
         <div
-          className="w-14 h-14 rounded-[24px] flex-shrink-0 shadow-lg"
+          className="w-14 h-14 rounded-lg flex-shrink-0 shadow-lg"
           style={{
             background: getCampaignGradient(campaign.id),
           }}
@@ -57,7 +57,7 @@ export function CampaignDisplayCard({ campaign, onEdit }: CampaignCardProps) {
         {onEdit && (
           <button
             onClick={handleEditClick}
-            className="w-8 h-8 rounded-[24px] hover:bg-white/10 flex items-center justify-center transition-colors opacity-0 group-hover:opacity-100"
+            className="w-8 h-8 rounded-lg hover:bg-white/10 flex items-center justify-center transition-colors opacity-0 group-hover:opacity-100"
             aria-label="Edit campaign"
           >
             <Settings className="w-4 h-4 text-white/70" />

@@ -21,13 +21,9 @@ export function AudioPlayerFooter() {
   const audioFileMap = audioFiles instanceof Map ? audioFiles : new Map()
   const currentTrack = currentTrackId ? audioFileMap.get(currentTrackId) : null
 
-  // Show minimal footer if no track is loaded
+  // Hide footer completely if no track is loaded
   if (!currentTrack) {
-    return (
-      <div className="flex items-center justify-center px-6 py-4">
-        <div className="text-sm text-white/40">No audio playing</div>
-      </div>
-    )
+    return null
   }
 
   // Format time as MM:SS
@@ -45,7 +41,7 @@ export function AudioPlayerFooter() {
       {/* Left: Track Info */}
       <div className="flex-1 flex items-center gap-2">
         {/* Lighting Icon */}
-        <div className="relative w-12 h-12 bg-white/[0.07] rounded-[24px] flex items-center justify-center overflow-hidden">
+        <div className="relative w-12 h-12 bg-white/[0.07] rounded-lg flex items-center justify-center overflow-hidden">
           {/* Gradient background effects */}
           <div
             className="absolute w-14 h-14 -left-7 top-3 mix-blend-screen blur-md"
@@ -60,7 +56,7 @@ export function AudioPlayerFooter() {
 
         {/* Scene Thumbnail */}
         <div
-          className="w-12 h-12 rounded-[24px] shadow-lg"
+          className="w-12 h-12 rounded-lg shadow-lg"
           style={{ background: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)' }}
         />
 
