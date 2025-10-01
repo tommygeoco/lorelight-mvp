@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
-import { Upload, Music, Trash2, Play, Pause, Search, Plus, X, Edit2, ChevronRight, SlidersHorizontal, Tag, Clock, Circle } from 'lucide-react'
+import { Upload, Music, Trash2, Play, Pause, Search, Plus, X, Edit2, ChevronRight, SlidersHorizontal, Tag } from 'lucide-react'
 import { DashboardLayoutWithSidebar } from '@/components/layouts/DashboardLayoutWithSidebar'
 import { DashboardSidebar } from '@/components/layouts/DashboardSidebar'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
@@ -27,7 +27,6 @@ export default function AudioPage() {
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const [uploadQueue, setUploadQueue] = useState<Array<{file: File, name: string, id: string, progress: number, status: 'pending' | 'uploading' | 'complete' | 'error', message: string}>>([])
-  const [uploadMessage, setUploadMessage] = useState('')
   const [deleteConfirmFile, setDeleteConfirmFile] = useState<AudioFile | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
   const [selectedPlaylistId, setSelectedPlaylistId] = useState<string | null>(null)
@@ -59,7 +58,6 @@ export default function AudioPage() {
 
   const {
     isLoading,
-    isUploading,
     fetchAudioFiles,
     uploadAudioFile,
     deleteAudioFile,
@@ -91,6 +89,10 @@ export default function AudioPage() {
   useEffect(() => {
     if (!contextMenu) {
       setTagInput('')
+      // Unfocus the tag input if it's focused
+      if (tagInputRef.current && tagInputRef.current === document.activeElement) {
+        tagInputRef.current.blur()
+      }
     }
   }, [contextMenu])
 
@@ -255,7 +257,7 @@ export default function AudioPage() {
         clearInterval(messageInterval)
         clearInterval(progressInterval)
 
-        logger.error('Upload failed for file:', item.name, error)
+        logger.error('Upload failed for file', error, { fileName: item.name })
 
         setUploadQueue(prev => prev.map(q =>
           q.id === item.id
@@ -374,18 +376,15 @@ export default function AudioPage() {
     }
 
     try {
-      console.log('Attempting to rename file:', { editingFileId, newName, originalName: originalFile.name })
       await updateAudioFile(editingFileId, { name: newName })
       addToast('Renamed successfully', 'success')
       setEditingFileId(null)
     } catch (error: unknown) {
-      console.error('Rename error:', error)
       const errorMessage = error instanceof Error ? error.message : String(error)
       logger.error('Rename failed', error instanceof Error ? error : new Error(String(error)), {
         fileId: editingFileId,
         newName,
-        errorType: typeof error,
-        errorString: String(error)
+        originalName: originalFile.name
       })
       addToast(`Failed to rename: ${errorMessage}`, 'error')
       setEditingFileId(null)
@@ -414,7 +413,7 @@ export default function AudioPage() {
       setIsAddToNewPlaylistModalOpen(false)
       setAudioFileForNewPlaylist(null)
     } catch (error) {
-      console.error('Failed to create playlist and add audio:', error)
+      logger.error('Failed to create playlist and add audio', error)
       addToast('Failed to add to playlist', 'error')
     } finally {
       setIsCreatingPlaylist(false)
@@ -429,12 +428,12 @@ export default function AudioPage() {
       setContextMenu(null)
       setShowAddToSubmenu(false)
     } catch (error) {
-      console.error('Failed to add to playlist:', error)
       const errorMessage = error instanceof Error ? error.message : String(error)
       // Check if it's a duplicate error
       if (errorMessage.includes('duplicate key') || errorMessage.includes('unique constraint')) {
         addToast('Song already in playlist', 'error')
       } else {
+        logger.error('Failed to add to playlist', error)
         addToast('Failed to add to playlist', 'error')
       }
     }
@@ -452,7 +451,7 @@ export default function AudioPage() {
       addToast(`Removed from "${playlist?.name || 'playlist'}"`, 'success')
       setContextMenu(null)
     } catch (error) {
-      console.error('Failed to remove from playlist:', error)
+      logger.error('Failed to remove from playlist', error)
       addToast('Failed to remove from playlist', 'error')
     }
   }
@@ -529,7 +528,7 @@ export default function AudioPage() {
       setSelectedFileIds(new Set())
       setShowBulkActions(false)
     } catch (error) {
-      console.error('Bulk delete failed:', error)
+      logger.error('Bulk delete failed', error)
       addToast('Failed to delete files', 'error')
     }
   }
@@ -1331,9 +1330,11 @@ export default function AudioPage() {
                         }}
                         onKeyDown={(e) => {
                           if (e.key === 'Enter' && tagInput.trim()) {
+                            e.preventDefault()
                             handleAddTagToFile(contextMenu.audioFile!, tagInput)
                             setTagInput('')
-                            e.preventDefault()
+                            // Keep input focused for rapid tag adding
+                            setTimeout(() => tagInputRef.current?.focus(), 0)
                           }
                         }}
                         placeholder="Search or create tag..."
@@ -1343,9 +1344,6 @@ export default function AudioPage() {
                           e.preventDefault()
                         }}
                         onMouseDown={(e) => {
-                          e.stopPropagation()
-                        }}
-                        onFocus={(e) => {
                           e.stopPropagation()
                         }}
                       />
@@ -1359,6 +1357,8 @@ export default function AudioPage() {
                             e.stopPropagation()
                             handleAddTagToFile(contextMenu.audioFile!, tagInput)
                             setTagInput('')
+                            // Keep input focused for rapid tag adding
+                            setTimeout(() => tagInputRef.current?.focus(), 0)
                           }}
                           className="w-full px-3 py-2 text-left text-[13px] text-white hover:bg-white/5 transition-colors flex items-center gap-2"
                         >
@@ -1418,6 +1418,8 @@ export default function AudioPage() {
                                       e.stopPropagation()
                                       handleAddTagToFile(contextMenu.audioFile!, tag)
                                       setTagInput('')
+                                      // Keep input focused for rapid tag adding
+                                      setTimeout(() => tagInputRef.current?.focus(), 0)
                                     }}
                                     className="flex-1 text-left"
                                   >
