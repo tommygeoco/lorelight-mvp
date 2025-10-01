@@ -11,6 +11,7 @@ import { useModalBackdrop } from '@/hooks/useModalBackdrop'
 import { logger } from '@/lib/utils/logger'
 import { formatTime } from '@/lib/utils/time'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
+import { EmptyState } from '@/components/ui/EmptyState'
 import type { AudioFile } from '@/types'
 
 interface AudioLibraryProps {
@@ -267,9 +268,10 @@ export function AudioLibrary({ isOpen, onClose, onSelect }: AudioLibraryProps) {
 
               {/* Audio Files */}
               {audioFileArray.length === 0 && subfolders.length === 0 ? (
-                <div className="text-center py-8 text-white/40">
-                  {currentFolderId ? 'No audio files in this folder' : 'No audio files yet. Upload your first track!'}
-                </div>
+                <EmptyState
+                  title={currentFolderId ? "No audio files in this folder" : "No audio files yet. Upload your first track!"}
+                  variant="inline"
+                />
               ) : (
                 audioFileArray.map((audioFile) => (
                 <div

@@ -10,6 +10,8 @@ import { DashboardLayoutWithSidebar } from '@/components/layouts/DashboardLayout
 import { DashboardSidebar } from '@/components/layouts/DashboardSidebar'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
+import { EmptyState } from '@/components/ui/EmptyState'
+import { SectionHeader } from '@/components/ui/SectionHeader'
 import type { Session } from '@/types'
 import { STRINGS } from '@/lib/constants/strings'
 
@@ -132,31 +134,29 @@ export default function SessionsPage({
         {/* Sessions Content */}
         <div className="pt-[40px] pb-[40px]">
           <section aria-labelledby="sessions-heading">
-            <header className="h-[48px] pt-[24px] flex items-center justify-between">
-              <h2 id="sessions-heading" className="text-base font-semibold text-white">Sessions</h2>
-              <Button
-                onClick={handleCreateSession}
-                disabled={isCreating}
-                className="bg-white text-black hover:bg-white/90 h-8 px-3"
-              >
-                <Plus className="w-4 h-4 mr-1" />
-                {isCreating ? STRINGS.common.creating : 'New'}
-              </Button>
-            </header>
+            <SectionHeader
+              title="Sessions"
+              id="sessions-heading"
+              action={{
+                label: isCreating ? STRINGS.common.creating : 'New',
+                icon: <Plus className="w-4 h-4" />,
+                onClick: handleCreateSession,
+                disabled: isCreating,
+                variant: 'primary'
+              }}
+            />
 
             {/* Sessions list */}
             {campaignSessions.length === 0 ? (
               <div className="pt-[24px]">
-                <div className="rounded-[8px] border-2 border-dashed border-neutral-800 p-12 text-center">
-                  <h3 className="text-lg font-medium text-white">No sessions yet</h3>
-                  <p className="mt-2 text-neutral-400">
-                    Create your first session to start playing
-                  </p>
-                  <Button className="mt-4" onClick={handleCreateSession} disabled={isCreating}>
-                    <Plus className="w-4 h-4 mr-2" />
-                    Create Session
-                  </Button>
-                </div>
+                <EmptyState
+                  title="No sessions yet"
+                  description="Create your first session to start playing"
+                  actionLabel="Create Session"
+                  onAction={handleCreateSession}
+                  disabled={isCreating}
+                  variant="bordered"
+                />
               </div>
             ) : (
               <div className="pt-[24px] space-y-2">

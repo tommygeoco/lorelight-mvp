@@ -9,6 +9,7 @@ import { DashboardSidebar } from '@/components/layouts/DashboardSidebar'
 import { CampaignDisplayCard } from './CampaignDisplayCard'
 import { CampaignModal } from '@/components/campaigns/CampaignModal'
 import { PageHeader } from '@/components/ui/PageHeader'
+import { EmptyState } from '@/components/ui/EmptyState'
 import type { Campaign } from '@/types'
 
 export function DashboardView() {
@@ -68,10 +69,11 @@ export function DashboardView() {
         {/* Campaign List Section */}
         <section className="pt-[40px] pb-[40px]" aria-label="Campaign list">
           {campaignArray.length === 0 ? (
-            <div className="text-center py-8">
-              <p className="text-neutral-400">No campaigns yet</p>
-              <p className="text-xs text-neutral-500 mt-1">Create your first campaign to get started</p>
-            </div>
+            <EmptyState
+              title="No campaigns yet"
+              description="Create your first campaign to get started"
+              variant="simple"
+            />
           ) : (
             <ul className="flex flex-col gap-2" role="list">
               {campaignArray.map((campaign) => (

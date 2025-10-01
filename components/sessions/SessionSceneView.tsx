@@ -16,6 +16,8 @@ import { SceneModal } from '@/components/scenes/SceneModal'
 import { AudioLibrary } from '@/components/audio/AudioLibrary'
 import { HueSetup } from '@/components/hue/HueSetup'
 import { PageHeader } from '@/components/ui/PageHeader'
+import { EmptyState } from '@/components/ui/EmptyState'
+import { SectionHeader } from '@/components/ui/SectionHeader'
 
 interface SessionSceneViewProps {
   campaignId: string
@@ -162,25 +164,26 @@ export function SessionSceneView({ campaignId, sessionId }: SessionSceneViewProp
   const scenesSidebar = (
     <aside className="h-full" aria-label="Scenes list">
       <div className="bg-[#191919] rounded-[8px] p-3 h-full flex flex-col overflow-y-auto">
-        <header className="flex items-center justify-between p-2 mb-2">
-          <h2 className="text-[#b4b4b4] font-semibold text-base">Scenes</h2>
-          <button
-            onClick={() => {
+        <SectionHeader
+          title="Scenes"
+          variant="sidebar"
+          action={{
+            icon: <Plus className="w-[18px] h-[18px] text-white/70" />,
+            onClick: () => {
               setEditingScene(undefined)
               setIsSceneModalOpen(true)
-            }}
-            className="w-10 h-10 rounded-[8px] hover:bg-white/5 flex items-center justify-center transition-colors"
-            aria-label="Add new scene"
-          >
-            <Plus className="w-[18px] h-[18px] text-white/70" />
-          </button>
-        </header>
+            },
+            variant: 'icon-only',
+            ariaLabel: 'Add new scene'
+          }}
+        />
 
         {sortedScenes.length === 0 ? (
-          <div className="text-center py-8 px-4">
-            <p className="text-neutral-400">No scenes yet</p>
-            <p className="text-xs text-neutral-500 mt-1">Click + to create your first scene</p>
-          </div>
+          <EmptyState
+            title="No scenes yet"
+            description="Click + to create your first scene"
+            variant="simple"
+          />
         ) : (
           <ul role="list" className="space-y-2">
             {sortedScenes.map((scene) => (
@@ -213,9 +216,7 @@ export function SessionSceneView({ campaignId, sessionId }: SessionSceneViewProp
           <div className="pt-[40px] pb-[40px]">
             {/* Ambience Section */}
             <section aria-labelledby="ambience-heading">
-              <header className="h-[48px] pt-[24px]">
-                <h2 id="ambience-heading" className="text-base font-semibold text-white">Ambience</h2>
-              </header>
+              <SectionHeader title="Ambience" id="ambience-heading" />
               <div className="grid grid-cols-2 gap-2 pt-[24px]">
                 <AmbienceCard
                   type="lighting"
@@ -233,9 +234,7 @@ export function SessionSceneView({ campaignId, sessionId }: SessionSceneViewProp
             {/* Notes Section */}
             {notes.length > 0 && (
               <section aria-labelledby="notes-heading" className="mt-4">
-                <header className="h-[48px] pt-[24px]">
-                  <h2 id="notes-heading" className="text-base font-semibold text-white">Notes</h2>
-                </header>
+                <SectionHeader title="Notes" id="notes-heading" />
                 <ul className="grid grid-cols-3 gap-4 pt-[24px] pb-[40px]" role="list">
                   {notes.map((note, index) => (
                     <li key={index}>
@@ -252,12 +251,11 @@ export function SessionSceneView({ campaignId, sessionId }: SessionSceneViewProp
         </div>
       ) : (
         <div className="flex items-center justify-center h-full">
-          <p className="text-center">
-            <span className="block text-lg font-medium text-white mb-2">No scene selected</span>
-            <span className="block text-neutral-400">
-              Select a scene from the sidebar to view details
-            </span>
-          </p>
+          <EmptyState
+            title="No scene selected"
+            description="Select a scene from the sidebar to view details"
+            variant="centered"
+          />
         </div>
       )}
 
