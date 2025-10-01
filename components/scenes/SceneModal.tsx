@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { X, Trash2, Music } from 'lucide-react'
+import { X, Trash2, Music, ChevronDown } from 'lucide-react'
 import { useSceneStore } from '@/store/sceneStore'
 import { useAudioFileStore } from '@/store/audioFileStore'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
@@ -167,18 +167,21 @@ export function SceneModal({ isOpen, onClose, campaignId, scene }: SceneModalPro
                 <label htmlFor="scene-type" className="block text-[14px] font-semibold text-[#eeeeee]">
                   Scene Type
                 </label>
-                <select
-                  id="scene-type"
-                  value={sceneType}
-                  onChange={(e) => setSceneType(e.target.value)}
-                  className="w-full px-4 py-3 bg-[rgba(255,255,255,0.07)] border border-[#3a3a3a] rounded-[8px] text-[14px] text-white focus:outline-none focus:border-white/20 transition-colors"
-                >
-                  {SCENE_TYPES.map((type) => (
-                    <option key={type} value={type}>
-                      {type}
-                    </option>
-                  ))}
-                </select>
+                <div className="relative">
+                  <select
+                    id="scene-type"
+                    value={sceneType}
+                    onChange={(e) => setSceneType(e.target.value)}
+                    className="w-full px-4 py-3 bg-[rgba(255,255,255,0.07)] border border-[#3a3a3a] rounded-[8px] text-[14px] text-white focus:outline-none focus:border-white/20 transition-colors appearance-none cursor-pointer pr-10"
+                  >
+                    {SCENE_TYPES.map((type) => (
+                      <option key={type} value={type} className="bg-[#222222] text-white">
+                        {type}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/70 pointer-events-none" />
+                </div>
               </div>
 
               {/* Audio Selection */}
