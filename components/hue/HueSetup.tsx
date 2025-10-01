@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { X, Lightbulb, Loader2 } from 'lucide-react'
 import { useHueStore } from '@/store/hueStore'
+import { useModalBackdrop } from '@/hooks/useModalBackdrop'
 import { logger } from '@/lib/utils/logger'
 
 interface HueSetupProps {
@@ -19,6 +20,7 @@ export function HueSetup({ isOpen, onClose }: HueSetupProps) {
     disconnectBridge,
   } = useHueStore()
 
+  const { handleBackdropClick } = useModalBackdrop({ isOpen, onClose })
   const [isDiscovering, setIsDiscovering] = useState(false)
   const [isConnecting, setIsConnecting] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -61,12 +63,6 @@ export function HueSetup({ isOpen, onClose }: HueSetupProps) {
   const handleDisconnect = () => {
     disconnectBridge()
     setError(null)
-  }
-
-  const handleBackdropClick = (e: React.MouseEvent) => {
-    if (e.target === e.currentTarget) {
-      onClose()
-    }
   }
 
   return (

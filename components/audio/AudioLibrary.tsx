@@ -7,6 +7,7 @@ import { useAudioFolderStore } from '@/store/audioFolderStore'
 import { useAudioStore } from '@/store/audioStore'
 import { useToastStore } from '@/store/toastStore'
 import { useAudioFileMap } from '@/hooks/useAudioFileMap'
+import { useModalBackdrop } from '@/hooks/useModalBackdrop'
 import { logger } from '@/lib/utils/logger'
 import { formatTime } from '@/lib/utils/time'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
@@ -43,6 +44,7 @@ export function AudioLibrary({ isOpen, onClose, onSelect }: AudioLibraryProps) {
   const { currentTrackId, isPlaying, loadTrack, togglePlay } = useAudioStore()
   const audioFileMap = useAudioFileMap()
   const { addToast } = useToastStore()
+  const { handleBackdropClick } = useModalBackdrop({ isOpen, onClose })
 
   // Filter audio files by current folder
   const audioFileArray = Array.from(audioFileMap.values()).filter(f => {
@@ -138,12 +140,6 @@ export function AudioLibrary({ isOpen, onClose, onSelect }: AudioLibraryProps) {
     if (!bytes) return '--'
     const mb = bytes / (1024 * 1024)
     return `${mb.toFixed(1)} MB`
-  }
-
-  const handleBackdropClick = (e: React.MouseEvent) => {
-    if (e.target === e.currentTarget) {
-      onClose()
-    }
   }
 
   return (

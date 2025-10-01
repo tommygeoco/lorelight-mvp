@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { X, Trash2 } from 'lucide-react'
 import { useCampaignStore } from '@/store/campaignStore'
+import { useModalBackdrop } from '@/hooks/useModalBackdrop'
 import { Textarea } from '@/components/ui/textarea'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { logger } from '@/lib/utils/logger'
@@ -17,6 +18,7 @@ interface CampaignModalProps {
 
 export function CampaignModal({ isOpen, onClose, campaign }: CampaignModalProps) {
   const { createCampaign, updateCampaign, deleteCampaign } = useCampaignStore()
+  const { handleBackdropClick } = useModalBackdrop({ isOpen, onClose })
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -82,12 +84,6 @@ export function CampaignModal({ isOpen, onClose, campaign }: CampaignModalProps)
       logger.error('Failed to delete campaign', error, { campaignId: campaign.id })
     } finally {
       setIsDeleting(false)
-    }
-  }
-
-  const handleBackdropClick = (e: React.MouseEvent) => {
-    if (e.target === e.currentTarget) {
-      onClose()
     }
   }
 

@@ -5,6 +5,7 @@ import { X, Trash2, Music } from 'lucide-react'
 import { useSceneStore } from '@/store/sceneStore'
 import { useSessionSceneStore } from '@/store/sessionSceneStore'
 import { useAudioFileMap } from '@/hooks/useAudioFileMap'
+import { useModalBackdrop } from '@/hooks/useModalBackdrop'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { AudioLibrary } from '@/components/audio/AudioLibrary'
 import { logger } from '@/lib/utils/logger'
@@ -23,6 +24,7 @@ export function SceneModal({ isOpen, onClose, campaignId, sessionId, scene }: Sc
   const { createScene, updateScene, deleteScene } = useSceneStore()
   const { addSceneToSession } = useSessionSceneStore()
   const audioFileMap = useAudioFileMap()
+  const { handleBackdropClick } = useModalBackdrop({ isOpen, onClose })
   const [name, setName] = useState('')
   const [selectedAudioId, setSelectedAudioId] = useState<string | null>(null)
   const [isAudioLibraryOpen, setIsAudioLibraryOpen] = useState(false)
@@ -104,12 +106,6 @@ export function SceneModal({ isOpen, onClose, campaignId, sessionId, scene }: Sc
       logger.error('Failed to delete scene', error, { sceneId: scene.id })
     } finally {
       setIsDeleting(false)
-    }
-  }
-
-  const handleBackdropClick = (e: React.MouseEvent) => {
-    if (e.target === e.currentTarget) {
-      onClose()
     }
   }
 
