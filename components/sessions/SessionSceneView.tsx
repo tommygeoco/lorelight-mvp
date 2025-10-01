@@ -3,11 +3,14 @@
 import { useEffect, useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { useSessionSceneStore } from '@/store/sessionSceneStore'
+import { useSceneStore } from '@/store/sceneStore'
 import { useAudioStore } from '@/store/audioStore'
 import { useAudioFileMap } from '@/hooks/useAudioFileMap'
-import { Plus } from 'lucide-react'
+import { useToastStore } from '@/store/toastStore'
+import { Plus, Edit2, Copy, Trash2 } from 'lucide-react'
 import { DashboardLayoutWithSidebar } from '@/components/layouts/DashboardLayoutWithSidebar'
 import { DashboardSidebar } from '@/components/layouts/DashboardSidebar'
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import type { Scene } from '@/types'
 import { SceneListItem } from '@/components/scenes/SceneListItem'
 import { AmbienceCard } from '@/components/scenes/AmbienceCard'
@@ -31,17 +34,32 @@ export function SessionSceneView({ campaignId, sessionId }: SessionSceneViewProp
     sessionScenes,
     isLoading,
     fetchScenesForSession,
-    fetchedSessions
+    fetchedSessions,
+    addSceneToSession,
   } = useSessionSceneStore()
+
+  const {
+    createScene,
+    deleteScene
+  } = useSceneStore()
 
   const { loadTrack } = useAudioStore()
   const audioFileMap = useAudioFileMap()
+  const { addToast } = useToastStore()
 
   const [selectedSceneId, setSelectedSceneId] = useState<string | null>(null)
   const [isSceneModalOpen, setIsSceneModalOpen] = useState(false)
   const [isAudioLibraryOpen, setIsAudioLibraryOpen] = useState(false)
   const [isHueSetupOpen, setIsHueSetupOpen] = useState(false)
   const [editingScene, setEditingScene] = useState<Scene | undefined>(undefined)
+  const [contextMenu, setContextMenu] = useState<{
+    x: number
+    y: number
+    scene?: Scene
+  } | null>(null)
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
+  const [sceneToDelete, setSceneToDelete] = useState<Scene | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
 
   // Get session-specific scenes from sessionSceneStore
   const sceneArray = useMemo(
@@ -62,6 +80,15 @@ export function SessionSceneView({ campaignId, sessionId }: SessionSceneViewProp
   const selectedScene = selectedSceneId
     ? sceneArray.find(s => s.id === selectedSceneId)
     : sortedScenes.find(s => s.is_active) || sortedScenes[0]
+
+  // Close context menu when clicking outside
+  useEffect(() => {
+    const handleClick = () => setContextMenu(null)
+    if (contextMenu) {
+      document.addEventListener('click', handleClick)
+      return () => document.removeEventListener('click', handleClick)
+    }
+  }, [contextMenu])
 
   useEffect(() => {
     if (!fetchedSessions.has(sessionId) && !isLoading) {
@@ -103,6 +130,81 @@ export function SessionSceneView({ campaignId, sessionId }: SessionSceneViewProp
   const handlePlayScene = async (scene: Scene) => {
     // TODO: Implement setActiveScene for session-specific scenes
     setSelectedSceneId(scene.id)
+  }
+
+  const handleContextMenu = (e: React.MouseEvent, scene?: Scene) => {
+    e.preventDefault()
+    setContextMenu({
+      x: e.clientX,
+      y: e.clientY,
+      scene,
+    })
+  }
+
+  const handleEmptySpaceContextMenu = (e: React.MouseEvent) => {
+    // Only show context menu if not clicking on a scene item
+    if ((e.target as HTMLElement).closest('[data-scene-item]')) {
+      return
+    }
+    handleContextMenu(e)
+  }
+
+  const handleRename = (scene: Scene) => {
+    setEditingScene(scene)
+    setIsSceneModalOpen(true)
+    setContextMenu(null)
+  }
+
+  const handleDuplicate = async (scene: Scene) => {
+    try {
+      const duplicatedScene = await createScene({
+        campaign_id: campaignId,
+        name: `${scene.name} (Copy)`,
+        description: scene.description,
+        scene_type: scene.scene_type,
+        audio_config: scene.audio_config,
+        light_config: scene.light_config,
+        notes: scene.notes,
+        order_index: sceneArray.length,
+        is_active: false
+      })
+
+      // Add the duplicated scene to this session
+      await addSceneToSession(sessionId, duplicatedScene.id)
+
+      addToast(`Duplicated "${scene.name}"`, 'success')
+      setSelectedSceneId(duplicatedScene.id)
+      setContextMenu(null)
+    } catch (error) {
+      console.error('Failed to duplicate scene:', error)
+      addToast('Failed to duplicate scene', 'error')
+    }
+  }
+
+  const handleDeleteClick = (scene: Scene) => {
+    setSceneToDelete(scene)
+    setIsDeleteDialogOpen(true)
+    setContextMenu(null)
+  }
+
+  const handleDelete = async () => {
+    if (!sceneToDelete) return
+
+    setIsDeleting(true)
+    try {
+      await deleteScene(sceneToDelete.id)
+      if (selectedSceneId === sceneToDelete.id) {
+        setSelectedSceneId(null)
+      }
+      addToast(`Deleted "${sceneToDelete.name}"`, 'success')
+      setIsDeleteDialogOpen(false)
+      setSceneToDelete(null)
+    } catch (error) {
+      console.error('Failed to delete scene:', error)
+      addToast('Failed to delete scene', 'error')
+    } finally {
+      setIsDeleting(false)
+    }
   }
 
   const parseNotes = (notes: string): Array<{ title: string; content: string }> => {
@@ -147,7 +249,10 @@ export function SessionSceneView({ campaignId, sessionId }: SessionSceneViewProp
 
   const scenesSidebar = (
     <aside className="h-full" aria-label="Scenes list">
-      <div className="bg-[#191919] rounded-[8px] p-3 h-full flex flex-col overflow-y-auto">
+      <div
+        className="bg-[#191919] rounded-[8px] p-3 h-full flex flex-col overflow-y-auto"
+        onContextMenu={handleEmptySpaceContextMenu}
+      >
         <SectionHeader
           title="Scenes"
           variant="sidebar"
@@ -171,13 +276,14 @@ export function SessionSceneView({ campaignId, sessionId }: SessionSceneViewProp
         ) : (
           <ul role="list" className="space-y-2">
             {sortedScenes.map((scene) => (
-              <li key={scene.id}>
+              <li key={scene.id} data-scene-item>
                 <SceneListItem
                   scene={scene}
                   isActive={scene.is_active}
                   isSelected={selectedSceneId === scene.id}
                   onClick={() => handleSceneClick(scene)}
                   onPlay={() => handlePlayScene(scene)}
+                  onContextMenu={(e) => handleContextMenu(e, scene)}
                 />
               </li>
             ))}
@@ -248,6 +354,10 @@ export function SessionSceneView({ campaignId, sessionId }: SessionSceneViewProp
         onClose={() => {
           setIsSceneModalOpen(false)
           setEditingScene(undefined)
+          // Refetch to get updated scene data
+          if (editingScene) {
+            fetchScenesForSession(sessionId, true)
+          }
         }}
         campaignId={campaignId}
         sessionId={sessionId}
@@ -262,6 +372,73 @@ export function SessionSceneView({ campaignId, sessionId }: SessionSceneViewProp
       <HueSetup
         isOpen={isHueSetupOpen}
         onClose={() => setIsHueSetupOpen(false)}
+      />
+
+      {/* Context Menu */}
+      {contextMenu && (
+        <div
+          className="fixed bg-[#191919] border border-white/10 rounded-[8px] py-1 shadow-lg z-50 min-w-[140px]"
+          style={{
+            left: `${contextMenu.x}px`,
+            top: `${contextMenu.y}px`,
+          }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Show "New Scene" if no scene (empty space click) */}
+          {!contextMenu.scene ? (
+            <button
+              onClick={() => {
+                setEditingScene(undefined)
+                setIsSceneModalOpen(true)
+                setContextMenu(null)
+              }}
+              className="w-full px-4 py-2 text-left text-[13px] text-white hover:bg-white/5 flex items-center gap-2 transition-colors"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              New Scene
+            </button>
+          ) : (
+            <>
+              <button
+                onClick={() => handleRename(contextMenu.scene!)}
+                className="w-full px-4 py-2 text-left text-[13px] text-white hover:bg-white/5 flex items-center gap-2 transition-colors"
+              >
+                <Edit2 className="w-3.5 h-3.5" />
+                Rename
+              </button>
+              <button
+                onClick={() => handleDuplicate(contextMenu.scene!)}
+                className="w-full px-4 py-2 text-left text-[13px] text-white hover:bg-white/5 flex items-center gap-2 transition-colors"
+              >
+                <Copy className="w-3.5 h-3.5" />
+                Duplicate
+              </button>
+              <div className="h-px bg-white/10 my-1" />
+              <button
+                onClick={() => handleDeleteClick(contextMenu.scene!)}
+                className="w-full px-4 py-2 text-left text-[13px] text-red-400 hover:bg-red-500/10 flex items-center gap-2 transition-colors"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                Delete
+              </button>
+            </>
+          )}
+        </div>
+      )}
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={isDeleteDialogOpen}
+        onClose={() => {
+          setIsDeleteDialogOpen(false)
+          setSceneToDelete(null)
+        }}
+        onConfirm={handleDelete}
+        title="Delete Scene"
+        description={`Are you sure you want to delete "${sceneToDelete?.name}"? This action cannot be undone.`}
+        confirmText="Delete"
+        variant="destructive"
+        isLoading={isDeleting}
       />
     </DashboardLayoutWithSidebar>
   )

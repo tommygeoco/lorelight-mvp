@@ -17,10 +17,11 @@ interface SessionSceneState {
   fetchedSessions: Set<string> // Track which sessions we've fetched
 
   // Actions
-  fetchScenesForSession: (sessionId: string) => Promise<void>
+  fetchScenesForSession: (sessionId: string, force?: boolean) => Promise<void>
   addSceneToSession: (sessionId: string, sceneId: string, orderIndex?: number) => Promise<void>
   removeSceneFromSession: (sessionId: string, sceneId: string) => Promise<void>
   reorderScenes: (sessionId: string, sceneIds: string[]) => Promise<void>
+  updateSceneInSession: (sessionId: string, sceneId: string, updates: Partial<Scene>) => void
   isSceneInSession: (sessionId: string, sceneId: string) => boolean
   clearError: () => void
 }
@@ -37,9 +38,9 @@ export const useSessionSceneStore = create<SessionSceneState>()(
       error: null,
       fetchedSessions: new Set(),
 
-      fetchScenesForSession: async (sessionId) => {
-        // Don't refetch if already loaded
-        if (get().fetchedSessions.has(sessionId)) {
+      fetchScenesForSession: async (sessionId, force = false) => {
+        // Don't refetch if already loaded (unless forced)
+        if (!force && get().fetchedSessions.has(sessionId)) {
           return
         }
 
@@ -125,6 +126,18 @@ export const useSessionSceneStore = create<SessionSceneState>()(
           })
           throw error
         }
+      },
+
+      updateSceneInSession: (sessionId, sceneId, updates) => {
+        set(state => {
+          const scenes = state.sessionScenes.get(sessionId)
+          if (!scenes) return
+
+          const updatedScenes = scenes.map(scene =>
+            scene.id === sceneId ? { ...scene, ...updates } : scene
+          )
+          state.sessionScenes.set(sessionId, castDraft(updatedScenes))
+        })
       },
 
       isSceneInSession: (sessionId, sceneId) => {

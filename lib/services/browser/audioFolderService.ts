@@ -11,6 +11,22 @@ class AudioFolderService extends BaseService<AudioFolder, AudioFolderInsert, Aud
   }
 
   /**
+   * Override create to add user_id automatically
+   */
+  async create(input: Omit<AudioFolderInsert, 'user_id'>): Promise<AudioFolder> {
+    const { data: { user }, error: userError } = await this.supabase.auth.getUser()
+
+    if (userError || !user) {
+      throw new Error('User not authenticated')
+    }
+
+    return super.create({
+      ...input,
+      user_id: user.id
+    } as AudioFolderInsert)
+  }
+
+  /**
    * Get all root-level folders (no parent)
    */
   async getRootFolders(): Promise<AudioFolder[]> {

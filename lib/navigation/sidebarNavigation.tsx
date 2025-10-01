@@ -79,7 +79,7 @@ export function getSidebarButtons(context: NavigationContext): SidebarButton[] {
     {
       icon: <Music className="w-[18px] h-[18px] text-white/70" />,
       label: 'Music library',
-      onClick: onOpenAudioLibrary || (() => {}),
+      onClick: () => router.push('/audio'),
     },
     // Position 5: Settings
     {

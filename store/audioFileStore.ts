@@ -123,7 +123,10 @@ export const useAudioFileStore = create<AudioFileState>()(
 
       updateAudioFile: async (id, updates) => {
         const audioFile = get().audioFiles.get(id)
-        if (!audioFile) return
+        if (!audioFile) {
+          logger.error('Audio file not found in store', new Error('Not found'), { audioFileId: id })
+          throw new Error('Audio file not found')
+        }
 
         const originalAudioFile = { ...audioFile }
 
@@ -138,9 +141,16 @@ export const useAudioFileStore = create<AudioFileState>()(
         })
 
         try {
-          await audioService.update(id, updates)
+          console.log('audioService.update called with:', { id, updates })
+          const updatedFile = await audioService.update(id, updates)
+          console.log('audioService.update succeeded:', updatedFile)
+          // Update with server response
+          set(state => {
+            state.audioFiles.set(id, updatedFile)
+          })
         } catch (error) {
-          logger.error('Failed to update audio file', error, { audioFileId: id })
+          console.error('audioService.update failed:', error)
+          logger.error('Failed to update audio file', error as Error, { audioFileId: id, updates })
           // Rollback
           set(state => {
             state.audioFiles.set(id, originalAudioFile)

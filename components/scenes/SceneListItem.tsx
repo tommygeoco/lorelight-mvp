@@ -10,6 +10,7 @@ interface SceneListItemProps {
   isSelected?: boolean
   onClick?: () => void
   onPlay?: () => void
+  onContextMenu?: (e: React.MouseEvent) => void
 }
 
 export function SceneListItem({
@@ -17,13 +18,15 @@ export function SceneListItem({
   isActive = false,
   isSelected = false,
   onClick,
-  onPlay
+  onPlay,
+  onContextMenu
 }: SceneListItemProps) {
   const gradientColors = getSceneGradientColors(scene.scene_type)
 
   return (
     <button
       onClick={onClick}
+      onContextMenu={onContextMenu}
       className={`w-full flex items-center gap-4 p-2 rounded-[8px] transition-colors ${
         isSelected
           ? 'bg-white/[0.10]'

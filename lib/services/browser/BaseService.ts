@@ -93,9 +93,18 @@ export abstract class BaseService<
         .select()
         .single()
 
-      if (error) throw error
+      if (error) {
+        console.error('Supabase error details:', {
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code
+        })
+        throw error
+      }
       return data
     } catch (error) {
+      console.error('Create error:', error)
       logger.error(`Failed to create ${this.tableName}`, error, { input })
       throw error
     }

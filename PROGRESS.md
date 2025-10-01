@@ -2,6 +2,54 @@
 
 ## Recent Updates
 
+### ✅ Sprint 3 Completed (2025-10-01)
+
+**Design System & Modal Improvements:**
+
+1. **Replaced System Dialogs with Custom Modals**
+   - Created `InputModal` component (`/components/ui/InputModal.tsx`)
+   - Replaced all `prompt()` calls with InputModal
+   - Replaced all `confirm()` calls with ConfirmDialog
+   - Consistent design system across all user interactions
+
+2. **Enhanced Context Menus**
+   - Added "Create New" option for empty space right-clicks
+   - Audio Library: Shows "Upload New" on empty space
+   - Playlists Sidebar: Shows "New Playlist" on empty space
+   - Scenes Sidebar: Shows "New Scene" on empty space
+   - Unified context menu pattern across app
+
+3. **Scene Management Improvements**
+   - Fixed scene rename not saving in SessionSceneView
+   - Added force refetch pattern for sessionSceneStore
+   - Scene changes now properly reflected in UI
+   - Optimistic updates with rollback on error
+
+4. **Design System Documentation**
+   - Created comprehensive `DESIGN_SYSTEM.md`
+   - Documented all reusable UI components
+   - Color palette, typography, and spacing guidelines
+   - Component usage examples and best practices
+   - File organization structure
+
+5. **Files Modified**
+   - `/components/ui/InputModal.tsx` - New text input modal component
+   - `/components/ui/ConfirmDialog.tsx` - Enhanced delete confirmation
+   - `/components/audio/PlaylistsSidebar.tsx` - Custom modals for create/delete
+   - `/app/audio/page.tsx` - InputModal for "Add to New Playlist"
+   - `/components/sessions/SessionSceneView.tsx` - ConfirmDialog for delete, fixed rename
+   - `/store/sessionSceneStore.ts` - Added force refetch, updateSceneInSession
+   - `/components/scenes/SceneModal.tsx` - Integrates with session scenes
+
+**Key Achievements:**
+- ✅ Zero system dialogs (prompt/confirm) - all custom modals
+- ✅ Consistent modal design across entire app
+- ✅ Scene rename properly saves in session view
+- ✅ Context menus support empty space actions
+- ✅ Comprehensive design system documentation
+- ✅ All lint checks passing (0 errors, 5 unrelated warnings)
+- ✅ TypeScript passing (only expected Immer+Map warnings)
+
 ### ✅ Sprint 2 Completed (2025-09-30)
 
 **Layout System & UX Polish:**

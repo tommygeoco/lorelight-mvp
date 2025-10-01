@@ -11,6 +11,43 @@ class AudioPlaylistService extends BaseService<AudioPlaylist, AudioPlaylistInser
   }
 
   /**
+   * Override create to add user_id
+   */
+  async create(input: Omit<AudioPlaylistInsert, 'user_id'>): Promise<AudioPlaylist> {
+    try {
+      // Get current user
+      const { data: { user } } = await this.supabase.auth.getUser()
+      if (!user) {
+        throw new Error('User not authenticated')
+      }
+
+      const { data, error } = await this.supabase
+        .from(this.tableName)
+        .insert({
+          ...input,
+          user_id: user.id,
+        } as never)
+        .select()
+        .single()
+
+      if (error) {
+        console.error('Supabase error details:', {
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code
+        })
+        throw error
+      }
+      return data
+    } catch (error) {
+      console.error('Create error:', error)
+      logger.error(`Failed to create ${this.tableName}`, error, { input })
+      throw error
+    }
+  }
+
+  /**
    * Get all audio files in a playlist (ordered)
    */
   async getPlaylistAudio(playlistId: string): Promise<AudioFile[]> {

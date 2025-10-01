@@ -97,6 +97,8 @@ class AudioService {
    * Update an audio file entry
    */
   async update(id: string, updates: AudioFileUpdate): Promise<AudioFile> {
+    console.log('[audioService.update] Starting update:', JSON.stringify({ id, updates }))
+
     const { data, error } = await this.supabase
       .from('audio_files')
       .update(updates)
@@ -105,9 +107,15 @@ class AudioService {
       .single()
 
     if (error) {
+      console.error('[audioService.update] Supabase error:', JSON.stringify(error))
+      console.error('[audioService.update] Error message:', error.message)
+      console.error('[audioService.update] Error code:', error.code)
+      console.error('[audioService.update] Error details:', error.details)
+      console.error('[audioService.update] Error hint:', error.hint)
       throw error
     }
 
+    console.log('[audioService.update] Success:', JSON.stringify(data))
     return data
   }
 

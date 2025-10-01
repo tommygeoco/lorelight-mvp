@@ -145,7 +145,7 @@ export function AudioLibrary({ isOpen, onClose, onSelect }: AudioLibraryProps) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-start justify-center pt-12 bg-black/60 backdrop-blur-sm"
       onClick={handleBackdropClick}
     >
       <div className="bg-[var(--card-surface)] border border-white/10 rounded-[8px] w-[800px] max-h-[90vh] overflow-hidden shadow-2xl flex flex-col">
