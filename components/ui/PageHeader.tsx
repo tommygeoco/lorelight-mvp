@@ -5,31 +5,31 @@ interface PageHeaderProps {
 
 export function PageHeader({ title, description }: PageHeaderProps) {
   return (
-    <header className="relative h-auto w-full overflow-hidden flex-shrink-0">
-      {/* Radial Gradient Background - Full width */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+    <header className="relative h-auto w-full overflow-visible flex-shrink-0">
+      {/* Radial Gradient Background - Extends beyond container */}
+      <div className="absolute left-1/2 -translate-x-1/2 pointer-events-none" style={{ width: '200vw', top: '-100px', height: '300px' }}>
         {/* Pink gradient - left side */}
         <div
           className="absolute"
           style={{
-            left: '0',
-            top: '-100px',
+            left: '25%',
+            top: '0',
             width: '100%',
-            height: '300px',
-            background: 'radial-gradient(ellipse 800px 200px at 25% 0%, rgba(236, 72, 153, 0.4) 0%, transparent 70%)',
-            filter: 'blur(40px)',
+            height: '100%',
+            background: 'radial-gradient(ellipse 1200px 300px at center top, rgba(236, 72, 153, 0.4) 0%, transparent 70%)',
+            filter: 'blur(60px)',
           }}
         />
         {/* Purple gradient - right side */}
         <div
           className="absolute"
           style={{
-            left: '0',
-            top: '-100px',
+            left: '50%',
+            top: '0',
             width: '100%',
-            height: '300px',
-            background: 'radial-gradient(ellipse 800px 200px at 75% 0%, rgba(139, 92, 246, 0.4) 0%, transparent 70%)',
-            filter: 'blur(40px)',
+            height: '100%',
+            background: 'radial-gradient(ellipse 1200px 300px at center top, rgba(139, 92, 246, 0.4) 0%, transparent 70%)',
+            filter: 'blur(60px)',
           }}
         />
       </div>

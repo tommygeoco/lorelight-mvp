@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Plus, Play, ChevronLeft, CirclePlay, Settings, Music, Flame, Trash2 } from 'lucide-react'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { AudioPlayerFooter } from '@/components/dashboard/AudioPlayerFooter'
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import type { Session } from '@/types'
 import { STRINGS } from '@/lib/constants/strings'
 
@@ -21,6 +22,8 @@ export default function SessionsPage({
   const { campaigns, fetchCampaigns } = useCampaignStore()
   const { sessions, fetchSessionsForCampaign, createSession, deleteSession, fetchedCampaigns, isLoading } = useSessionStore()
   const [isCreating, setIsCreating] = useState(false)
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
 
   const campaign = campaigns.get(resolvedParams.id)
   const campaignSessions = Array.from(sessions.values())
@@ -69,14 +72,22 @@ export default function SessionsPage({
     router.push(`/campaigns/${resolvedParams.id}/sessions/${session.id}/play`)
   }
 
-  const handleDeleteSession = async (sessionId: string, e: React.MouseEvent) => {
+  const handleDeleteClick = (sessionId: string, e: React.MouseEvent) => {
     e.stopPropagation()
-    if (!confirm('Delete this session? This cannot be undone.')) return
+    setDeleteConfirmId(sessionId)
+  }
 
+  const handleDeleteConfirm = async () => {
+    if (!deleteConfirmId) return
+
+    setIsDeleting(true)
     try {
-      await deleteSession(sessionId)
+      await deleteSession(deleteConfirmId)
+      setDeleteConfirmId(null)
     } catch (error) {
       console.error('Failed to delete session:', error)
+    } finally {
+      setIsDeleting(false)
     }
   }
 
@@ -170,11 +181,11 @@ export default function SessionsPage({
                         </h3>
                         <div className="flex items-center gap-2">
                           <button
-                            onClick={(e) => handleDeleteSession(session.id, e)}
-                            className="w-9 h-9 rounded-[8px] hover:bg-red-500/10 flex items-center justify-center transition-colors opacity-0 group-hover:opacity-100"
+                            onClick={(e) => handleDeleteClick(session.id, e)}
+                            className="w-9 h-9 rounded-[8px] hover:bg-red-500/10 flex items-center justify-center transition-colors opacity-0 group-hover:opacity-100 group/delete"
                             aria-label="Delete session"
                           >
-                            <Trash2 className="w-4 h-4 text-white/40 hover:text-red-400" />
+                            <Trash2 className="w-4 h-4 text-white/40 group-hover/delete:text-red-400 transition-colors" />
                           </button>
                           <Button
                             size="sm"
@@ -200,6 +211,18 @@ export default function SessionsPage({
 
       {/* Audio Player Footer - Only show when track is loaded */}
       <AudioPlayerFooter />
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={!!deleteConfirmId}
+        onClose={() => setDeleteConfirmId(null)}
+        onConfirm={handleDeleteConfirm}
+        title="Delete Session"
+        description="Are you sure you want to delete this session? This action cannot be undone."
+        confirmText="Delete"
+        variant="destructive"
+        isLoading={isDeleting}
+      />
     </div>
   )
 }

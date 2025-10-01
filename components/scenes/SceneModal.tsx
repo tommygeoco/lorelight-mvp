@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react'
 import { X, Trash2, Music } from 'lucide-react'
 import { useSceneStore } from '@/store/sceneStore'
 import { useAudioFileStore } from '@/store/audioFileStore'
-import { Textarea } from '@/components/ui/textarea'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { AudioLibrary } from '@/components/audio/AudioLibrary'
 import { logger } from '@/lib/utils/logger'
@@ -25,9 +24,7 @@ export function SceneModal({ isOpen, onClose, campaignId, scene }: SceneModalPro
   const { audioFiles } = useAudioFileStore()
   const audioFileMap = audioFiles instanceof Map ? audioFiles : new Map()
   const [name, setName] = useState('')
-  const [description, setDescription] = useState('')
   const [sceneType, setSceneType] = useState<string>('Story')
-  const [notes, setNotes] = useState('')
   const [selectedAudioId, setSelectedAudioId] = useState<string | null>(null)
   const [isAudioLibraryOpen, setIsAudioLibraryOpen] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -40,18 +37,14 @@ export function SceneModal({ isOpen, onClose, campaignId, scene }: SceneModalPro
   useEffect(() => {
     if (isEditMode && scene) {
       setName(scene.name)
-      setDescription(scene.description || '')
       setSceneType(scene.scene_type || 'Story')
-      setNotes(scene.notes || '')
       // Extract audio_id from audio_config JSON
       const audioConfig = scene.audio_config as { audio_id?: string } | null
       setSelectedAudioId(audioConfig?.audio_id || null)
     } else {
       // Reset form in create mode
       setName('')
-      setDescription('')
       setSceneType('Story')
-      setNotes('')
       setSelectedAudioId(null)
     }
   }, [isEditMode, scene])
@@ -70,9 +63,7 @@ export function SceneModal({ isOpen, onClose, campaignId, scene }: SceneModalPro
         // Update existing scene
         await updateScene(scene.id, {
           name: name.trim(),
-          description: description.trim() || null,
           scene_type: sceneType,
-          notes: notes.trim() || '',
           audio_config: audioConfig,
         })
       } else {
@@ -80,9 +71,7 @@ export function SceneModal({ isOpen, onClose, campaignId, scene }: SceneModalPro
         await createScene({
           campaign_id: campaignId,
           name: name.trim(),
-          description: description.trim() || undefined,
           scene_type: sceneType,
-          notes: notes.trim() || '',
           light_config: {},
           audio_config: audioConfig,
           is_active: false,
@@ -173,42 +162,23 @@ export function SceneModal({ isOpen, onClose, campaignId, scene }: SceneModalPro
                 />
               </div>
 
-              {/* Scene Type Selector */}
+              {/* Scene Type Dropdown */}
               <div className="space-y-2">
                 <label htmlFor="scene-type" className="block text-[14px] font-semibold text-[#eeeeee]">
                   Scene Type
                 </label>
-                <div className="grid grid-cols-5 gap-2">
+                <select
+                  id="scene-type"
+                  value={sceneType}
+                  onChange={(e) => setSceneType(e.target.value)}
+                  className="w-full px-4 py-3 bg-[rgba(255,255,255,0.07)] border border-[#3a3a3a] rounded-[8px] text-[14px] text-white focus:outline-none focus:border-white/20 transition-colors"
+                >
                   {SCENE_TYPES.map((type) => (
-                    <button
-                      key={type}
-                      type="button"
-                      onClick={() => setSceneType(type)}
-                      className={`px-3 py-2 rounded-[8px] text-[14px] font-medium transition-colors ${
-                        sceneType === type
-                          ? 'bg-white text-black'
-                          : 'bg-white/5 text-white/70 hover:bg-white/10'
-                      }`}
-                    >
+                    <option key={type} value={type}>
                       {type}
-                    </button>
+                    </option>
                   ))}
-                </div>
-              </div>
-
-              {/* Description Field */}
-              <div className="space-y-2">
-                <label htmlFor="scene-description" className="block text-[14px] font-semibold text-[#eeeeee]">
-                  {STRINGS.scenes.descriptionLabel}
-                </label>
-                <Textarea
-                  id="scene-description"
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  placeholder={STRINGS.scenes.descriptionPlaceholder}
-                  rows={3}
-                  className="resize-none"
-                />
+                </select>
               </div>
 
               {/* Audio Selection */}
@@ -244,20 +214,6 @@ export function SceneModal({ isOpen, onClose, campaignId, scene }: SceneModalPro
                 </button>
               </div>
 
-              {/* Notes Field */}
-              <div className="space-y-2">
-                <label htmlFor="scene-notes" className="block text-[14px] font-semibold text-[#eeeeee]">
-                  Notes
-                </label>
-                <Textarea
-                  id="scene-notes"
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                  placeholder="Add notes for this scene..."
-                  rows={4}
-                  className="resize-none"
-                />
-              </div>
             </div>
 
             {/* Footer */}
