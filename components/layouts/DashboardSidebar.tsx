@@ -1,13 +1,6 @@
 'use client'
 
-import { ReactNode } from 'react'
-
-interface SidebarButton {
-  icon: ReactNode
-  label: string
-  onClick: () => void
-  isActive?: boolean
-}
+import type { SidebarButton } from '@/types'
 
 interface DashboardSidebarProps {
   buttons: SidebarButton[]

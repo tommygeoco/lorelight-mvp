@@ -69,8 +69,7 @@ export function SceneModal({ isOpen, onClose, campaignId, sessionId, scene }: Sc
         const newScene = await createScene({
           campaign_id: campaignId,
           name: name.trim(),
-          // @ts-expect-error - scene_type has a database constraint we need to fix
-          scene_type: null,
+          scene_type: 'default',
           audio_config: audioConfig,
           is_active: false,
           order_index: 0,

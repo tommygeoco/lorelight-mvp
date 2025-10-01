@@ -111,3 +111,11 @@ export interface LightingConfig {
   brightnessOverride?: number // 0-100
   transitionDuration?: number // milliseconds
 }
+
+// UI Component types
+export interface SidebarButton {
+  icon: React.ReactNode
+  label: string
+  onClick: () => void
+  isActive?: boolean
+}
