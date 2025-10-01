@@ -293,6 +293,44 @@ Location: `/components/ui/EmptyState.tsx`
 />
 ```
 
+### Tables
+
+#### Table Pattern
+Standard table structure used in audio library and data views.
+
+```tsx
+<div className="flex flex-col">
+  {/* Table Header */}
+  <div className="flex items-center gap-4 px-6 py-3 border-b border-white/10 text-[13px] text-white/60 font-medium">
+    <div className="flex-1">Name</div>
+    <div className="w-24">Duration</div>
+    <div className="w-32">Type</div>
+    <div className="w-12"></div>
+  </div>
+
+  {/* Table Rows */}
+  {items.map((item) => (
+    <div
+      key={item.id}
+      className="group flex items-center gap-4 px-6 py-3 hover:bg-white/5 border-b border-white/5 cursor-pointer transition-colors"
+      data-table-row
+    >
+      <div className="flex-1 flex items-center gap-3">
+        <Music className="w-4 h-4 text-white/40" />
+        <span className="text-[14px] text-white truncate">{item.name}</span>
+      </div>
+      <div className="w-24 text-[13px] text-white/60">{item.duration}</div>
+      <div className="w-32 text-[13px] text-white/60">{item.type}</div>
+      <div className="w-12">
+        <button className="opacity-0 group-hover:opacity-100 w-8 h-8 flex items-center justify-center hover:bg-white/10 rounded transition-all">
+          <MoreVertical className="w-4 h-4 text-white/60" />
+        </button>
+      </div>
+    </div>
+  ))}
+</div>
+```
+
 ### Lists
 
 #### Sidebar List
@@ -307,16 +345,6 @@ Location: `/components/ui/EmptyState.tsx`
     </li>
   ))}
 </ul>
-```
-
-#### Table Row (Audio Library Style)
-```tsx
-<div
-  className="group flex items-center gap-4 px-6 py-3 hover:bg-white/5 border-b border-white/5 cursor-pointer transition-colors"
-  data-audio-row
->
-  {/* Row content */}
-</div>
 ```
 
 ## Layouts
@@ -338,6 +366,45 @@ Main application layout with navigation sidebar, optional content sidebar, and m
   contentSidebar={<PlaylistsSidebar />}
 >
   <div>{/* Main content */}</div>
+</DashboardLayoutWithSidebar>
+```
+
+### Layout Combinations
+
+#### Two Sidebar Layout (Audio Library Pattern)
+```tsx
+<DashboardLayoutWithSidebar
+  navSidebar={<DashboardSidebar buttons={[...]} />}
+  contentSidebar={<PlaylistsSidebar />}
+>
+  <div className="p-6">
+    {/* Main content with table */}
+  </div>
+</DashboardLayoutWithSidebar>
+```
+
+#### Single Sidebar Layout (Dashboard Pattern)
+```tsx
+<DashboardLayoutWithSidebar
+  navSidebar={<DashboardSidebar buttons={[...]} />}
+>
+  <div className="p-6">
+    {/* Main content with campaign cards */}
+  </div>
+</DashboardLayoutWithSidebar>
+```
+
+#### Three Column Layout (Session View Pattern)
+```tsx
+<DashboardLayoutWithSidebar
+  navSidebar={<DashboardSidebar buttons={[...]} />}
+  contentSidebar={<ScenesList />}
+>
+  <div className="p-6">
+    <div className="grid grid-cols-2 gap-4">
+      {/* Two column content */}
+    </div>
+  </div>
 </DashboardLayoutWithSidebar>
 ```
 
@@ -376,6 +443,74 @@ Main application layout with navigation sidebar, optional content sidebar, and m
 - Auto-focus first input in modals: `autoFocus`
 - Visible focus states: `focus:outline-none focus:border-white/20`
 - Return focus after modal close
+
+### Context Menus
+
+Standard right-click menu pattern used throughout the application.
+
+**Pattern:**
+```tsx
+const [contextMenu, setContextMenu] = useState<{
+  x: number
+  y: number
+  item?: ItemType
+} | null>(null)
+
+// Close on click outside
+useEffect(() => {
+  const handleClick = () => setContextMenu(null)
+  if (contextMenu) {
+    document.addEventListener('click', handleClick)
+    return () => document.removeEventListener('click', handleClick)
+  }
+}, [contextMenu])
+
+// Handler for item context menu
+const handleContextMenu = (e: React.MouseEvent, item?: ItemType) => {
+  e.preventDefault()
+  setContextMenu({ x: e.clientX, y: e.clientY, item })
+}
+
+// Context menu JSX
+{contextMenu && (
+  <div
+    className="fixed bg-[#191919] border border-white/10 rounded-[8px] py-1 shadow-lg z-50 min-w-[140px]"
+    style={{
+      left: `${contextMenu.x}px`,
+      top: `${contextMenu.y}px`,
+    }}
+    onClick={(e) => e.stopPropagation()}
+  >
+    <button className="w-full px-4 py-2 text-left text-[13px] text-white hover:bg-white/5 flex items-center gap-2 transition-colors">
+      <Icon className="w-3.5 h-3.5" />
+      Menu Item
+    </button>
+    <div className="h-px bg-white/10 my-1" />
+    <button className="w-full px-4 py-2 text-left text-[13px] text-red-400 hover:bg-red-500/10 flex items-center gap-2 transition-colors">
+      <Trash2 className="w-3.5 h-3.5" />
+      Delete
+    </button>
+  </div>
+)}
+```
+
+### Tooltips
+
+Simple tooltip pattern using CSS and data attributes.
+
+**Pattern:**
+```tsx
+// Component with tooltip
+<button
+  data-tooltip="This is a tooltip"
+  className="relative group"
+>
+  <Info className="w-4 h-4" />
+  <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-[#191919] border border-white/10 rounded text-xs text-white whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+    This is a tooltip
+  </span>
+</button>
+```
 
 ## Animation & Transitions
 

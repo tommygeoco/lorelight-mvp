@@ -9,7 +9,6 @@ import { useState, useEffect } from 'react'
 import { Plus, Music, Trash2, Edit2 } from 'lucide-react'
 import { SectionHeader } from '@/components/ui/SectionHeader'
 import { useAudioPlaylistStore } from '@/store/audioPlaylistStore'
-import { useAudioPlaylistMap } from '@/hooks/useAudioPlaylistMap'
 import { useToastStore } from '@/store/toastStore'
 import { InputModal } from '@/components/ui/InputModal'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
@@ -24,8 +23,7 @@ export function PlaylistsSidebar({
   selectedPlaylistId,
   onSelectPlaylist,
 }: PlaylistsSidebarProps) {
-  const { createPlaylist, deletePlaylist, updatePlaylist } = useAudioPlaylistStore()
-  const playlistMap = useAudioPlaylistMap()
+  const { createPlaylist, deletePlaylist, updatePlaylist, playlists: playlistMap } = useAudioPlaylistStore()
   const { addToast } = useToastStore()
 
   const [contextMenu, setContextMenu] = useState<{
@@ -161,43 +159,47 @@ export function PlaylistsSidebar({
         }}
       />
 
-      <div className="mt-4">
-        {/* All Files */}
-        <button
-          onClick={() => onSelectPlaylist(null)}
-          className={`w-full flex items-center gap-2 px-3 py-2 rounded-[8px] text-sm transition-colors ${
-            selectedPlaylistId === null
-              ? 'bg-white/10 text-white'
-              : 'text-white/60 hover:text-white hover:bg-white/5'
-          }`}
-        >
-          <Music className="w-4 h-4 flex-shrink-0" />
-          <span className="truncate">All Files</span>
-        </button>
-      </div>
-
       {/* Playlists List */}
-      {playlists.length === 0 ? (
-        <div className="mt-4">
-          <div className="text-center py-8">
-            <p className="text-neutral-400">No playlists yet</p>
-            <p className="text-xs text-neutral-500 mt-1">Create a playlist to get started</p>
+      <ul role="list" className="space-y-2 mt-4">
+        {/* All Files */}
+        <li>
+          <div
+            onClick={() => onSelectPlaylist(null)}
+            className={`flex items-center gap-2 px-3 py-2 rounded-[8px] text-sm transition-colors cursor-pointer ${
+              selectedPlaylistId === null
+                ? 'bg-white/10 text-white'
+                : 'text-white/60 hover:text-white hover:bg-white/5'
+            }`}
+          >
+            <Music className="w-4 h-4 flex-shrink-0" />
+            <span className="truncate">All Files</span>
           </div>
-        </div>
-      ) : (
-        <ul role="list" className="space-y-2 mt-3">
+        </li>
+
+        {/* User Playlists */}
+        {playlists.length === 0 ? (
+          <li>
+            <div className="text-center py-8">
+              <p className="text-neutral-400">No playlists yet</p>
+              <p className="text-xs text-neutral-500 mt-1">Create a playlist to get started</p>
+            </div>
+          </li>
+        ) : (
+          <>
           {playlists.map((playlist) => {
             const isEditing = editingPlaylistId === playlist.id
+            const trackCount = playlist.audio_file_ids?.length || 0
 
             return (
               <li key={playlist.id}>
                 <div
                   data-playlist-item
-                  className={`group flex items-center gap-2 px-3 py-2 rounded-[8px] text-sm transition-colors cursor-pointer ${
+                  className={`group flex flex-col px-3 py-2 rounded-[8px] transition-colors cursor-pointer ${
                     selectedPlaylistId === playlist.id
-                      ? 'bg-white/10 text-white'
-                      : 'text-white/70 hover:text-white hover:bg-white/5'
+                      ? 'bg-white/10'
+                      : 'hover:bg-white/5'
                   }`}
+                  onClick={() => !isEditing && onSelectPlaylist(playlist.id)}
                   onContextMenu={(e) => handleContextMenu(e, playlist)}
                 >
                   {isEditing ? (
@@ -206,9 +208,10 @@ export function PlaylistsSidebar({
                         e.preventDefault()
                         handleRenameSubmit(playlist.id)
                       }}
+                      onClick={(e) => e.stopPropagation()}
                       className="flex items-center gap-2 flex-1 min-w-0"
                     >
-                      <Music className="w-4 h-4 flex-shrink-0" />
+                      <Music className="w-4 h-4 flex-shrink-0 text-white/70" />
                       <input
                         type="text"
                         value={editingName}
@@ -226,31 +229,33 @@ export function PlaylistsSidebar({
                     </form>
                   ) : (
                     <>
-                      <button
-                        onClick={() => onSelectPlaylist(playlist.id)}
-                        className="flex items-center gap-2 flex-1 min-w-0 text-left"
-                      >
-                        <Music className="w-4 h-4 flex-shrink-0" />
-                        <span className="flex-1 truncate font-medium">{playlist.name}</span>
-                      </button>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          handleDeleteClick(playlist)
-                        }}
-                        className="opacity-0 group-hover:opacity-100 w-5 h-5 flex items-center justify-center rounded hover:bg-red-500/10 text-white/30 hover:text-red-400 transition-all flex-shrink-0"
-                        title="Delete playlist"
-                      >
-                        <Trash2 className="w-3 h-3" />
-                      </button>
+                      <div className="flex items-center gap-2">
+                        <Music className="w-4 h-4 flex-shrink-0 text-white/70" />
+                        <span className="flex-1 truncate text-[13px] text-white font-medium">{playlist.name}</span>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleDeleteClick(playlist)
+                          }}
+                          className="opacity-0 group-hover:opacity-100 w-5 h-5 flex items-center justify-center rounded hover:bg-red-500/10 text-white/30 hover:text-red-400 transition-all flex-shrink-0"
+                          title="Delete playlist"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </button>
+                      </div>
+                      {/* Track count */}
+                      <div className="ml-6 text-[11px] text-white/30 mt-0.5">
+                        {trackCount} {trackCount === 1 ? 'track' : 'tracks'}
+                      </div>
                     </>
                   )}
                 </div>
               </li>
             )
           })}
-        </ul>
-      )}
+          </>
+        )}
+      </ul>
 
       {/* Context Menu */}
       {contextMenu && (

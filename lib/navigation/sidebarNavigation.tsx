@@ -2,7 +2,7 @@ import { ChevronLeft, CirclePlay, Settings, Music, Flame, Home, Lightbulb } from
 import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime'
 import type { SidebarButton } from '@/types'
 
-export type NavigationView = 'dashboard' | 'campaigns' | 'sessions' | 'sessionScene' | 'lights'
+export type NavigationView = 'dashboard' | 'campaigns' | 'sessions' | 'sessionScene' | 'lights' | 'audio'
 
 interface NavigationContext {
   view: NavigationView
@@ -20,7 +20,7 @@ interface NavigationContext {
  * - Position 1: Back button (context-aware destination)
  * - Position 2: Campaigns (active on dashboard/campaigns/sessions/scenes)
  * - Position 3: Lights (active on lights page)
- * - Position 4: Music library (opens modal)
+ * - Position 4: Music library (active on audio page)
  * - Position 5: Settings (placeholder for future)
  */
 export function getSidebarButtons(context: NavigationContext): SidebarButton[] {
@@ -43,6 +43,11 @@ export function getSidebarButtons(context: NavigationContext): SidebarButton[] {
       break
     case 'lights':
       // Lights -> Campaigns
+      backLabel = 'Back to campaigns'
+      backAction = () => router.push('/campaigns')
+      break
+    case 'audio':
+      // Audio Library -> Campaigns
       backLabel = 'Back to campaigns'
       backAction = () => router.push('/campaigns')
       break
@@ -80,6 +85,7 @@ export function getSidebarButtons(context: NavigationContext): SidebarButton[] {
       icon: <Music className="w-[18px] h-[18px] text-white/70" />,
       label: 'Music library',
       onClick: () => router.push('/audio'),
+      isActive: view === 'audio',
     },
     // Position 5: Settings
     {

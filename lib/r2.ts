@@ -24,6 +24,12 @@ export function getR2Client(): S3Client {
         accessKeyId,
         secretAccessKey,
       },
+      requestHandler: {
+        requestTimeout: 600000, // 10 minutes for large files
+        httpsAgent: {
+          maxSockets: 25,
+        },
+      },
     })
   }
 

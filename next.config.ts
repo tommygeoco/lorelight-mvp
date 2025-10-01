@@ -11,6 +11,12 @@ const nextConfig: NextConfig = {
     // Run ESLint but don't fail the build
     ignoreDuringBuilds: false,
   },
+  experimental: {
+    // Increase body size limit for large audio file uploads (500MB)
+    serverActions: {
+      bodySizeLimit: '500mb',
+    },
+  },
 };
 
 export default nextConfig;

@@ -5,6 +5,7 @@ import { nanoid } from 'nanoid'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
+export const maxDuration = 300 // 5 minutes for large file uploads
 
 /**
  * Upload audio file to R2
@@ -39,11 +40,11 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Validate file size (50MB max)
-    const maxSize = 50 * 1024 * 1024 // 50MB
+    // Validate file size (500MB max)
+    const maxSize = 500 * 1024 * 1024 // 500MB
     if (file.size > maxSize) {
       return NextResponse.json(
-        { error: 'File size must be less than 50MB' },
+        { error: 'File size must be less than 500MB' },
         { status: 400 }
       )
     }
