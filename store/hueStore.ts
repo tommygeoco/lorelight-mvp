@@ -20,8 +20,8 @@ interface HueState {
   disconnectBridge: () => void
   fetchLightsAndRooms: () => Promise<void>
   applyLightConfig: (config: {
-    lights?: Record<string, { on?: boolean; bri?: number; hue?: number; sat?: number; ct?: number }>
-    groups?: Record<string, { on?: boolean; bri?: number; hue?: number; sat?: number; ct?: number }>
+    lights?: Record<string, { on?: boolean; bri?: number; hue?: number; sat?: number; ct?: number; transitiontime?: number }>
+    groups?: Record<string, { on?: boolean; bri?: number; hue?: number; sat?: number; ct?: number; transitiontime?: number }>
   }) => Promise<void>
 }
 
