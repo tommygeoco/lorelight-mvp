@@ -42,12 +42,20 @@ export interface LightState {
 class HueService {
   /**
    * Discover Hue bridges on local network
+   * Uses our API route to avoid CORS issues
    */
   async discoverBridges(): Promise<HueBridge[]> {
     try {
-      const response = await fetch('https://discovery.meethue.com/')
+      const response = await fetch('/api/hue/discover')
       if (!response.ok) throw new Error('Bridge discovery failed')
-      return await response.json()
+      const data = await response.json()
+
+      // Check if the response has an error property
+      if (data.error) {
+        throw new Error(data.error)
+      }
+
+      return data
     } catch (error) {
       console.error('Failed to discover bridges:', error)
       return []

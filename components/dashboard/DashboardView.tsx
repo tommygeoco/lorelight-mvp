@@ -56,8 +56,8 @@ export function DashboardView() {
     },
     {
       icon: <Flame className="w-[18px] h-[18px] text-white/70" />,
-      label: 'Effects',
-      onClick: () => {},
+      label: 'Lights',
+      onClick: () => router.push('/lights'),
     },
   ]
 
