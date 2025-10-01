@@ -23,7 +23,6 @@ export type SessionScene = Tables<'session_scenes'>
 export type AudioFolder = Tables<'audio_folders'>
 export type AudioPlaylist = Tables<'audio_playlists'>
 export type PlaylistAudio = Tables<'playlist_audio'>
-export type ScenePreset = Tables<'scene_presets'>
 
 // Insert types
 export type CampaignInsert = Inserts<'campaigns'>
@@ -36,7 +35,6 @@ export type SessionSceneInsert = Inserts<'session_scenes'>
 export type AudioFolderInsert = Inserts<'audio_folders'>
 export type AudioPlaylistInsert = Inserts<'audio_playlists'>
 export type PlaylistAudioInsert = Inserts<'playlist_audio'>
-export type ScenePresetInsert = Inserts<'scene_presets'>
 
 // Update types
 export type CampaignUpdate = Updates<'campaigns'>
@@ -49,7 +47,6 @@ export type SessionSceneUpdate = Updates<'session_scenes'>
 export type AudioFolderUpdate = Updates<'audio_folders'>
 export type AudioPlaylistUpdate = Updates<'audio_playlists'>
 export type PlaylistAudioUpdate = Updates<'playlist_audio'>
-export type ScenePresetUpdate = Updates<'scene_presets'>
 
 // Session status enum
 export type SessionStatus = 'planning' | 'active' | 'completed'
@@ -90,9 +87,8 @@ export interface SessionWithScenes extends Session {
   scenes: Scene[]
 }
 
-// Scene with preset and relations
+// Scene with relations
 export interface SceneWithRelations extends Omit<Scene, 'light_config'> {
-  preset?: ScenePreset
   audio_file?: AudioFile
   light_config?: LightConfig
 }

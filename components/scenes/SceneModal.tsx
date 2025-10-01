@@ -1,10 +1,9 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect } from 'react'
 import { X, Trash2, Music } from 'lucide-react'
 import { useSceneStore } from '@/store/sceneStore'
 import { useAudioFileStore } from '@/store/audioFileStore'
-import { useScenePresetStore } from '@/store/scenePresetStore'
 import { Textarea } from '@/components/ui/textarea'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { AudioLibrary } from '@/components/audio/AudioLibrary'
@@ -24,40 +23,18 @@ const SCENE_TYPES = ['Story', 'Encounter', 'Event', 'Location', 'Rest'] as const
 export function SceneModal({ isOpen, onClose, campaignId, scene }: SceneModalProps) {
   const { createScene, updateScene, deleteScene } = useSceneStore()
   const { audioFiles } = useAudioFileStore()
-  const { systemPresets, userPresets, fetchAllPresets } = useScenePresetStore()
   const audioFileMap = audioFiles instanceof Map ? audioFiles : new Map()
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
   const [sceneType, setSceneType] = useState<string>('Story')
   const [notes, setNotes] = useState('')
   const [selectedAudioId, setSelectedAudioId] = useState<string | null>(null)
-  const [selectedPresetId, setSelectedPresetId] = useState<string | null>(null)
   const [isAudioLibraryOpen, setIsAudioLibraryOpen] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
 
   const isEditMode = !!scene
-  const allPresets = useMemo(() => [...systemPresets, ...userPresets], [systemPresets, userPresets])
-
-  // Fetch presets on mount
-  useEffect(() => {
-    fetchAllPresets()
-  }, [fetchAllPresets])
-
-  // Apply preset defaults when preset is selected
-  useEffect(() => {
-    if (selectedPresetId && !isEditMode) {
-      const preset = allPresets.find(p => p.id === selectedPresetId)
-      if (preset) {
-        if (preset.description && !description) {
-          setDescription(preset.description)
-        }
-        // Apply default audio tags if available
-        // Note: We could filter audioFiles by tags here in the future
-      }
-    }
-  }, [selectedPresetId, allPresets, isEditMode, description])
 
   // Initialize form with scene data in edit mode
   useEffect(() => {
@@ -76,7 +53,6 @@ export function SceneModal({ isOpen, onClose, campaignId, scene }: SceneModalPro
       setSceneType('Story')
       setNotes('')
       setSelectedAudioId(null)
-      setSelectedPresetId(null)
     }
   }, [isEditMode, scene])
 
@@ -181,38 +157,6 @@ export function SceneModal({ isOpen, onClose, campaignId, scene }: SceneModalPro
 
             {/* Form Fields */}
             <div className="px-6 py-6 space-y-5 overflow-y-auto flex-1 scrollbar-hide">
-              {/* Preset Selector - Only show in create mode */}
-              {!isEditMode && allPresets.length > 0 && (
-                <div className="space-y-2">
-                  <label className="block text-[14px] font-semibold text-[#eeeeee]">
-                    Scene Preset
-                  </label>
-                  <div className="grid grid-cols-4 gap-2">
-                    {allPresets.slice(0, 8).map((preset) => (
-                      <button
-                        key={preset.id}
-                        type="button"
-                        onClick={() => setSelectedPresetId(preset.id === selectedPresetId ? null : preset.id)}
-                        className={`px-3 py-2 rounded-[8px] text-[14px] font-medium transition-colors flex items-center justify-center ${
-                          selectedPresetId === preset.id
-                            ? 'bg-white text-black'
-                            : 'bg-white/5 text-white/70 hover:bg-white/10'
-                        }`}
-                        title={preset.description || preset.name}
-                      >
-                        {preset.icon && <span className="mr-1">{preset.icon}</span>}
-                        {preset.name}
-                      </button>
-                    ))}
-                  </div>
-                  {allPresets.length > 8 && (
-                    <p className="text-xs text-white/40 mt-2">
-                      +{allPresets.length - 8} more presets available
-                    </p>
-                  )}
-                </div>
-              )}
-
               {/* Name Field */}
               <div className="space-y-2">
                 <label htmlFor="scene-name" className="block text-[14px] font-semibold text-[#eeeeee]">
