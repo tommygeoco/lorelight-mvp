@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { AudioManager } from "@/components/audio/AudioManager";
+import { ToastContainer } from "@/components/ui/Toast";
 import "./globals.css";
 
 const inter = Inter({
@@ -28,6 +29,7 @@ export default function RootLayout({
       >
         <AuthProvider>
           <AudioManager />
+          <ToastContainer />
           {children}
         </AuthProvider>
       </body>

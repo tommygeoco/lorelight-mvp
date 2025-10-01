@@ -5,9 +5,11 @@ import { Upload, Music, Trash2, Play, Pause, X, Folder, ChevronRight } from 'luc
 import { useAudioFileStore } from '@/store/audioFileStore'
 import { useAudioFolderStore } from '@/store/audioFolderStore'
 import { useAudioStore } from '@/store/audioStore'
+import { useToastStore } from '@/store/toastStore'
 import { useAudioFileMap } from '@/hooks/useAudioFileMap'
 import { logger } from '@/lib/utils/logger'
 import { formatTime } from '@/lib/utils/time'
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import type { AudioFile } from '@/types'
 
 interface AudioLibraryProps {
@@ -21,6 +23,8 @@ export function AudioLibrary({ isOpen, onClose, onSelect }: AudioLibraryProps) {
   const [uploadName, setUploadName] = useState('')
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [currentFolderId, setCurrentFolderId] = useState<string | null>(null)
+  const [deleteConfirmFile, setDeleteConfirmFile] = useState<AudioFile | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
 
   const {
     isLoading,
@@ -38,6 +42,7 @@ export function AudioLibrary({ isOpen, onClose, onSelect }: AudioLibraryProps) {
 
   const { currentTrackId, isPlaying, loadTrack, togglePlay } = useAudioStore()
   const audioFileMap = useAudioFileMap()
+  const { addToast } = useToastStore()
 
   // Filter audio files by current folder
   const audioFileArray = Array.from(audioFileMap.values()).filter(f => {
@@ -82,14 +87,22 @@ export function AudioLibrary({ isOpen, onClose, onSelect }: AudioLibraryProps) {
     }
   }
 
-  const handleDelete = async (audioFile: AudioFile, e: React.MouseEvent) => {
+  const handleDeleteClick = (audioFile: AudioFile, e: React.MouseEvent) => {
     e.stopPropagation()
-    if (!confirm(`Delete "${audioFile.name}"?`)) return
+    setDeleteConfirmFile(audioFile)
+  }
 
+  const handleDeleteConfirm = async () => {
+    if (!deleteConfirmFile) return
+
+    setIsDeleting(true)
     try {
-      await deleteAudioFile(audioFile.id)
+      await deleteAudioFile(deleteConfirmFile.id)
+      setDeleteConfirmFile(null)
     } catch (error) {
       logger.error('Delete failed', error)
+    } finally {
+      setIsDeleting(false)
     }
   }
 
@@ -104,7 +117,7 @@ export function AudioLibrary({ isOpen, onClose, onSelect }: AudioLibraryProps) {
       togglePlay()
     } else {
       if (!audioFile.file_url) {
-        alert('This audio file is missing its URL. Please re-upload.')
+        addToast('This audio file is missing its URL. Please re-upload.', 'error')
         return
       }
       loadTrack(audioFile.id, audioFile.file_url)
@@ -295,7 +308,7 @@ export function AudioLibrary({ isOpen, onClose, onSelect }: AudioLibraryProps) {
 
                   {/* Delete Button */}
                   <button
-                    onClick={(e) => handleDelete(audioFile, e)}
+                    onClick={(e) => handleDeleteClick(audioFile, e)}
                     className="w-8 h-8 rounded-[8px] hover:bg-red-500/10 flex items-center justify-center transition-colors opacity-0 group-hover:opacity-100"
                   >
                     <Trash2 className="w-4 h-4 text-white/40 hover:text-red-400" />
@@ -307,6 +320,18 @@ export function AudioLibrary({ isOpen, onClose, onSelect }: AudioLibraryProps) {
           )}
         </div>
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={!!deleteConfirmFile}
+        onClose={() => setDeleteConfirmFile(null)}
+        onConfirm={handleDeleteConfirm}
+        title="Delete Audio File"
+        description={`Are you sure you want to delete "${deleteConfirmFile?.name}"? This action cannot be undone.`}
+        confirmText="Delete"
+        variant="destructive"
+        isLoading={isDeleting}
+      />
     </div>
   )
 }

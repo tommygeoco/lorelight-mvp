@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { immer } from 'zustand/middleware/immer'
+import { useToastStore } from './toastStore'
 
 interface AudioPlayerState {
   // Current playback state
@@ -101,7 +102,10 @@ export const useAudioStore = create<AudioPlayerState>()(
 
             // Show user-friendly error message
             if (err.name === 'NotSupportedError') {
-              alert('This audio file appears to be corrupted or unavailable. Please try deleting and re-uploading it.')
+              useToastStore.getState().addToast(
+                'This audio file appears to be corrupted or unavailable. Please try deleting and re-uploading it.',
+                'error'
+              )
             }
           })
           set({ isPlaying: true })
