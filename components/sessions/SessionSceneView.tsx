@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useSessionSceneStore } from '@/store/sessionSceneStore'
 import { useAudioStore } from '@/store/audioStore'
 import { useAudioFileMap } from '@/hooks/useAudioFileMap'
-import { ChevronLeft, CirclePlay, Music, Flame, Plus, Settings } from 'lucide-react'
+import { Plus } from 'lucide-react'
 import { DashboardLayoutWithSidebar } from '@/components/layouts/DashboardLayoutWithSidebar'
 import { DashboardSidebar } from '@/components/layouts/DashboardSidebar'
 import type { Scene } from '@/types'
@@ -18,6 +18,7 @@ import { HueSetup } from '@/components/hue/HueSetup'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { SectionHeader } from '@/components/ui/SectionHeader'
+import { getSidebarButtons } from '@/lib/navigation/sidebarNavigation'
 
 interface SessionSceneViewProps {
   campaignId: string
@@ -132,34 +133,17 @@ export function SessionSceneView({ campaignId, sessionId }: SessionSceneViewProp
 
   const notes = selectedScene ? parseNotes(selectedScene.notes) : []
 
-  const sidebarButtons = [
-    {
-      icon: <ChevronLeft className="w-[18px] h-[18px] text-white/70" />,
-      label: 'Navigate back',
-      onClick: () => router.back(),
-    },
-    {
-      icon: <CirclePlay className="w-[18px] h-[18px] text-white/70" />,
-      label: 'Play scene',
-      onClick: () => {},
-      isActive: true,
-    },
-    {
-      icon: <Settings className="w-[18px] h-[18px] text-white/70" />,
-      label: 'Campaign settings',
-      onClick: () => router.push(`/campaigns/${campaignId}`),
-    },
-    {
-      icon: <Music className="w-[18px] h-[18px] text-white/70" />,
-      label: 'Music library',
-      onClick: () => setIsAudioLibraryOpen(true),
-    },
-    {
-      icon: <Flame className="w-[18px] h-[18px] text-white/70" />,
-      label: 'Lighting effects',
-      onClick: () => setIsHueSetupOpen(true),
-    },
-  ]
+  // Get session object from the store to pass sessionId
+  const session = { id: sessionId } // We have sessionId from props
+
+  const sidebarButtons = getSidebarButtons({
+    view: 'sessionScene',
+    campaignId,
+    sessionId: session?.id,
+    router,
+    onOpenAudioLibrary: () => setIsAudioLibraryOpen(true),
+    onOpenHueSetup: () => setIsHueSetupOpen(true),
+  })
 
   const scenesSidebar = (
     <aside className="h-full" aria-label="Scenes list">

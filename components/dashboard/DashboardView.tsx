@@ -3,13 +3,13 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useCampaignStore } from '@/store/campaignStore'
-import { ChevronLeft, CirclePlay, BookOpen, Music, Flame } from 'lucide-react'
 import { DashboardLayoutWithSidebar } from '@/components/layouts/DashboardLayoutWithSidebar'
 import { DashboardSidebar } from '@/components/layouts/DashboardSidebar'
 import { CampaignDisplayCard } from './CampaignDisplayCard'
 import { CampaignModal } from '@/components/campaigns/CampaignModal'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { EmptyState } from '@/components/ui/EmptyState'
+import { getSidebarButtons } from '@/lib/navigation/sidebarNavigation'
 import type { Campaign } from '@/types'
 
 export function DashboardView() {
@@ -32,34 +32,12 @@ export function DashboardView() {
     setIsCampaignModalOpen(true)
   }
 
-  const sidebarButtons = [
-    {
-      icon: <ChevronLeft className="w-[18px] h-[18px] text-white/70" />,
-      label: 'Navigate back',
-      onClick: () => router.push('/'),
-    },
-    {
-      icon: <CirclePlay className="w-[18px] h-[18px] text-white/70" />,
-      label: 'Play',
-      onClick: () => {},
-      isActive: true,
-    },
-    {
-      icon: <BookOpen className="w-[18px] h-[18px] text-white/70" />,
-      label: 'Library',
-      onClick: () => {},
-    },
-    {
-      icon: <Music className="w-[18px] h-[18px] text-white/70" />,
-      label: 'Music',
-      onClick: () => {},
-    },
-    {
-      icon: <Flame className="w-[18px] h-[18px] text-white/70" />,
-      label: 'Lights',
-      onClick: () => router.push('/lights'),
-    },
-  ]
+  const sidebarButtons = getSidebarButtons({
+    view: 'dashboard',
+    router,
+    onOpenAudioLibrary: () => {}, // TODO: Implement when AudioLibrary is added
+    onOpenHueSetup: () => {}, // TODO: Implement when needed
+  })
 
   return (
     <DashboardLayoutWithSidebar navSidebar={<DashboardSidebar buttons={sidebarButtons} />}>

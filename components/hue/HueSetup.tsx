@@ -49,12 +49,12 @@ export function HueSetup({ isOpen, onClose }: HueSetupProps) {
       await connectBridge(bridgeIp)
       onClose()
     } catch (err) {
+      // Error already logged in store, just show user-friendly message
       if (err instanceof Error && err.message.includes('link button')) {
         setError('Please press the button on your Hue bridge, then try again.')
       } else {
         setError('Failed to connect. Please try again.')
       }
-      logger.error('Bridge connection failed', err)
     } finally {
       setIsConnecting(false)
     }
@@ -86,9 +86,9 @@ export function HueSetup({ isOpen, onClose }: HueSetupProps) {
         </div>
 
         {/* Content */}
-        <div className="px-6 py-6 space-y-4">
+        <div className="px-6 py-6">
           {isConnected ? (
-            <>
+            <div className="space-y-4">
               <div className="p-4 bg-green-500/10 border border-green-500/20 rounded-[8px]">
                 <p className="text-sm text-green-400 font-medium">
                   ✓ Connected to Hue bridge
@@ -100,25 +100,23 @@ export function HueSetup({ isOpen, onClose }: HueSetupProps) {
 
               <button
                 onClick={handleDisconnect}
-                className="w-full px-4 py-2 text-[14px] font-medium text-red-400 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 rounded-[8px] transition-colors"
+                className="w-full px-4 py-3 text-[14px] font-semibold text-red-400 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 rounded-[8px] transition-colors"
               >
                 Disconnect Bridge
               </button>
-            </>
+            </div>
           ) : (
-            <>
-              <div className="space-y-2">
-                <p className="text-sm text-white/70">
-                  Connect Lorelight to your Philips Hue bridge to control your lights during sessions.
-                </p>
+            <div className="space-y-4">
+              <p className="text-sm text-white/70">
+                Connect Lorelight to your Philips Hue bridge to control your lights during sessions.
+              </p>
 
-                {bridgeIp && (
-                  <div className="p-3 bg-white/5 border border-white/10 rounded-[8px]">
-                    <p className="text-xs text-white/50">Bridge IP</p>
-                    <p className="text-sm text-white font-mono">{bridgeIp}</p>
-                  </div>
-                )}
-              </div>
+              {bridgeIp && (
+                <div className="p-3 bg-white/5 border border-white/10 rounded-[8px]">
+                  <p className="text-xs text-white/50">Bridge IP</p>
+                  <p className="text-sm text-white font-mono">{bridgeIp}</p>
+                </div>
+              )}
 
               {error && (
                 <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-[8px]">
@@ -136,7 +134,7 @@ export function HueSetup({ isOpen, onClose }: HueSetupProps) {
                   {isDiscovering ? 'Searching...' : 'Find Hue Bridge'}
                 </button>
               ) : (
-                <div className="space-y-3">
+                <div className="space-y-4">
                   <div className="p-4 bg-blue-500/10 border border-blue-500/20 rounded-[8px]">
                     <p className="text-sm text-blue-400 font-medium">
                       Press the button on your Hue bridge
@@ -158,13 +156,13 @@ export function HueSetup({ isOpen, onClose }: HueSetupProps) {
                   <button
                     onClick={handleDiscover}
                     disabled={isConnecting}
-                    className="w-full px-4 py-2 text-[14px] font-medium text-white/70 hover:text-white hover:bg-white/5 rounded-[8px] transition-colors"
+                    className="w-full px-4 py-3 text-[14px] font-semibold text-white/70 hover:text-white hover:bg-white/5 rounded-[8px] transition-colors"
                   >
                     Search Again
                   </button>
                 </div>
               )}
-            </>
+            </div>
           )}
         </div>
       </div>

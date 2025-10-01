@@ -5,13 +5,14 @@ import { useRouter } from 'next/navigation'
 import { useCampaignStore } from '@/store/campaignStore'
 import { useSessionStore } from '@/store/sessionStore'
 import { Button } from '@/components/ui/button'
-import { Plus, Play, ChevronLeft, CirclePlay, Settings, Music, Flame, Trash2 } from 'lucide-react'
+import { Plus, Play, Trash2 } from 'lucide-react'
 import { DashboardLayoutWithSidebar } from '@/components/layouts/DashboardLayoutWithSidebar'
 import { DashboardSidebar } from '@/components/layouts/DashboardSidebar'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { SectionHeader } from '@/components/ui/SectionHeader'
+import { getSidebarButtons } from '@/lib/navigation/sidebarNavigation'
 import type { Session } from '@/types'
 import { STRINGS } from '@/lib/constants/strings'
 
@@ -94,34 +95,13 @@ export default function SessionsPage({
     }
   }
 
-  const sidebarButtons = [
-    {
-      icon: <ChevronLeft className="w-[18px] h-[18px] text-white/70" />,
-      label: 'Navigate back to campaigns',
-      onClick: () => router.push('/campaigns'),
-    },
-    {
-      icon: <CirclePlay className="w-[18px] h-[18px] text-white/70" />,
-      label: 'Sessions',
-      onClick: () => {},
-      isActive: true,
-    },
-    {
-      icon: <Settings className="w-[18px] h-[18px] text-white/70" />,
-      label: 'Campaign settings',
-      onClick: () => {},
-    },
-    {
-      icon: <Music className="w-[18px] h-[18px] text-white/70" />,
-      label: 'Music library',
-      onClick: () => {},
-    },
-    {
-      icon: <Flame className="w-[18px] h-[18px] text-white/70" />,
-      label: 'Lighting effects',
-      onClick: () => {},
-    },
-  ]
+  const sidebarButtons = getSidebarButtons({
+    view: 'sessions',
+    campaignId: resolvedParams.id,
+    router,
+    onOpenAudioLibrary: () => {}, // TODO: Implement when AudioLibrary modal is added
+    onOpenHueSetup: () => {}, // TODO: Implement when HueSetup modal is added
+  })
 
   return (
     <DashboardLayoutWithSidebar navSidebar={<DashboardSidebar buttons={sidebarButtons} />}>

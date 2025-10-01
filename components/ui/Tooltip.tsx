@@ -40,7 +40,7 @@ interface TooltipProps {
 export function Tooltip({
   content,
   position = 'right',
-  delay = 200,
+  delay = 0,
   children,
   className = '',
   disabled = false,
@@ -123,7 +123,7 @@ export function Tooltip({
   return (
     <div
       ref={triggerRef}
-      className="relative inline-block"
+      className="relative inline-flex"
       onMouseEnter={showTooltip}
       onMouseLeave={hideTooltip}
       onFocus={showTooltip}
