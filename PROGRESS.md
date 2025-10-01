@@ -2,6 +2,56 @@
 
 ## Recent Updates
 
+### ✅ Sprint 2 Completed (2025-09-30)
+
+**Layout System & UX Polish:**
+
+1. **Unified Layout Architecture**
+   - Created h-screen flex-col layout pattern with overflow control
+   - Padded wrapper (p-2, bg-[#111111]) containing sidebars + main content
+   - Main content with overflow-y-auto, overflow-x-hidden for natural scrolling
+   - Fixed audio footer at bottom (flex-shrink-0)
+   - Eliminated all scroll hijacking and nested scrollbars
+
+2. **Spacing System Standardization**
+   - Base unit: 8px (p-2 / gap-2)
+   - List item internal padding: p-2 (SceneListItem, AmbienceCard)
+   - List spacing: gap-2 between items
+   - Larger items: p-4 (CampaignDisplayCard, Session rows)
+   - Audio footer: pt-2 pb-4 for optical centering
+
+3. **Sidebar Architecture**
+   - Icon nav: 56px width, h-full
+   - Content sidebar (scenes): 320px width, h-full
+   - Sidebars removed hardcoded sizing - inherit from parent wrappers
+   - Consistent across DashboardLayout and DashboardLayoutWithSidebar
+
+4. **Audio Playback UX Fix**
+   - loadTrack now preserves playing state when switching tracks
+   - Same track check prevents unnecessary reloads
+   - Auto-plays new track if music was already playing
+   - Eliminates unexpected pause when navigating scenes
+
+5. **Files Modified**
+   - `/components/layouts/DashboardLayout.tsx` - Single sidebar layout
+   - `/components/layouts/DashboardLayoutWithSidebar.tsx` - Two sidebar layout
+   - `/components/layouts/DashboardSidebar.tsx` - Nav sidebar component
+   - `/components/dashboard/AudioPlayerFooter.tsx` - Footer padding fix
+   - `/components/scenes/SceneListItem.tsx` - Spacing to p-2
+   - `/components/scenes/AmbienceCard.tsx` - Spacing to p-2, icon positioning
+   - `/components/sessions/SessionSceneView.tsx` - Grid gap-2, sidebar sizing
+   - `/components/dashboard/DashboardView.tsx` - Campaigns list gap-2
+   - `/app/campaigns/[id]/sessions/page.tsx` - Session rows maintain p-4
+   - `/store/audioStore.ts` - Smart track loading with state preservation
+
+**Key Achievements:**
+- ✅ Natural browser scrolling (no custom scrollbar styling)
+- ✅ Full-height sidebars on all viewport sizes
+- ✅ Consistent 8px spacing system across all lists
+- ✅ Audio continues playing when switching scenes
+- ✅ Fixed footer always visible with optical alignment
+- ✅ Overflow issues completely resolved
+
 ### ✅ Sprint 1 Completed (2025-09-30)
 
 **High Priority Infrastructure Improvements:**

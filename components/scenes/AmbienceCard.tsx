@@ -36,8 +36,8 @@ export function AmbienceCard({ type, title, subtitle, thumbnail }: AmbienceCardP
         </>
       )}
 
-      {/* Content with 16px padding */}
-      <div className="relative p-4 flex flex-col h-full">
+      {/* Content with 8px padding */}
+      <div className="relative p-2 flex flex-col h-full">
         {/* Thumbnail - 64x64 at top */}
         {thumbnail ? (
           <div
@@ -58,11 +58,11 @@ export function AmbienceCard({ type, title, subtitle, thumbnail }: AmbienceCardP
           </div>
         </div>
 
-        {/* Icon - absolute at top-right with 16px padding */}
+        {/* Icon - absolute at top-right with 8px padding */}
         {isLighting ? (
-          <Lightbulb className="absolute top-4 right-4 w-[18px] h-[18px] text-white/40" />
+          <Lightbulb className="absolute top-2 right-2 w-[18px] h-[18px] text-white/40" />
         ) : (
-          <Music className="absolute top-4 right-4 w-[18px] h-[18px] text-white/40" />
+          <Music className="absolute top-2 right-2 w-[18px] h-[18px] text-white/40" />
         )}
       </div>
     </div>

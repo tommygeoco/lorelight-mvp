@@ -1,8 +1,9 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { X, Trash2, Music, ChevronDown } from 'lucide-react'
+import { X, Trash2, Music } from 'lucide-react'
 import { useSceneStore } from '@/store/sceneStore'
+import { useSessionSceneStore } from '@/store/sessionSceneStore'
 import { useAudioFileStore } from '@/store/audioFileStore'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { AudioLibrary } from '@/components/audio/AudioLibrary'
@@ -14,17 +15,16 @@ interface SceneModalProps {
   isOpen: boolean
   onClose: () => void
   campaignId: string
+  sessionId?: string // If provided, add scene to session after creation
   scene?: Scene // If provided, edit mode
 }
 
-const SCENE_TYPES = ['Story', 'Encounter', 'Event', 'Location', 'Rest'] as const
-
-export function SceneModal({ isOpen, onClose, campaignId, scene }: SceneModalProps) {
+export function SceneModal({ isOpen, onClose, campaignId, sessionId, scene }: SceneModalProps) {
   const { createScene, updateScene, deleteScene } = useSceneStore()
+  const { addSceneToSession } = useSessionSceneStore()
   const { audioFiles } = useAudioFileStore()
   const audioFileMap = audioFiles instanceof Map ? audioFiles : new Map()
   const [name, setName] = useState('')
-  const [sceneType, setSceneType] = useState<string>('Story')
   const [selectedAudioId, setSelectedAudioId] = useState<string | null>(null)
   const [isAudioLibraryOpen, setIsAudioLibraryOpen] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -37,14 +37,12 @@ export function SceneModal({ isOpen, onClose, campaignId, scene }: SceneModalPro
   useEffect(() => {
     if (isEditMode && scene) {
       setName(scene.name)
-      setSceneType(scene.scene_type || 'Story')
       // Extract audio_id from audio_config JSON
       const audioConfig = scene.audio_config as { audio_id?: string } | null
       setSelectedAudioId(audioConfig?.audio_id || null)
     } else {
       // Reset form in create mode
       setName('')
-      setSceneType('Story')
       setSelectedAudioId(null)
     }
   }, [isEditMode, scene])
@@ -63,25 +61,31 @@ export function SceneModal({ isOpen, onClose, campaignId, scene }: SceneModalPro
         // Update existing scene
         await updateScene(scene.id, {
           name: name.trim(),
-          scene_type: sceneType,
           audio_config: audioConfig,
         })
       } else {
         // Create new scene
-        await createScene({
+        const newScene = await createScene({
           campaign_id: campaignId,
           name: name.trim(),
-          scene_type: sceneType,
-          light_config: {},
+          // @ts-expect-error - scene_type has a database constraint we need to fix
+          scene_type: null,
           audio_config: audioConfig,
           is_active: false,
           order_index: 0,
         })
+
+        // If sessionId provided, add scene to session
+        if (sessionId) {
+          await addSceneToSession(sessionId, newScene.id)
+        }
       }
       onClose()
     } catch (error) {
+      console.error('Scene creation error:', error)
       logger.error(`Failed to ${isEditMode ? 'update' : 'create'} scene`, error, {
         campaignId,
+        sessionId,
         sceneName: name,
         sceneId: scene?.id,
       })
@@ -162,59 +166,37 @@ export function SceneModal({ isOpen, onClose, campaignId, scene }: SceneModalPro
                 />
               </div>
 
-              {/* Scene Type Dropdown */}
-              <div className="space-y-2">
-                <label htmlFor="scene-type" className="block text-[14px] font-semibold text-[#eeeeee]">
-                  Scene Type
-                </label>
-                <div className="relative">
-                  <select
-                    id="scene-type"
-                    value={sceneType}
-                    onChange={(e) => setSceneType(e.target.value)}
-                    className="w-full px-4 py-3 bg-[rgba(255,255,255,0.07)] border border-[#3a3a3a] rounded-[8px] text-[14px] text-white focus:outline-none focus:border-white/20 transition-colors appearance-none cursor-pointer pr-10"
-                  >
-                    {SCENE_TYPES.map((type) => (
-                      <option key={type} value={type} className="bg-[#222222] text-white">
-                        {type}
-                      </option>
-                    ))}
-                  </select>
-                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/70 pointer-events-none" />
-                </div>
-              </div>
-
               {/* Audio Selection */}
               <div className="space-y-2">
                 <label className="block text-[14px] font-semibold text-[#eeeeee]">
                   Scene Audio
                 </label>
-                <button
-                  type="button"
-                  onClick={() => setIsAudioLibraryOpen(true)}
-                  className="w-full px-4 py-3 bg-[rgba(255,255,255,0.07)] border border-[#3a3a3a] rounded-[8px] text-[14px] text-white hover:bg-white/10 transition-colors flex items-center justify-between"
-                >
-                  <div className="flex items-center gap-2">
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setIsAudioLibraryOpen(true)}
+                    className="w-full px-4 py-3 bg-[rgba(255,255,255,0.07)] border border-[#3a3a3a] rounded-[8px] text-[14px] text-white hover:bg-white/10 transition-colors flex items-center gap-2"
+                  >
                     <Music className="w-4 h-4 text-white/70" />
                     <span className="text-white/70">
                       {selectedAudioId && audioFileMap.get(selectedAudioId)
                         ? audioFileMap.get(selectedAudioId)!.name
                         : 'Select audio track...'}
                     </span>
-                  </div>
+                  </button>
                   {selectedAudioId && (
                     <button
                       type="button"
                       onClick={(e) => {
-                        e.stopPropagation()
+                        e.preventDefault()
                         setSelectedAudioId(null)
                       }}
-                      className="text-white/40 hover:text-white/70"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white/70 transition-colors"
                     >
                       <X className="w-4 h-4" />
                     </button>
                   )}
-                </button>
+                </div>
               </div>
 
             </div>

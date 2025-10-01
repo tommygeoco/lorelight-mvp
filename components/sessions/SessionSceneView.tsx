@@ -6,6 +6,8 @@ import { useSessionSceneStore } from '@/store/sessionSceneStore'
 import { useAudioStore } from '@/store/audioStore'
 import { useAudioFileStore } from '@/store/audioFileStore'
 import { ChevronLeft, CirclePlay, Music, Flame, Plus, Settings } from 'lucide-react'
+import { DashboardLayoutWithSidebar } from '@/components/layouts/DashboardLayoutWithSidebar'
+import { DashboardSidebar } from '@/components/layouts/DashboardSidebar'
 import type { Scene } from '@/types'
 import { SceneListItem } from '@/components/scenes/SceneListItem'
 import { AmbienceCard } from '@/components/scenes/AmbienceCard'
@@ -14,7 +16,6 @@ import { SceneModal } from '@/components/scenes/SceneModal'
 import { AudioLibrary } from '@/components/audio/AudioLibrary'
 import { HueSetup } from '@/components/hue/HueSetup'
 import { PageHeader } from '@/components/ui/PageHeader'
-import { AudioPlayerFooter } from '@/components/dashboard/AudioPlayerFooter'
 
 interface SessionSceneViewProps {
   campaignId: string
@@ -134,151 +135,136 @@ export function SessionSceneView({ campaignId, sessionId }: SessionSceneViewProp
 
   const notes = selectedScene ? parseNotes(selectedScene.notes) : []
 
-  return (
-    <div className="h-screen w-full bg-[#111111] flex flex-col">
-      <div className="flex-1 min-h-0 flex overflow-hidden gap-2 px-2 pt-2 pb-2">
-        {/* Navigation Sidebar */}
-        <nav className="w-14 flex-shrink-0" aria-label="Main navigation">
-          <div className="bg-[#191919] rounded-[8px] p-2 h-full flex flex-col gap-2">
-            <button
-              onClick={() => router.back()}
-              className="w-10 h-10 rounded-[8px] hover:bg-white/5 flex items-center justify-center transition-colors"
-              aria-label="Navigate back"
-            >
-              <ChevronLeft className="w-[18px] h-[18px] text-white/70" />
-            </button>
-            <button
-              className="w-10 h-10 rounded-[8px] bg-white/[0.07] hover:bg-white/10 flex items-center justify-center transition-colors"
-              aria-label="Play scene"
-            >
-              <CirclePlay className="w-[18px] h-[18px] text-white/70" />
-            </button>
-            <button
-              onClick={() => router.push(`/campaigns/${campaignId}`)}
-              className="w-10 h-10 rounded-[8px] hover:bg-white/5 flex items-center justify-center transition-colors"
-              aria-label="Campaign settings"
-            >
-              <Settings className="w-[18px] h-[18px] text-white/70" />
-            </button>
-            <button
-              onClick={() => setIsAudioLibraryOpen(true)}
-              className="w-10 h-10 rounded-[8px] hover:bg-white/5 flex items-center justify-center transition-colors"
-              aria-label="Music library"
-            >
-              <Music className="w-[18px] h-[18px] text-white/70" />
-            </button>
-            <button
-              onClick={() => setIsHueSetupOpen(true)}
-              className="w-10 h-10 rounded-[8px] hover:bg-white/5 flex items-center justify-center transition-colors"
-              aria-label="Lighting effects"
-            >
-              <Flame className="w-[18px] h-[18px] text-white/70" />
-            </button>
+  const sidebarButtons = [
+    {
+      icon: <ChevronLeft className="w-[18px] h-[18px] text-white/70" />,
+      label: 'Navigate back',
+      onClick: () => router.back(),
+    },
+    {
+      icon: <CirclePlay className="w-[18px] h-[18px] text-white/70" />,
+      label: 'Play scene',
+      onClick: () => {},
+      isActive: true,
+    },
+    {
+      icon: <Settings className="w-[18px] h-[18px] text-white/70" />,
+      label: 'Campaign settings',
+      onClick: () => router.push(`/campaigns/${campaignId}`),
+    },
+    {
+      icon: <Music className="w-[18px] h-[18px] text-white/70" />,
+      label: 'Music library',
+      onClick: () => setIsAudioLibraryOpen(true),
+    },
+    {
+      icon: <Flame className="w-[18px] h-[18px] text-white/70" />,
+      label: 'Lighting effects',
+      onClick: () => setIsHueSetupOpen(true),
+    },
+  ]
+
+  const scenesSidebar = (
+    <aside className="h-full" aria-label="Scenes list">
+      <div className="bg-[#191919] rounded-[8px] p-3 h-full flex flex-col overflow-y-auto">
+        <header className="flex items-center justify-between p-2 mb-2">
+          <h2 className="text-[#b4b4b4] font-semibold text-base">Scenes</h2>
+          <button
+            onClick={() => {
+              setEditingScene(undefined)
+              setIsSceneModalOpen(true)
+            }}
+            className="w-10 h-10 rounded-[8px] hover:bg-white/5 flex items-center justify-center transition-colors"
+            aria-label="Add new scene"
+          >
+            <Plus className="w-[18px] h-[18px] text-white/70" />
+          </button>
+        </header>
+
+        {sortedScenes.length === 0 ? (
+          <div className="text-center py-8 px-4">
+            <p className="text-neutral-400">No scenes yet</p>
+            <p className="text-xs text-neutral-500 mt-1">Click + to create your first scene</p>
           </div>
-        </nav>
+        ) : (
+          <ul role="list" className="space-y-2">
+            {sortedScenes.map((scene) => (
+              <li key={scene.id}>
+                <SceneListItem
+                  scene={scene}
+                  isActive={scene.is_active}
+                  isSelected={selectedSceneId === scene.id}
+                  onClick={() => handleSceneClick(scene)}
+                  onPlay={() => handlePlayScene(scene)}
+                />
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </aside>
+  )
 
-        {/* Scenes List Sidebar */}
-        <aside className="w-80 flex-shrink-0" aria-label="Scenes list">
-          <div className="bg-[#191919] rounded-[8px] p-3 h-full flex flex-col overflow-y-auto">
-            <header className="flex items-center justify-between p-2 mb-2">
-              <h2 className="text-[#b4b4b4] font-semibold text-base">Scenes</h2>
-              <button
-                onClick={() => {
-                  setEditingScene(undefined)
-                  setIsSceneModalOpen(true)
-                }}
-                className="w-10 h-10 rounded-[8px] hover:bg-white/5 flex items-center justify-center transition-colors"
-                aria-label="Add new scene"
-              >
-                <Plus className="w-[18px] h-[18px] text-white/70" />
-              </button>
-            </header>
+  return (
+    <DashboardLayoutWithSidebar
+      navSidebar={<DashboardSidebar buttons={sidebarButtons} />}
+      contentSidebar={scenesSidebar}
+    >
+      {selectedScene ? (
+        <div className="w-[640px] mx-auto">
+          <PageHeader title={selectedScene.name} description={selectedScene.description || undefined} />
 
-            {sortedScenes.length === 0 ? (
-              <div className="text-center py-8 px-4">
-                <p className="text-neutral-400">No scenes yet</p>
-                <p className="text-xs text-neutral-500 mt-1">Click + to create your first scene</p>
+          {/* Scene Content */}
+          <div className="pt-[40px] pb-[40px]">
+            {/* Ambience Section */}
+            <section aria-labelledby="ambience-heading">
+              <header className="h-[48px] pt-[24px]">
+                <h2 id="ambience-heading" className="text-base font-semibold text-white">Ambience</h2>
+              </header>
+              <div className="grid grid-cols-2 gap-2 pt-[24px]">
+                <AmbienceCard
+                  type="lighting"
+                  title="Lighting"
+                  subtitle="Winter Twilight"
+                />
+                <AmbienceCard
+                  type="audio"
+                  title="Scene Audio"
+                  subtitle="Ambient Track"
+                />
               </div>
-            ) : (
-              <ul role="list" className="space-y-2">
-                {sortedScenes.map((scene) => (
-                  <li key={scene.id}>
-                    <SceneListItem
-                      scene={scene}
-                      isActive={scene.is_active}
-                      isSelected={selectedSceneId === scene.id}
-                      onClick={() => handleSceneClick(scene)}
-                      onPlay={() => handlePlayScene(scene)}
-                    />
-                  </li>
-                ))}
-              </ul>
+            </section>
+
+            {/* Notes Section */}
+            {notes.length > 0 && (
+              <section aria-labelledby="notes-heading" className="mt-4">
+                <header className="h-[48px] pt-[24px]">
+                  <h2 id="notes-heading" className="text-base font-semibold text-white">Notes</h2>
+                </header>
+                <ul className="grid grid-cols-3 gap-4 pt-[24px] pb-[40px]" role="list">
+                  {notes.map((note, index) => (
+                    <li key={index}>
+                      <NoteCard
+                        title={note.title}
+                        content={note.content}
+                      />
+                    </li>
+                  ))}
+                </ul>
+              </section>
             )}
           </div>
-        </aside>
-
-        {/* Main Content */}
-        <main className="flex-1 bg-[#191919] rounded-[8px] overflow-y-auto">
-          {selectedScene ? (
-            <div className="w-[640px] mx-auto">
-              <PageHeader title={selectedScene.name} description={selectedScene.description || undefined} />
-
-              {/* Scene Content */}
-              <div className="pt-[40px] pb-[40px]">
-                {/* Ambience Section */}
-                <section aria-labelledby="ambience-heading">
-                  <header className="h-[48px] pt-[24px]">
-                    <h2 id="ambience-heading" className="text-base font-semibold text-white">Ambience</h2>
-                  </header>
-                  <div className="grid grid-cols-2 gap-4 pt-[24px]">
-                    <AmbienceCard
-                      type="lighting"
-                      title="Lighting"
-                      subtitle="Winter Twilight"
-                    />
-                    <AmbienceCard
-                      type="audio"
-                      title="Scene Audio"
-                      subtitle="Ambient Track"
-                    />
-                  </div>
-                </section>
-
-                {/* Notes Section */}
-                {notes.length > 0 && (
-                  <section aria-labelledby="notes-heading" className="mt-4">
-                    <header className="h-[48px] pt-[24px]">
-                      <h2 id="notes-heading" className="text-base font-semibold text-white">Notes</h2>
-                    </header>
-                    <ul className="grid grid-cols-3 gap-4 pt-[24px] pb-[40px]" role="list">
-                      {notes.map((note, index) => (
-                        <li key={index}>
-                          <NoteCard
-                            title={note.title}
-                            content={note.content}
-                          />
-                        </li>
-                      ))}
-                    </ul>
-                  </section>
-                )}
-              </div>
-            </div>
-          ) : (
-            <div className="flex items-center justify-center h-full">
-              <p className="text-center">
-                <span className="block text-lg font-medium text-white mb-2">No scene selected</span>
-                <span className="block text-neutral-400">
-                  Select a scene from the sidebar to view details
-                </span>
-              </p>
-            </div>
-          )}
-        </main>
-      </div>
-
-      {/* Audio Player Footer - Only show when track is loaded */}
-      <AudioPlayerFooter />
+        </div>
+      ) : (
+        <div className="flex items-center justify-center h-full">
+          <p className="text-center">
+            <span className="block text-lg font-medium text-white mb-2">No scene selected</span>
+            <span className="block text-neutral-400">
+              Select a scene from the sidebar to view details
+            </span>
+          </p>
+        </div>
+      )}
 
       <SceneModal
         isOpen={isSceneModalOpen}
@@ -287,6 +273,7 @@ export function SessionSceneView({ campaignId, sessionId }: SessionSceneViewProp
           setEditingScene(undefined)
         }}
         campaignId={campaignId}
+        sessionId={sessionId}
         scene={editingScene}
       />
 
@@ -299,6 +286,6 @@ export function SessionSceneView({ campaignId, sessionId }: SessionSceneViewProp
         isOpen={isHueSetupOpen}
         onClose={() => setIsHueSetupOpen(false)}
       />
-    </div>
+    </DashboardLayoutWithSidebar>
   )
 }

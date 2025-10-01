@@ -24,7 +24,7 @@ export function SceneListItem({
   return (
     <button
       onClick={onClick}
-      className={`w-full flex items-center gap-4 px-2 py-3 rounded-[8px] transition-colors ${
+      className={`w-full flex items-center gap-4 p-2 rounded-[8px] transition-colors ${
         isSelected
           ? 'bg-white/[0.10]'
           : 'hover:bg-white/[0.05]'

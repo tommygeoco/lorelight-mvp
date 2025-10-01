@@ -6,8 +6,9 @@ import { useCampaignStore } from '@/store/campaignStore'
 import { useSessionStore } from '@/store/sessionStore'
 import { Button } from '@/components/ui/button'
 import { Plus, Play, ChevronLeft, CirclePlay, Settings, Music, Flame, Trash2 } from 'lucide-react'
+import { DashboardLayout } from '@/components/layouts/DashboardLayout'
+import { DashboardSidebar } from '@/components/layouts/DashboardSidebar'
 import { PageHeader } from '@/components/ui/PageHeader'
-import { AudioPlayerFooter } from '@/components/dashboard/AudioPlayerFooter'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import type { Session } from '@/types'
 import { STRINGS } from '@/lib/constants/strings'
@@ -91,126 +92,110 @@ export default function SessionsPage({
     }
   }
 
+  const sidebarButtons = [
+    {
+      icon: <ChevronLeft className="w-[18px] h-[18px] text-white/70" />,
+      label: 'Navigate back to campaigns',
+      onClick: () => router.push('/campaigns'),
+    },
+    {
+      icon: <CirclePlay className="w-[18px] h-[18px] text-white/70" />,
+      label: 'Sessions',
+      onClick: () => {},
+      isActive: true,
+    },
+    {
+      icon: <Settings className="w-[18px] h-[18px] text-white/70" />,
+      label: 'Campaign settings',
+      onClick: () => {},
+    },
+    {
+      icon: <Music className="w-[18px] h-[18px] text-white/70" />,
+      label: 'Music library',
+      onClick: () => {},
+    },
+    {
+      icon: <Flame className="w-[18px] h-[18px] text-white/70" />,
+      label: 'Lighting effects',
+      onClick: () => {},
+    },
+  ]
+
   return (
-    <div className="h-screen w-full bg-[#111111] flex flex-col">
-      <div className="flex-1 min-h-0 flex overflow-hidden gap-2 px-2 pt-2 pb-2">
-        {/* Navigation Sidebar */}
-        <nav className="w-14 flex-shrink-0" aria-label="Main navigation">
-          <div className="bg-[#191919] rounded-[8px] p-2 h-full flex flex-col gap-2">
-            <button
-              onClick={() => router.push('/campaigns')}
-              className="w-10 h-10 rounded-[8px] hover:bg-white/5 flex items-center justify-center transition-colors"
-              aria-label="Navigate back to campaigns"
-            >
-              <ChevronLeft className="w-[18px] h-[18px] text-white/70" />
-            </button>
-            <button
-              className="w-10 h-10 rounded-[8px] bg-white/[0.07] hover:bg-white/10 flex items-center justify-center transition-colors"
-              aria-label="Sessions"
-            >
-              <CirclePlay className="w-[18px] h-[18px] text-white/70" />
-            </button>
-            <button
-              className="w-10 h-10 rounded-[8px] hover:bg-white/5 flex items-center justify-center transition-colors"
-              aria-label="Campaign settings"
-            >
-              <Settings className="w-[18px] h-[18px] text-white/70" />
-            </button>
-            <button
-              className="w-10 h-10 rounded-[8px] hover:bg-white/5 flex items-center justify-center transition-colors"
-              aria-label="Music library"
-            >
-              <Music className="w-[18px] h-[18px] text-white/70" />
-            </button>
-            <button
-              className="w-10 h-10 rounded-[8px] hover:bg-white/5 flex items-center justify-center transition-colors"
-              aria-label="Lighting effects"
-            >
-              <Flame className="w-[18px] h-[18px] text-white/70" />
-            </button>
-          </div>
-        </nav>
+    <DashboardLayout sidebar={<DashboardSidebar buttons={sidebarButtons} />}>
+      <div className="w-[640px] mx-auto">
+        <PageHeader
+          title={campaign.name}
+          description={campaign.description || 'Select a session to begin playing'}
+        />
 
-        {/* Main Content */}
-        <main className="flex-1 bg-[#191919] rounded-tl-[8px] rounded-tr-[8px] overflow-y-auto">
-          <div className="w-[640px] mx-auto">
-            <PageHeader
-              title={campaign.name}
-              description={campaign.description || 'Select a session to begin playing'}
-            />
+        {/* Sessions Content */}
+        <div className="pt-[40px] pb-[40px]">
+          <section aria-labelledby="sessions-heading">
+            <header className="h-[48px] pt-[24px] flex items-center justify-between">
+              <h2 id="sessions-heading" className="text-base font-semibold text-white">Sessions</h2>
+              <Button
+                onClick={handleCreateSession}
+                disabled={isCreating}
+                className="bg-white text-black hover:bg-white/90 h-8 px-3"
+              >
+                <Plus className="w-4 h-4 mr-1" />
+                {isCreating ? STRINGS.common.creating : 'New'}
+              </Button>
+            </header>
 
-            {/* Sessions Content */}
-            <div className="pt-[40px] pb-[40px]">
-              <section aria-labelledby="sessions-heading">
-                <header className="h-[48px] pt-[24px] flex items-center justify-between">
-                  <h2 id="sessions-heading" className="text-base font-semibold text-white">Sessions</h2>
-                  <Button
-                    onClick={handleCreateSession}
-                    disabled={isCreating}
-                    className="bg-white text-black hover:bg-white/90 h-8 px-3"
-                  >
-                    <Plus className="w-4 h-4 mr-1" />
-                    {isCreating ? STRINGS.common.creating : 'New'}
+            {/* Sessions list */}
+            {campaignSessions.length === 0 ? (
+              <div className="pt-[24px]">
+                <div className="rounded-[8px] border-2 border-dashed border-neutral-800 p-12 text-center">
+                  <h3 className="text-lg font-medium text-white">No sessions yet</h3>
+                  <p className="mt-2 text-neutral-400">
+                    Create your first session to start playing
+                  </p>
+                  <Button className="mt-4" onClick={handleCreateSession} disabled={isCreating}>
+                    <Plus className="w-4 h-4 mr-2" />
+                    Create Session
                   </Button>
-                </header>
-
-                {/* Sessions list */}
-                {campaignSessions.length === 0 ? (
-                  <div className="pt-[24px]">
-                    <div className="rounded-[8px] border-2 border-dashed border-neutral-800 p-12 text-center">
-                      <h3 className="text-lg font-medium text-white">No sessions yet</h3>
-                      <p className="mt-2 text-neutral-400">
-                        Create your first session to start playing
-                      </p>
-                      <Button className="mt-4" onClick={handleCreateSession} disabled={isCreating}>
-                        <Plus className="w-4 h-4 mr-2" />
-                        Create Session
+                </div>
+              </div>
+            ) : (
+              <div className="pt-[24px] space-y-2">
+                {campaignSessions.map((session) => (
+                  <article
+                    key={session.id}
+                    className="bg-white/[0.02] hover:bg-white/[0.05] transition-all rounded-[8px] p-4 cursor-pointer group flex items-center justify-between"
+                    onClick={() => handlePlaySession(session)}
+                  >
+                    <h3 className="text-base font-semibold text-white">
+                      {session.title}
+                    </h3>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={(e) => handleDeleteClick(session.id, e)}
+                        className="w-9 h-9 rounded-[8px] hover:bg-red-500/10 flex items-center justify-center transition-colors opacity-0 group-hover:opacity-100 group/delete"
+                        aria-label="Delete session"
+                      >
+                        <Trash2 className="w-4 h-4 text-white/40 group-hover/delete:text-red-400 transition-colors" />
+                      </button>
+                      <Button
+                        size="sm"
+                        className="bg-white/10 hover:bg-white/20 text-white"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handlePlaySession(session)
+                        }}
+                      >
+                        <Play className="w-4 h-4 mr-2" fill="currentColor" />
+                        Play
                       </Button>
                     </div>
-                  </div>
-                ) : (
-                  <div className="pt-[24px] space-y-2">
-                    {campaignSessions.map((session) => (
-                      <article
-                        key={session.id}
-                        className="bg-white/[0.02] hover:bg-white/[0.05] transition-all rounded-[8px] p-4 cursor-pointer group flex items-center justify-between"
-                        onClick={() => handlePlaySession(session)}
-                      >
-                        <h3 className="text-base font-semibold text-white">
-                          {session.title}
-                        </h3>
-                        <div className="flex items-center gap-2">
-                          <button
-                            onClick={(e) => handleDeleteClick(session.id, e)}
-                            className="w-9 h-9 rounded-[8px] hover:bg-red-500/10 flex items-center justify-center transition-colors opacity-0 group-hover:opacity-100 group/delete"
-                            aria-label="Delete session"
-                          >
-                            <Trash2 className="w-4 h-4 text-white/40 group-hover/delete:text-red-400 transition-colors" />
-                          </button>
-                          <Button
-                            size="sm"
-                            className="bg-white/10 hover:bg-white/20 text-white"
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              handlePlaySession(session)
-                            }}
-                          >
-                            <Play className="w-4 h-4 mr-2" fill="currentColor" />
-                            Play
-                          </Button>
-                        </div>
-                      </article>
-                    ))}
-                  </div>
-                )}
-              </section>
-            </div>
-          </div>
-        </main>
+                  </article>
+                ))}
+              </div>
+            )}
+          </section>
+        </div>
       </div>
-
-      {/* Audio Player Footer - Only show when track is loaded */}
-      <AudioPlayerFooter />
 
       {/* Delete Confirmation Dialog */}
       <ConfirmDialog
@@ -223,6 +208,6 @@ export default function SessionsPage({
         variant="destructive"
         isLoading={isDeleting}
       />
-    </div>
+    </DashboardLayout>
   )
 }

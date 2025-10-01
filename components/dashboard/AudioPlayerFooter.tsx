@@ -21,11 +21,6 @@ export function AudioPlayerFooter() {
   const audioFileMap = audioFiles instanceof Map ? audioFiles : new Map()
   const currentTrack = currentTrackId ? audioFileMap.get(currentTrackId) : null
 
-  // Hide footer completely if no track is loaded
-  if (!currentTrack) {
-    return null
-  }
-
   // Format time as MM:SS
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60)
@@ -37,7 +32,7 @@ export function AudioPlayerFooter() {
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0
 
   return (
-    <div className="flex items-center gap-6 px-6 py-4">
+    <div className="flex items-center gap-6 px-6 pt-2 pb-4 bg-[#111111]">
       {/* Left: Track Info */}
       <div className="flex-1 flex items-center gap-2">
         {/* Lighting Icon */}
@@ -63,7 +58,7 @@ export function AudioPlayerFooter() {
         {/* Track Info */}
         <div className="flex flex-col">
           <div className="text-sm font-medium text-[#eeeeee]">
-            {currentTrack.name}
+            {currentTrack?.name || 'No track loaded'}
           </div>
           <div className="text-xs font-medium text-[#7b7b7b]">
             Audio Track

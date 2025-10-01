@@ -5,9 +5,9 @@ interface PageHeaderProps {
 
 export function PageHeader({ title, description }: PageHeaderProps) {
   return (
-    <header className="relative h-auto w-full overflow-visible flex-shrink-0">
-      {/* Radial Gradient Background - Extends beyond container */}
-      <div className="absolute left-1/2 -translate-x-1/2 pointer-events-none" style={{ width: '200vw', top: '-100px', height: '300px' }}>
+    <header className="relative h-auto w-full flex-shrink-0">
+      {/* Radial Gradient Background - Covers main container only */}
+      <div className="absolute left-0 right-0 pointer-events-none" style={{ top: '-100px', height: '300px' }}>
         {/* Pink gradient - left side */}
         <div
           className="absolute"
@@ -35,7 +35,7 @@ export function PageHeader({ title, description }: PageHeaderProps) {
       </div>
 
       {/* Title - 640px wide centered */}
-      <div className="relative w-[640px] mx-auto pt-24">
+      <div className="relative w-[640px] mx-auto pt-12">
         <h1
           className="text-[60px] font-normal text-white tracking-[-1.2px]"
           style={{ fontFamily: '"PP Mondwest", sans-serif' }}

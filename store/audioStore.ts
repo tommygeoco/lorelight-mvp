@@ -50,12 +50,21 @@ export const useAudioStore = create<AudioPlayerState>()(
 
       loadTrack: (trackId, trackUrl) => {
         console.log('loadTrack called:', { trackId, trackUrl })
-        const { audioElement, volume, isLooping } = get()
+        const { audioElement, volume, isLooping, currentTrackId, isPlaying } = get()
 
         if (!trackUrl) {
           console.error('loadTrack: trackUrl is undefined!')
           return
         }
+
+        // If same track is already loaded, don't reload it
+        if (currentTrackId === trackId && audioElement?.src) {
+          console.log('Same track already loaded, skipping reload')
+          return
+        }
+
+        // Remember playing state to restore after loading
+        const wasPlaying = isPlaying
 
         set(state => {
           state.currentTrackId = trackId
@@ -73,6 +82,15 @@ export const useAudioStore = create<AudioPlayerState>()(
           console.log('About to call audioElement.load()')
           audioElement.load()
           console.log('audioElement.load() completed')
+
+          // Auto-play if something was playing before
+          if (wasPlaying) {
+            audioElement.play().then(() => {
+              set({ isPlaying: true })
+            }).catch(err => {
+              console.error('Error auto-playing after track load:', err)
+            })
+          }
         } else {
           console.error('loadTrack: audioElement is null!')
         }
