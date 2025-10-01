@@ -10,15 +10,15 @@ import { InputModal } from '@/components/ui/InputModal'
 import { PlaylistsSidebar } from '@/components/audio/PlaylistsSidebar'
 import { useAudioFileStore } from '@/store/audioFileStore'
 import { useAudioPlaylistStore } from '@/store/audioPlaylistStore'
-import { useAudioStore } from '@/store/audioStore'
 import { useAuthStore } from '@/store/authStore'
 import { useToastStore } from '@/store/toastStore'
 import { useAudioFileMap } from '@/hooks/useAudioFileMap'
 import { useAudioPlaylistMap } from '@/hooks/useAudioPlaylistMap'
+import { useAudioPlayback } from '@/hooks/useAudioPlayback'
 import { getSidebarButtons } from '@/lib/navigation/sidebarNavigation'
 import { logger } from '@/lib/utils/logger'
-import { formatTime } from '@/lib/utils/time'
 import { getRandomLoadingMessage } from '@/lib/constants/loadingMessages'
+import { formatDuration, formatFileSize, normalizeSearchText } from '@/lib/utils/audio'
 import type { AudioFile } from '@/types'
 
 export default function AudioPage() {
@@ -55,6 +55,7 @@ export default function AudioPage() {
   const isInputFocusedRef = useRef(false)
   const tagInputRef = useRef<HTMLInputElement>(null)
   const [focusedQueueItemId, setFocusedQueueItemId] = useState<string | null>(null)
+  const [isDraggingOver, setIsDraggingOver] = useState(false)
 
   const {
     isLoading,
@@ -65,7 +66,7 @@ export default function AudioPage() {
   } = useAudioFileStore()
 
   const { createPlaylist, addAudioToPlaylist } = useAudioPlaylistStore()
-  const { currentTrackId, isPlaying, loadTrack, togglePlay } = useAudioStore()
+  const { handlePlay, currentTrackId, isPlaying } = useAudioPlayback()
   const audioFileMap = useAudioFileMap()
   const playlistMap = useAudioPlaylistMap()
   const playlistAudioMap = useAudioPlaylistStore((state) => state.playlistAudio)
@@ -147,11 +148,18 @@ export default function AudioPage() {
 
     // Apply search filter
     if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase()
-      files = files.filter(file =>
-        file.name.toLowerCase().includes(query) ||
-        file.tags?.some(tag => tag.toLowerCase().includes(query))
-      )
+      const query = normalizeSearchText(searchQuery)
+
+      files = files.filter(file => {
+        const normalizedName = normalizeSearchText(file.name)
+        const nameMatch = normalizedName.includes(query)
+
+        const tagMatch = file.tags?.some(tag =>
+          normalizeSearchText(tag).includes(query)
+        )
+
+        return nameMatch || tagMatch
+      })
     }
 
     // Apply tag filter
@@ -196,6 +204,51 @@ export default function AudioPage() {
         message: ''
       }))
       setUploadQueue(prev => [...prev, ...newUploads])
+    }
+  }
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDraggingOver(true)
+  }
+
+  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault()
+    e.stopPropagation()
+    // Only set to false if leaving the drop zone entirely
+    if (e.currentTarget === e.target) {
+      setIsDraggingOver(false)
+    }
+  }
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDraggingOver(false)
+
+    const files = e.dataTransfer.files
+    if (files && files.length > 0) {
+      // Filter for audio files
+      const audioFiles = Array.from(files).filter(file =>
+        file.type.startsWith('audio/')
+      )
+
+      if (audioFiles.length > 0) {
+        const newUploads = audioFiles.map(file => ({
+          file,
+          name: file.name.replace(/\.[^/.]+$/, ''),
+          id: Math.random().toString(36).substring(7),
+          progress: 0,
+          status: 'pending' as const,
+          message: ''
+        }))
+
+        setUploadQueue(prev => [...prev, ...newUploads])
+        addToast(`Added ${audioFiles.length} file(s) to upload queue`, 'success')
+      } else {
+        addToast('No audio files found. Please drop audio files only.', 'error')
+      }
     }
   }
 
@@ -456,28 +509,6 @@ export default function AudioPage() {
     }
   }
 
-  const handlePlay = async (audioFile: AudioFile) => {
-    const currentTrackUrl = useAudioStore.getState().currentTrackUrl
-    const isSameTrack = currentTrackId === audioFile.id && currentTrackUrl === audioFile.file_url
-
-    if (isSameTrack) {
-      togglePlay()
-    } else {
-      if (!audioFile.file_url) {
-        addToast('This audio file is missing its URL. Please re-upload.', 'error')
-        return
-      }
-      // Load and immediately play the new track
-      loadTrack(audioFile.id, audioFile.file_url)
-      // Ensure it starts playing even if another track was playing
-      if (!isPlaying) {
-        setTimeout(() => {
-          togglePlay()
-        }, 200)
-      }
-    }
-  }
-
   const handleRowClick = (audioFile: AudioFile, e: React.MouseEvent) => {
     // Don't play if clicking on checkbox, buttons, or tags
     if ((e.target as HTMLElement).closest('input[type="checkbox"]') ||
@@ -682,17 +713,6 @@ export default function AudioPage() {
       addToast('Failed to rename tag', 'error')
       setEditingTag(null)
     }
-  }
-
-  const formatDuration = (seconds: number | null): string => {
-    if (!seconds) return '--:--'
-    return formatTime(seconds)
-  }
-
-  const formatFileSize = (bytes: number | null): string => {
-    if (!bytes) return '--'
-    const mb = bytes / (1024 * 1024)
-    return `${mb.toFixed(1)} MB`
   }
 
   const sidebarButtons = getSidebarButtons({
@@ -900,9 +920,22 @@ export default function AudioPage() {
 
         {/* Audio Files List */}
         <div
-          className="flex-1 overflow-y-auto"
+          className={`flex-1 overflow-y-auto relative ${isDraggingOver ? 'bg-white/5' : ''}`}
           onContextMenu={handleEmptySpaceContextMenu}
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
         >
+          {/* Drag-and-drop overlay */}
+          {isDraggingOver && (
+            <div className="absolute inset-0 z-50 flex items-center justify-center bg-purple-500/10 border-2 border-dashed border-purple-500/50 pointer-events-none">
+              <div className="text-center">
+                <Upload className="w-12 h-12 text-purple-400 mx-auto mb-2" />
+                <p className="text-lg text-white font-semibold">Drop audio files here</p>
+                <p className="text-sm text-white/60">Files will be added to the upload queue</p>
+              </div>
+            </div>
+          )}
           {/* Upload Queue */}
           {uploadQueue.length > 0 && (
             <div className="px-6 pt-3 pb-3">
