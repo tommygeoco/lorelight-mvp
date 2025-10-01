@@ -77,6 +77,7 @@ export function SceneListItem({
             onPlay?.()
           }}
           className="hover:scale-110 transition-transform"
+          aria-label={`Play ${scene.name}`}
         >
           <Play className="w-5 h-5 text-white/70 flex-shrink-0" fill="currentColor" />
         </button>

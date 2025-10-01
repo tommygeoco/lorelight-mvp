@@ -85,12 +85,16 @@ export function AudioPlayerFooter() {
         <button
           onClick={toggleMute}
           className="w-6 h-6 flex items-center justify-center text-white/70 hover:text-white transition-colors"
+          aria-label={isMuted ? "Unmute" : "Mute"}
         >
           {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
         </button>
 
         {/* Volume Up Icon (decorative) */}
-        <button className="w-6 h-6 flex items-center justify-center text-white/70 hover:text-white transition-colors">
+        <button
+          className="w-6 h-6 flex items-center justify-center text-white/70 hover:text-white transition-colors"
+          aria-label="Volume up"
+        >
           <Volume2 className="w-5 h-5" />
         </button>
 
@@ -98,6 +102,7 @@ export function AudioPlayerFooter() {
         <button
           onClick={togglePlay}
           className="w-8 h-8 bg-[#eeeeee] rounded-[8px] flex items-center justify-center hover:bg-white transition-colors"
+          aria-label={isPlaying ? "Pause" : "Play"}
         >
           {isPlaying ? (
             <Pause className="w-[18px] h-[18px] text-black" />
