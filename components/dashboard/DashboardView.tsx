@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useCampaignStore } from '@/store/campaignStore'
 import { ChevronLeft, CirclePlay, BookOpen, Music, Flame } from 'lucide-react'
-import { DashboardLayout } from '@/components/layouts/DashboardLayout'
+import { DashboardLayoutWithSidebar } from '@/components/layouts/DashboardLayoutWithSidebar'
 import { DashboardSidebar } from '@/components/layouts/DashboardSidebar'
 import { CampaignDisplayCard } from './CampaignDisplayCard'
 import { CampaignModal } from '@/components/campaigns/CampaignModal'
@@ -61,7 +61,7 @@ export function DashboardView() {
   ]
 
   return (
-    <DashboardLayout sidebar={<DashboardSidebar buttons={sidebarButtons} />}>
+    <DashboardLayoutWithSidebar navSidebar={<DashboardSidebar buttons={sidebarButtons} />}>
       <div className="w-[640px] mx-auto">
         <PageHeader title="Campaigns" description="Text description" />
 
@@ -92,6 +92,6 @@ export function DashboardView() {
         }}
         campaign={editingCampaign}
       />
-    </DashboardLayout>
+    </DashboardLayoutWithSidebar>
   )
 }

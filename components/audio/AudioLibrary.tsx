@@ -5,7 +5,9 @@ import { Upload, Music, Trash2, Play, Pause, X, Folder, ChevronRight } from 'luc
 import { useAudioFileStore } from '@/store/audioFileStore'
 import { useAudioFolderStore } from '@/store/audioFolderStore'
 import { useAudioStore } from '@/store/audioStore'
+import { useAudioFileMap } from '@/hooks/useAudioFileMap'
 import { logger } from '@/lib/utils/logger'
+import { formatTime } from '@/lib/utils/time'
 import type { AudioFile } from '@/types'
 
 interface AudioLibraryProps {
@@ -21,7 +23,6 @@ export function AudioLibrary({ isOpen, onClose, onSelect }: AudioLibraryProps) {
   const [currentFolderId, setCurrentFolderId] = useState<string | null>(null)
 
   const {
-    audioFiles,
     isLoading,
     isUploading,
     fetchAudioFiles,
@@ -36,9 +37,7 @@ export function AudioLibrary({ isOpen, onClose, onSelect }: AudioLibraryProps) {
   } = useAudioFolderStore()
 
   const { currentTrackId, isPlaying, loadTrack, togglePlay } = useAudioStore()
-
-  // Ensure audioFiles is a Map
-  const audioFileMap = audioFiles instanceof Map ? audioFiles : new Map()
+  const audioFileMap = useAudioFileMap()
 
   // Filter audio files by current folder
   const audioFileArray = Array.from(audioFileMap.values()).filter(f => {
@@ -105,7 +104,6 @@ export function AudioLibrary({ isOpen, onClose, onSelect }: AudioLibraryProps) {
       togglePlay()
     } else {
       if (!audioFile.file_url) {
-        console.error('Audio file has no file_url:', audioFile)
         alert('This audio file is missing its URL. Please re-upload.')
         return
       }
@@ -120,9 +118,7 @@ export function AudioLibrary({ isOpen, onClose, onSelect }: AudioLibraryProps) {
 
   const formatDuration = (seconds: number | null): string => {
     if (!seconds) return '--:--'
-    const mins = Math.floor(seconds / 60)
-    const secs = Math.floor(seconds % 60)
-    return `${mins}:${secs.toString().padStart(2, '0')}`
+    return formatTime(seconds)
   }
 
   const formatFileSize = (bytes: number | null): string => {

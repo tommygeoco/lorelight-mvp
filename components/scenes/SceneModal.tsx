@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { X, Trash2, Music } from 'lucide-react'
 import { useSceneStore } from '@/store/sceneStore'
 import { useSessionSceneStore } from '@/store/sessionSceneStore'
-import { useAudioFileStore } from '@/store/audioFileStore'
+import { useAudioFileMap } from '@/hooks/useAudioFileMap'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { AudioLibrary } from '@/components/audio/AudioLibrary'
 import { logger } from '@/lib/utils/logger'
@@ -22,8 +22,7 @@ interface SceneModalProps {
 export function SceneModal({ isOpen, onClose, campaignId, sessionId, scene }: SceneModalProps) {
   const { createScene, updateScene, deleteScene } = useSceneStore()
   const { addSceneToSession } = useSessionSceneStore()
-  const { audioFiles } = useAudioFileStore()
-  const audioFileMap = audioFiles instanceof Map ? audioFiles : new Map()
+  const audioFileMap = useAudioFileMap()
   const [name, setName] = useState('')
   const [selectedAudioId, setSelectedAudioId] = useState<string | null>(null)
   const [isAudioLibraryOpen, setIsAudioLibraryOpen] = useState(false)
@@ -82,7 +81,6 @@ export function SceneModal({ isOpen, onClose, campaignId, sessionId, scene }: Sc
       }
       onClose()
     } catch (error) {
-      console.error('Scene creation error:', error)
       logger.error(`Failed to ${isEditMode ? 'update' : 'create'} scene`, error, {
         campaignId,
         sessionId,

@@ -2,7 +2,8 @@
 
 import { Lightbulb, Volume2, VolumeX, Pause, Play } from 'lucide-react'
 import { useAudioStore } from '@/store/audioStore'
-import { useAudioFileStore } from '@/store/audioFileStore'
+import { useAudioFileMap } from '@/hooks/useAudioFileMap'
+import { formatTime } from '@/lib/utils/time'
 
 export function AudioPlayerFooter() {
   const {
@@ -15,18 +16,8 @@ export function AudioPlayerFooter() {
     toggleMute
   } = useAudioStore()
 
-  const { audioFiles } = useAudioFileStore()
-
-  // Get current track info
-  const audioFileMap = audioFiles instanceof Map ? audioFiles : new Map()
+  const audioFileMap = useAudioFileMap()
   const currentTrack = currentTrackId ? audioFileMap.get(currentTrackId) : null
-
-  // Format time as MM:SS
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60)
-    const secs = Math.floor(seconds % 60)
-    return `${mins}:${secs.toString().padStart(2, '0')}`
-  }
 
   // Calculate progress percentage
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0

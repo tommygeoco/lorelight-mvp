@@ -49,17 +49,14 @@ export const useAudioStore = create<AudioPlayerState>()(
       audioElement: null,
 
       loadTrack: (trackId, trackUrl) => {
-        console.log('loadTrack called:', { trackId, trackUrl })
         const { audioElement, volume, isLooping, currentTrackId, isPlaying } = get()
 
         if (!trackUrl) {
-          console.error('loadTrack: trackUrl is undefined!')
           return
         }
 
         // If same track is already loaded, don't reload it
         if (currentTrackId === trackId && audioElement?.src) {
-          console.log('Same track already loaded, skipping reload')
           return
         }
 
@@ -74,47 +71,32 @@ export const useAudioStore = create<AudioPlayerState>()(
         })
 
         if (audioElement) {
-          console.log('Setting audio src to:', trackUrl)
           audioElement.src = trackUrl
           audioElement.volume = volume
           audioElement.loop = isLooping
-          console.log('Audio src after setting:', audioElement.src)
-          console.log('About to call audioElement.load()')
           audioElement.load()
-          console.log('audioElement.load() completed')
 
           // Auto-play if something was playing before
           if (wasPlaying) {
             audioElement.play().then(() => {
               set({ isPlaying: true })
-            }).catch(err => {
-              console.error('Error auto-playing after track load:', err)
+            }).catch(() => {
+              // Failed to auto-play, stay paused
             })
           }
-        } else {
-          console.error('loadTrack: audioElement is null!')
         }
       },
 
       play: () => {
         const { audioElement, volume, isMuted } = get()
         if (audioElement) {
-          console.log('play() called - current src:', audioElement.src)
-          console.log('play() - volume before:', audioElement.volume)
-          console.log('play() - muted before:', audioElement.muted)
-          console.log('play() - readyState:', audioElement.readyState)
-
           // Ensure audio is not muted and has proper volume
           audioElement.muted = isMuted
           if (!isMuted && audioElement.volume === 0) {
             audioElement.volume = volume
           }
 
-          console.log('play() - volume after:', audioElement.volume)
-          console.log('play() - muted after:', audioElement.muted)
-
           audioElement.play().catch(err => {
-            console.error('Error playing audio:', err)
             set({ isPlaying: false })
 
             // Show user-friendly error message
@@ -123,8 +105,6 @@ export const useAudioStore = create<AudioPlayerState>()(
             }
           })
           set({ isPlaying: true })
-        } else {
-          console.error('play() - audioElement is null!')
         }
       },
 

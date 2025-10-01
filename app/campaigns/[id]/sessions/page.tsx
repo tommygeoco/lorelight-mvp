@@ -6,7 +6,7 @@ import { useCampaignStore } from '@/store/campaignStore'
 import { useSessionStore } from '@/store/sessionStore'
 import { Button } from '@/components/ui/button'
 import { Plus, Play, ChevronLeft, CirclePlay, Settings, Music, Flame, Trash2 } from 'lucide-react'
-import { DashboardLayout } from '@/components/layouts/DashboardLayout'
+import { DashboardLayoutWithSidebar } from '@/components/layouts/DashboardLayoutWithSidebar'
 import { DashboardSidebar } from '@/components/layouts/DashboardSidebar'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
@@ -62,8 +62,8 @@ export default function SessionsPage({
         title: `Session ${campaignSessions.length + 1}`,
         description: null,
       })
-    } catch (error) {
-      console.error('Failed to create session:', error)
+    } catch {
+      // Error handled by store
     } finally {
       setIsCreating(false)
     }
@@ -85,8 +85,8 @@ export default function SessionsPage({
     try {
       await deleteSession(deleteConfirmId)
       setDeleteConfirmId(null)
-    } catch (error) {
-      console.error('Failed to delete session:', error)
+    } catch {
+      // Error handled by store
     } finally {
       setIsDeleting(false)
     }
@@ -122,7 +122,7 @@ export default function SessionsPage({
   ]
 
   return (
-    <DashboardLayout sidebar={<DashboardSidebar buttons={sidebarButtons} />}>
+    <DashboardLayoutWithSidebar navSidebar={<DashboardSidebar buttons={sidebarButtons} />}>
       <div className="w-[640px] mx-auto">
         <PageHeader
           title={campaign.name}
@@ -208,6 +208,6 @@ export default function SessionsPage({
         variant="destructive"
         isLoading={isDeleting}
       />
-    </DashboardLayout>
+    </DashboardLayoutWithSidebar>
   )
 }

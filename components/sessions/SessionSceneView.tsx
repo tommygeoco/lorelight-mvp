@@ -4,7 +4,7 @@ import { useEffect, useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { useSessionSceneStore } from '@/store/sessionSceneStore'
 import { useAudioStore } from '@/store/audioStore'
-import { useAudioFileStore } from '@/store/audioFileStore'
+import { useAudioFileMap } from '@/hooks/useAudioFileMap'
 import { ChevronLeft, CirclePlay, Music, Flame, Plus, Settings } from 'lucide-react'
 import { DashboardLayoutWithSidebar } from '@/components/layouts/DashboardLayoutWithSidebar'
 import { DashboardSidebar } from '@/components/layouts/DashboardSidebar'
@@ -32,12 +32,7 @@ export function SessionSceneView({ campaignId, sessionId }: SessionSceneViewProp
   } = useSessionSceneStore()
 
   const { loadTrack } = useAudioStore()
-
-  const { audioFiles } = useAudioFileStore()
-  const audioFileMap = useMemo(
-    () => (audioFiles instanceof Map ? audioFiles : new Map()),
-    [audioFiles]
-  )
+  const audioFileMap = useAudioFileMap()
 
   const [selectedSceneId, setSelectedSceneId] = useState<string | null>(null)
   const [isSceneModalOpen, setIsSceneModalOpen] = useState(false)
