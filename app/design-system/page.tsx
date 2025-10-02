@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { Plus, Music, Trash2, Edit2, Play, Volume2, AlertCircle, MoreVertical, Info } from 'lucide-react'
+import { Plus, Music, Trash2, Edit2, Play, Volume2, AlertCircle, MoreVertical, Info, X, Tag, ChevronDown, SlidersHorizontal } from 'lucide-react'
 import { BaseModal } from '@/components/ui/BaseModal'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { InputModal } from '@/components/ui/InputModal'
@@ -23,6 +23,12 @@ export default function DesignSystemPage() {
     item?: { id: string; name: string }
   } | null>(null)
   const [hoveredTooltip, setHoveredTooltip] = useState<string | null>(null)
+  const [showDropdown, setShowDropdown] = useState(false)
+  const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set())
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const editInputRef = useRef<HTMLInputElement>(null)
+  const dropdownRef = useRef<HTMLDivElement>(null)
 
   // Close context menu on click outside
   useEffect(() => {
@@ -33,11 +39,44 @@ export default function DesignSystemPage() {
     }
   }, [contextMenu])
 
+  // Close dropdown on click outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setShowDropdown(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  // Auto-focus input when editing
+  useEffect(() => {
+    if (editingId && editInputRef.current) {
+      editInputRef.current.focus()
+      editInputRef.current.select()
+    }
+  }, [editingId])
+
   const sampleTableData = [
     { id: '1', name: 'Tavern Ambience', duration: '3:45', type: 'Ambience' },
     { id: '2', name: 'Battle Theme', duration: '2:30', type: 'Music' },
     { id: '3', name: 'Forest Sounds', duration: '5:12', type: 'Ambience' },
   ]
+
+  const sampleTags = ['ambient', 'battle', 'tavern', 'forest', 'epic']
+
+  const handleTagClick = (tag: string) => {
+    setSelectedTags(prev => {
+      const newSet = new Set(prev)
+      if (newSet.has(tag)) {
+        newSet.delete(tag)
+      } else {
+        newSet.add(tag)
+      }
+      return newSet
+    })
+  }
 
   const copyCode = (code: string, id: string) => {
     navigator.clipboard.writeText(code)
@@ -101,6 +140,10 @@ export default function DesignSystemPage() {
               <li><a href="#inputs" className="text-white/60 hover:text-white transition-colors">Inputs</a></li>
               <li><a href="#cards" className="text-white/60 hover:text-white transition-colors">Cards</a></li>
               <li><a href="#tables" className="text-white/60 hover:text-white transition-colors">Tables</a></li>
+              <li><a href="#dropdowns" className="text-white/60 hover:text-white transition-colors">Dropdowns</a></li>
+              <li><a href="#tags" className="text-white/60 hover:text-white transition-colors">Tags</a></li>
+              <li><a href="#bulk-actions" className="text-white/60 hover:text-white transition-colors">Bulk Actions</a></li>
+              <li><a href="#inline-editing" className="text-white/60 hover:text-white transition-colors">Inline Editing</a></li>
               <li><a href="#context-menus" className="text-white/60 hover:text-white transition-colors">Context Menus</a></li>
               <li><a href="#tooltips" className="text-white/60 hover:text-white transition-colors">Tooltips</a></li>
               <li><a href="#empty-states" className="text-white/60 hover:text-white transition-colors">Empty States</a></li>

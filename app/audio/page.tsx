@@ -989,7 +989,10 @@ export default function AudioPage() {
                       <input
                         type="checkbox"
                         checked={isSelected}
-                        onChange={() => handleCheckboxChange(audioFile.id)}
+                        onChange={(e) => {
+                          e.stopPropagation()
+                          handleCheckboxChange(audioFile.id)
+                        }}
                         onClick={(e) => e.stopPropagation()}
                         className="w-3.5 h-3.5 cursor-pointer"
                       />
@@ -1031,6 +1034,7 @@ export default function AudioPage() {
                             ref={editInputRef}
                             type="text"
                             defaultValue={audioFile.name}
+                            onClick={(e) => e.stopPropagation()}
                             onBlur={() => {
                               setTimeout(handleRenameSubmit, 100)
                             }}

@@ -565,12 +565,271 @@ className="hover:scale-105 transition-transform"
 └── sessions/              # Session-specific components
 ```
 
+### Dropdowns
+
+#### Dropdown Menu Pattern
+Dropdown menus for filters, actions, and selections. Positioned relative to trigger button.
+
+**Pattern:**
+```tsx
+const [isOpen, setIsOpen] = useState(false)
+const dropdownRef = useRef<HTMLDivElement>(null)
+
+// Close on click outside
+useEffect(() => {
+  const handleClickOutside = (e: MouseEvent) => {
+    if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+      setIsOpen(false)
+    }
+  }
+  document.addEventListener('mousedown', handleClickOutside)
+  return () => document.removeEventListener('mousedown', handleClickOutside)
+}, [])
+
+// Dropdown JSX
+<div className="relative" ref={dropdownRef}>
+  <button
+    onClick={() => setIsOpen(!isOpen)}
+    className="px-3 py-1.5 text-[13px] text-white/70 hover:text-white hover:bg-white/5 rounded-[6px] transition-colors flex items-center gap-1.5"
+  >
+    <FilterIcon className="w-3.5 h-3.5" />
+    Filter
+    <ChevronDown className="w-3 h-3" />
+  </button>
+
+  {isOpen && (
+    <div className="absolute top-full right-0 mt-1 bg-[#191919] border border-white/10 rounded-[8px] shadow-2xl min-w-[200px] py-2 z-50">
+      <button className="w-full px-4 py-2 text-left text-[13px] text-white hover:bg-white/5 transition-colors">
+        Option 1
+      </button>
+      <button className="w-full px-4 py-2 text-left text-[13px] text-white hover:bg-white/5 transition-colors">
+        Option 2
+      </button>
+    </div>
+  )}
+</div>
+```
+
+### Sidebars
+
+#### Content Sidebar Pattern
+320px wide sidebar for playlists, scenes, or navigation.
+
+```tsx
+<div className="w-[320px] h-full bg-[#191919] border-r border-white/10 flex flex-col">
+  {/* Header */}
+  <div className="px-6 py-4 border-b border-white/10">
+    <SectionHeader
+      title="Playlists"
+      variant="sidebar"
+      action={{
+        icon: <Plus className="w-[18px] h-[18px]" />,
+        onClick: handleCreate,
+        variant: 'icon-only',
+        ariaLabel: 'Create playlist'
+      }}
+    />
+  </div>
+
+  {/* Scrollable List */}
+  <div className="flex-1 overflow-y-auto scrollbar-custom px-6 py-4">
+    <ul role="list" className="space-y-2">
+      {items.map(item => (
+        <li key={item.id}>
+          <button className="w-full flex items-center gap-2 px-3 py-2 rounded-[8px] text-[14px] text-white/70 hover:text-white hover:bg-white/5 transition-colors">
+            <Music className="w-4 h-4 flex-shrink-0" />
+            <span className="flex-1 truncate">{item.name}</span>
+          </button>
+        </li>
+      ))}
+    </ul>
+  </div>
+</div>
+```
+
+### Tags
+
+#### Tag Display & Selection
+Pills with optional close/remove button.
+
+```tsx
+// Display Tags
+<div className="flex flex-wrap gap-1.5">
+  {tags.map(tag => (
+    <div
+      key={tag}
+      className="px-2 py-1 bg-purple-500/20 border border-purple-500/30 rounded-[6px] text-[12px] text-white flex items-center gap-1.5"
+    >
+      {tag}
+      <button onClick={() => handleRemove(tag)} className="text-white/50 hover:text-white">
+        <X className="w-3 h-3" />
+      </button>
+    </div>
+  ))}
+</div>
+
+// Clickable Filter Tags
+<div className="flex flex-wrap gap-1.5">
+  {tags.map(tag => (
+    <button
+      key={tag}
+      onClick={() => handleTagClick(tag)}
+      className={`px-2 py-1 rounded-[6px] text-[12px] transition-colors ${
+        isActive
+          ? 'bg-purple-500/30 border border-purple-500/50 text-white'
+          : 'bg-white/5 border border-white/10 text-white/60 hover:bg-white/10 hover:text-white'
+      }`}
+    >
+      {tag}
+    </button>
+  ))}
+</div>
+```
+
+### Bulk Actions
+
+#### Selection & Bulk Operations
+Checkbox-based selection with bulk action toolbar.
+
+```tsx
+const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+
+// Selection toolbar (appears when items selected)
+{selectedIds.size > 0 && (
+  <div className="flex items-center gap-3 px-6 py-3 border-b border-white/10 bg-white/5">
+    <span className="text-[14px] text-white font-medium">
+      {selectedIds.size} selected
+    </span>
+    <button className="px-3 py-1.5 text-[13px] text-white/70 hover:text-white hover:bg-white/5 rounded-[6px]">
+      <Tag className="w-3.5 h-3.5" />
+      Add Tag
+    </button>
+    <button className="px-3 py-1.5 text-[13px] text-white/70 hover:text-white hover:bg-white/5 rounded-[6px]">
+      <Plus className="w-3.5 h-3.5" />
+      Add to Playlist
+    </button>
+    <button className="px-3 py-1.5 text-[13px] text-red-400 hover:text-white hover:bg-red-500/10 rounded-[6px]">
+      <Trash2 className="w-3.5 h-3.5" />
+      Delete
+    </button>
+  </div>
+)}
+
+// Checkbox in table row
+<input
+  type="checkbox"
+  checked={selectedIds.has(item.id)}
+  onChange={(e) => {
+    e.stopPropagation()
+    const newSet = new Set(selectedIds)
+    if (newSet.has(item.id)) {
+      newSet.delete(item.id)
+    } else {
+      newSet.add(item.id)
+    }
+    setSelectedIds(newSet)
+  }}
+  onClick={(e) => e.stopPropagation()}
+  className="w-3.5 h-3.5 cursor-pointer"
+/>
+```
+
+### Inline Editing
+
+#### Editable Table Cells
+Click to edit, Enter to save, Escape to cancel.
+
+```tsx
+const [editingId, setEditingId] = useState<string | null>(null)
+const inputRef = useRef<HTMLInputElement>(null)
+
+// Auto-focus when editing starts
+useEffect(() => {
+  if (editingId && inputRef.current) {
+    inputRef.current.focus()
+    inputRef.current.select()
+  }
+}, [editingId])
+
+// Editable cell
+{editingId === item.id ? (
+  <form
+    onSubmit={(e) => {
+      e.preventDefault()
+      handleSave()
+    }}
+    className="w-full py-1"
+  >
+    <input
+      ref={inputRef}
+      type="text"
+      defaultValue={item.name}
+      onClick={(e) => e.stopPropagation()}
+      onBlur={() => setTimeout(handleSave, 100)}
+      onKeyDown={(e) => {
+        if (e.key === 'Escape') {
+          e.preventDefault()
+          setEditingId(null)
+        }
+      }}
+      className="w-full px-2 py-1 bg-white/10 border border-white/20 rounded text-[13px] text-white focus:outline-none focus:border-white/40"
+    />
+  </form>
+) : (
+  <div
+    onDoubleClick={() => setEditingId(item.id)}
+    className="py-1 text-[14px] text-white truncate"
+  >
+    {item.name}
+  </div>
+)}
+```
+
+### Scrollable Containers
+
+#### Custom Scrollbar Styling
+Consistent scrollbar appearance across the app.
+
+```css
+/* In globals.css */
+.scrollbar-custom {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+}
+
+.scrollbar-custom::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.scrollbar-custom::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-custom::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+}
+
+.scrollbar-custom::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(255, 255, 255, 0.3);
+}
+```
+
+**Usage:**
+```tsx
+<div className="h-64 overflow-y-auto scrollbar-custom">
+  {/* Scrollable content */}
+</div>
+```
+
 ## Future Enhancements
 
+- [x] Dropdown menu component
+- [x] Tag/badge component
+- [x] Tooltip pattern
+- [x] Context menu pattern
 - [ ] Add loading skeleton components
 - [ ] Create toast notification component
-- [ ] Add dropdown menu component
-- [ ] Create badge/chip component
-- [ ] Add tooltip component
 - [ ] Create progress bar component
 - [ ] Add tab navigation component
