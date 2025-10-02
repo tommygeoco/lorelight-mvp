@@ -104,7 +104,7 @@ export default function AudioPage() {
       setTimeout(() => {
         const rowElement = audioRowRefs.current.get(trackId)
         if (rowElement) {
-          rowElement.scrollIntoView({ behavior: 'smooth', block: 'center' })
+          rowElement.scrollIntoView({ behavior: 'smooth', block: 'start' })
         }
       }, 100)
     }
