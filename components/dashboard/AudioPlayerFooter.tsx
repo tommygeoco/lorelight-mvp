@@ -5,6 +5,7 @@ import { Volume2, VolumeX, Pause, Play, Volume1, SkipBack, SkipForward, Repeat, 
 import { useAudioStore } from '@/store/audioStore'
 import { useAudioFileMap } from '@/hooks/useAudioFileMap'
 import { formatTime } from '@/lib/utils/time'
+import { Tooltip } from '@/components/ui/Tooltip'
 
 // Scene-aware gradient constants (module-level for performance)
 const SCENE_GRADIENTS = [
@@ -202,12 +203,11 @@ export function AudioPlayerFooter() {
 
           {/* Track Details */}
           <div className="flex flex-col min-w-0 flex-1 gap-0.5">
-            <div
-              className="text-[15px] font-medium text-white truncate"
-              title={currentTrack?.name || 'No track loaded'}
-            >
-              {currentTrack?.name || 'No track loaded'}
-            </div>
+            <Tooltip content={currentTrack?.name || 'No track loaded'} position="top">
+              <div className="text-[15px] font-medium text-white truncate">
+                {currentTrack?.name || 'No track loaded'}
+              </div>
+            </Tooltip>
             <div className="text-[13px] text-white/40 truncate">
               {currentTrack ? (
                 <span className="flex items-center gap-1.5">
@@ -226,28 +226,26 @@ export function AudioPlayerFooter() {
           {/* Control Buttons */}
           <div className="flex items-center gap-2">
             {/* Shuffle (disabled for now) */}
-            <span title="Shuffle (coming soon)" className="inline-block">
+            <Tooltip content="Shuffle (coming soon)" position="top">
               <button
                 disabled
                 className="w-8 h-8 flex items-center justify-center text-white/20 cursor-not-allowed transition-colors"
                 aria-label="Shuffle"
-                style={{ pointerEvents: 'none' }}
               >
                 <Shuffle className="w-4 h-4" />
               </button>
-            </span>
+            </Tooltip>
 
             {/* Skip Back (disabled for now) */}
-            <span title="Previous track (coming soon)" className="inline-block">
+            <Tooltip content="Previous track (coming soon)" position="top">
               <button
                 disabled
                 className="w-8 h-8 flex items-center justify-center text-white/20 cursor-not-allowed transition-colors"
                 aria-label="Previous track"
-                style={{ pointerEvents: 'none' }}
               >
                 <SkipBack className="w-4 h-4" fill="currentColor" />
               </button>
-            </span>
+            </Tooltip>
 
             {/* Play/Pause */}
             <button
@@ -271,21 +269,20 @@ export function AudioPlayerFooter() {
             </button>
 
             {/* Skip Forward (disabled for now) */}
-            <span title="Next track (coming soon)" className="inline-block">
+            <Tooltip content="Next track (coming soon)" position="top">
               <button
                 disabled
                 className="w-8 h-8 flex items-center justify-center text-white/20 cursor-not-allowed transition-colors"
                 aria-label="Next track"
-                style={{ pointerEvents: 'none' }}
               >
                 <SkipForward className="w-4 h-4" fill="currentColor" />
               </button>
-            </span>
+            </Tooltip>
 
             {/* Loop */}
-            <span
-              title={!currentTrack ? "No track loaded" : isLooping ? "Loop enabled - Click to disable" : "Loop disabled - Click to enable"}
-              className="inline-block"
+            <Tooltip
+              content={!currentTrack ? "No track loaded" : isLooping ? "Loop enabled" : "Loop disabled"}
+              position="top"
             >
               <button
                 onClick={toggleLoop}
@@ -299,12 +296,11 @@ export function AudioPlayerFooter() {
                       : 'text-white/60 hover:text-white'
                   }
                 `}
-                style={!currentTrack ? { pointerEvents: 'none' } : undefined}
                 aria-label={isLooping ? "Loop enabled" : "Loop disabled"}
               >
                 <Repeat className="w-4 h-4" />
               </button>
-            </span>
+            </Tooltip>
           </div>
 
           {/* Progress Bar with purple gradient */}
