@@ -56,7 +56,7 @@ export function UploadQueue({
                 item.status === 'complete' ? 'opacity-0' : 'opacity-100'
               }`}
             >
-              <div className={`flex items-center gap-3 rounded-[6px] p-3 transition-colors ${
+              <div className={`flex items-center gap-3 rounded-[6px] p-3 pr-4 transition-colors ${
                 focusedQueueItemId === item.id ? 'bg-white/10' : 'bg-white/5'
               }`}>
                 <Music className="w-4 h-4 text-white/40 flex-shrink-0" />
@@ -81,7 +81,10 @@ export function UploadQueue({
                   <span className="flex-shrink-0 text-green-400 text-[12px] font-medium">✓</span>
                 )}
                 {item.status === 'error' && (
-                  <span className="flex-shrink-0 text-red-400 text-[12px] font-medium">✗</span>
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <span className="text-red-400 text-[11px] font-medium whitespace-nowrap">Failed to upload</span>
+                    <span className="text-red-400 text-[12px] font-medium">✗</span>
+                  </div>
                 )}
               </div>
 

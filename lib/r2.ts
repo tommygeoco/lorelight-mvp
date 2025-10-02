@@ -48,25 +48,50 @@ export async function uploadToR2(
     throw new Error('R2_BUCKET_NAME not configured')
   }
 
-  await client.send(
-    new PutObjectCommand({
-      Bucket: bucketName,
-      Key: key,
-      Body: file,
-      ContentType: contentType,
-    })
-  )
+  // Retry logic for SSL/network errors
+  const maxRetries = 3
+  let lastError: Error | null = null
 
-  // Return public URL
-  const publicDomain = process.env.R2_PUBLIC_DOMAIN || process.env.NEXT_PUBLIC_R2_PUBLIC_URL
-  if (publicDomain) {
-    // Remove https:// if present
-    const domain = publicDomain.replace(/^https?:\/\//, '')
-    return `https://${domain}/${key}`
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      await client.send(
+        new PutObjectCommand({
+          Bucket: bucketName,
+          Key: key,
+          Body: file,
+          ContentType: contentType,
+        })
+      )
+
+      // Success - return public URL
+      const publicDomain = process.env.R2_PUBLIC_DOMAIN || process.env.NEXT_PUBLIC_R2_PUBLIC_URL
+      if (publicDomain) {
+        // Remove https:// if present
+        const domain = publicDomain.replace(/^https?:\/\//, '')
+        return `https://${domain}/${key}`
+      }
+
+      // Fallback to bucket name (won't work without public access)
+      return `https://${bucketName}.r2.dev/${key}`
+    } catch (error) {
+      lastError = error as Error
+      console.error(`Upload attempt ${attempt} failed:`, error)
+
+      // Don't retry on certain errors
+      if (error instanceof Error && !error.message.includes('SSL') && !error.message.includes('network')) {
+        throw error
+      }
+
+      // Wait before retry (exponential backoff)
+      if (attempt < maxRetries) {
+        const delay = Math.min(1000 * Math.pow(2, attempt - 1), 5000)
+        console.log(`Retrying in ${delay}ms...`)
+        await new Promise(resolve => setTimeout(resolve, delay))
+      }
+    }
   }
 
-  // Fallback to bucket name (won't work without public access)
-  return `https://${bucketName}.r2.dev/${key}`
+  throw new Error(`Upload failed after ${maxRetries} attempts: ${lastError?.message}`)
 }
 
 export async function deleteFromR2(key: string): Promise<void> {
