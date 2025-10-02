@@ -95,7 +95,6 @@ export async function uploadToR2(
         const baseDelay = Math.min(3000 * Math.pow(1.5, attempt - 1), 15000) // 3s, 4.5s, 6.75s, 10s, 15s...
         const jitter = Math.random() * 2000 // Add up to 2s random jitter
         const delay = baseDelay + jitter
-        console.log(`[R2 Upload] Retrying in ${Math.round(delay)}ms... (fresh connection)`)
 
         await new Promise(resolve => setTimeout(resolve, delay))
       }

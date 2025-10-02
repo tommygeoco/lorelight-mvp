@@ -56,15 +56,11 @@ export const useAudioFileStore = create<AudioFileState>()(
       uploadAudioFile: async (file, name, tags = [], folderId) => {
         set({ isUploading: true, uploadProgress: 0 })
         try {
-          console.log('Starting upload for:', file.name)
-
           // Upload file to R2
           const { fileUrl, fileSize } = await audioService.upload(file)
-          console.log('File uploaded to R2:', fileUrl)
 
           // Get audio duration
           const duration = await getAudioDuration(file)
-          console.log('Audio duration:', duration)
 
           // Create audio file record
           const audioFile = await audioService.create({
@@ -76,8 +72,6 @@ export const useAudioFileStore = create<AudioFileState>()(
             tags,
             folder_id: folderId || null,
           })
-          console.log('Audio file record created:', audioFile.id)
-          console.log('Full audioFile object:', JSON.stringify(audioFile, null, 2))
 
           // Add to store
           set(state => {
@@ -141,9 +135,7 @@ export const useAudioFileStore = create<AudioFileState>()(
         })
 
         try {
-          console.log('audioService.update called with:', { id, updates })
           const updatedFile = await audioService.update(id, updates)
-          console.log('audioService.update succeeded:', updatedFile)
           // Update with server response
           set(state => {
             state.audioFiles.set(id, updatedFile)

@@ -1768,8 +1768,7 @@ const getSceneGradient = (trackId: string) => {
       <InputModal
         isOpen={showInputModal}
         onClose={() => setShowInputModal(false)}
-        onSubmit={(value) => {
-          console.log('Created:', value)
+        onSubmit={() => {
           setShowInputModal(false)
         }}
         title="Create Playlist"

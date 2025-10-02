@@ -186,16 +186,55 @@ All tables have Row Level Security (RLS) enforcing user isolation.
 - First Contentful Paint <1s
 - Time to Interactive <2s
 
+## Recent Features (October 2025)
+
+### Audio Player Footer Enhancements ✅
+**Navigation & Source Tracking:**
+- Dual-link navigation system (track name → library, source name → origin)
+- Source context tracking (library/playlist/scene) persisted to localStorage
+- Scroll-to-track functionality with URL parameters (`?track={id}`)
+- Dynamic source display with prefixes ("Playlist: X", "Scene: Y")
+
+**Visual Polish:**
+- Equalizer bars animation when playing
+- Progress bar shimmer effect during playback
+- Smooth drag scrubbing with real-time preview
+- Loop/Shuffle controls with tooltips
+- Volume slider with purple-pink gradient
+- Hover states on clickable elements
+
+**Technical Implementation:**
+- Source context passed through `useAudioPlayback` hook
+- URL sync for playlist selection bidirectional
+- Custom Tooltip component for accessibility
+- Memoized gradient calculations for performance
+- Global event listeners for smooth drag interaction
+
+### Audio Library - Dark Fantasy Charm ✅
+**Visual Effects:**
+- Playing track gradient with smooth fade-in animation
+- Left edge glow with pulsing effect
+- Subtle wave overlay animation
+- Tag hover shimmer with purple glow
+- Visualizer bars with organic movement
+
+**Interaction Improvements:**
+- Bulk selection and operations (tag, playlist, delete)
+- Context menu with tag management
+- Inline tag editing with keyboard shortcuts
+- Arcane drop zone for drag-and-drop uploads
+- Fixed tag menu overflow issues
+
 ## Migration Status
 
 ### Phase 3 Complete: Zustand Stores ✅
-**Status:** All state management implemented (see `PHASE3_COMPLETE.md`)
+**Status:** All state management implemented
 
-**New Stores Created:**
+**Stores Created:**
 - `sessionSceneStore` - Session-scene many-to-many relationships
-- `scenePresetStore` - Scene templates (8 system + user custom)
-- `audioFolderStore` - Hierarchical audio organization
 - `audioPlaylistStore` - Playlist management with audio files
+- `audioFolderStore` - Hierarchical audio organization
+- `audioStore` - Audio playback state with source tracking
 
 **Updated Stores:**
 - `sessionStore` - Added fetch-once pattern with `fetchedCampaigns`
