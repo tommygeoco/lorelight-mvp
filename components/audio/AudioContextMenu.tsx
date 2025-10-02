@@ -1,7 +1,7 @@
 'use client'
 
 import { useRef, useState } from 'react'
-import { Upload, Play, Pause, Edit2, Tag, ChevronRight, Trash2, Plus, X } from 'lucide-react'
+import { Upload, Play, Pause, Edit2, Tag, ChevronRight, Trash2, Plus, X, Minus } from 'lucide-react'
 import { useAudioPlayback } from '@/hooks/useAudioPlayback'
 import { useAudioFileStore } from '@/store/audioFileStore'
 import { useAudioPlaylistStore } from '@/store/audioPlaylistStore'
@@ -26,6 +26,7 @@ interface AudioContextMenuProps {
   onAddToNewPlaylist: (file: AudioFile) => void
   playlists: AudioPlaylist[]
   allTags: string[]
+  selectedPlaylistId: string | null
 }
 
 export function AudioContextMenu({
@@ -41,6 +42,7 @@ export function AudioContextMenu({
   onAddToNewPlaylist,
   playlists,
   allTags,
+  selectedPlaylistId,
 }: AudioContextMenuProps) {
   const tagInputRef = useRef<HTMLInputElement>(null)
   const isInputFocusedRef = useRef(false)
@@ -48,7 +50,7 @@ export function AudioContextMenu({
 
   const { handlePlay, currentTrackId, isPlaying } = useAudioPlayback()
   const { updateAudioFile } = useAudioFileStore()
-  const { addAudioToPlaylist } = useAudioPlaylistStore()
+  const { addAudioToPlaylist, removeAudioFromPlaylist } = useAudioPlaylistStore()
   const audioFileMap = useAudioFileMap()
   const { addToast } = useToastStore()
 
@@ -67,7 +69,6 @@ export function AudioContextMenu({
     }
 
     await updateAudioFile(audioFile.id, { tags: [...tags, tagToAdd] })
-    addToast('Tag added', 'success')
   }
 
   const handleRemoveTagFromFile = async (audioFile: AudioFile, tagToRemove: string) => {
@@ -75,15 +76,18 @@ export function AudioContextMenu({
     const currentFile = audioFileMap.get(audioFile.id)
     const tags = currentFile?.tags || []
     await updateAudioFile(audioFile.id, { tags: tags.filter(t => t !== tagToRemove) })
-    addToast('Tag removed', 'success')
   }
 
   const handleAddToPlaylist = async (audioFile: AudioFile, playlistId: string) => {
     await addAudioToPlaylist(playlistId, audioFile.id)
-    const playlist = playlists.find(p => p.id === playlistId)
-    addToast(`Added to "${playlist?.name}"`, 'success')
     setContextMenu(null)
     setShowAddToSubmenu(false)
+  }
+
+  const handleRemoveFromPlaylist = async (audioFile: AudioFile) => {
+    if (!selectedPlaylistId) return
+    await removeAudioFromPlaylist(selectedPlaylistId, audioFile.id)
+    setContextMenu(null)
   }
 
   const handleMenuItemHover = () => {
@@ -348,6 +352,21 @@ export function AudioContextMenu({
               </div>
             )}
           </div>
+
+          {/* Remove from Playlist - only show when viewing a specific playlist */}
+          {selectedPlaylistId && (
+            <>
+              <div className="h-px bg-white/10 my-1" />
+              <button
+                onClick={() => handleRemoveFromPlaylist(contextMenu.audioFile!)}
+                onMouseEnter={handleMenuItemHover}
+                className="w-full px-4 py-2 text-left text-[13px] text-white hover:bg-white/5 flex items-center gap-2 transition-colors"
+              >
+                <Minus className="w-3.5 h-3.5" />
+                Remove from Playlist
+              </button>
+            </>
+          )}
 
           <div className="h-px bg-white/10 my-1" />
 

@@ -553,7 +553,6 @@ export default function AudioPage() {
         })
       )
 
-      addToast(`Added tag "${trimmedTag}" to ${selectedFileIds.size} file(s)`, 'success')
       setIsBulkTagModalOpen(false)
       // Don't deselect - let user continue working
     } catch (error) {
@@ -573,8 +572,6 @@ export default function AudioPage() {
         )
       )
 
-      const playlist = playlistMap.get(playlistId)
-      addToast(`Added ${selectedFileIds.size} file(s) to "${playlist?.name}"`, 'success')
       setIsBulkPlaylistModalOpen(false)
       // Don't deselect - let user continue working
     } catch (error) {
@@ -1082,6 +1079,7 @@ export default function AudioPage() {
         onAddToNewPlaylist={handleAddToNewPlaylistClick}
         playlists={playlists}
         allTags={allTags}
+        selectedPlaylistId={selectedPlaylistId}
       />
 
       {/* Delete Confirmation Dialog */}
