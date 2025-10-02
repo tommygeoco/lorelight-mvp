@@ -49,7 +49,9 @@ export default function AudioPage() {
   const [showBulkActions, setShowBulkActions] = useState(false)
   const [showFilters, setShowFilters] = useState(false)
   const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set())
-  const closeMenuTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const [isBulkTagModalOpen, setIsBulkTagModalOpen] = useState(false)
+  const [isBulkPlaylistModalOpen, setIsBulkPlaylistModalOpen] = useState(false)
+  // Context menu state - managed locally in AudioContextMenu component
   const [focusedQueueItemId, setFocusedQueueItemId] = useState<string | null>(null)
   const [isDraggingOver, setIsDraggingOver] = useState(false)
   const dragCounterRef = useRef(0)
@@ -83,24 +85,34 @@ export default function AudioPage() {
     fetchAudioFiles()
   }, [fetchAudioFiles])
 
-  // Close context menu when clicking outside
+  // Close context menu and bulk action dropdowns when clicking outside
   useEffect(() => {
-    const handleClick = () => {
-      setContextMenu(null)
-      setShowTagsSubmenu(false)
-      setShowAddToSubmenu(false)
-    }
-    if (contextMenu) {
-      const timeoutRef = closeMenuTimeoutRef.current
-      document.addEventListener('click', handleClick)
-      return () => {
-        document.removeEventListener('click', handleClick)
-        if (timeoutRef) {
-          clearTimeout(timeoutRef)
-        }
+    const handleClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement
+
+      // Don't close if clicking inside context menu or its submenus
+      const isInsideContextMenu = target.closest('[data-context-menu]') || target.closest('[data-tags-submenu]')
+
+      // Don't close if clicking inside bulk dropdowns
+      const isInsideBulkDropdown = target.closest('[data-bulk-dropdown]')
+
+      // Only close if clicking outside all menus/dropdowns
+      if (!isInsideContextMenu && !isInsideBulkDropdown) {
+        setContextMenu(null)
+        setShowTagsSubmenu(false)
+        setShowAddToSubmenu(false)
+        setIsBulkTagModalOpen(false)
+        setIsBulkPlaylistModalOpen(false)
       }
     }
-  }, [contextMenu])
+    if (contextMenu || isBulkTagModalOpen || isBulkPlaylistModalOpen) {
+      // Use mousedown instead of click to catch events before React state updates
+      document.addEventListener('mousedown', handleClick)
+      return () => {
+        document.removeEventListener('mousedown', handleClick)
+      }
+    }
+  }, [contextMenu, isBulkTagModalOpen, isBulkPlaylistModalOpen])
 
   // Get all audio files from the map
   const allAudioFiles = useMemo(() =>
@@ -518,6 +530,60 @@ export default function AudioPage() {
     }
   }
 
+  const handleBulkAddTag = async (tag: string) => {
+    if (selectedFileIds.size === 0 || !tag.trim()) return
+
+    const trimmedTag = tag.trim().toLowerCase()
+
+    try {
+      for (const fileId of selectedFileIds) {
+        const file = audioFileMap.get(fileId)
+        if (!file) continue
+
+        const currentTags = file.tags || []
+        // Only add if tag doesn&apos;t already exist
+        if (!currentTags.includes(trimmedTag)) {
+          await updateAudioFile(fileId, {
+            tags: [...currentTags, trimmedTag]
+          })
+        }
+      }
+
+      addToast(`Added tag "${trimmedTag}" to ${selectedFileIds.size} file(s)`, 'success')
+      setIsBulkTagModalOpen(false)
+      setSelectedFileIds(new Set())
+      setShowBulkActions(false)
+    } catch (error) {
+      logger.error('Bulk tag failed', error)
+      addToast('Failed to add tags', 'error')
+    }
+  }
+
+  const handleBulkAddToPlaylist = async (playlistId: string) => {
+    if (selectedFileIds.size === 0) return
+
+    try {
+      for (const fileId of selectedFileIds) {
+        await addAudioToPlaylist(playlistId, fileId)
+      }
+
+      const playlist = playlistMap.get(playlistId)
+      addToast(`Added ${selectedFileIds.size} file(s) to "${playlist?.name}"`, 'success')
+      setIsBulkPlaylistModalOpen(false)
+      setSelectedFileIds(new Set())
+      setShowBulkActions(false)
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error)
+      // Check if it&apos;s a duplicate error
+      if (errorMessage.includes('duplicate key') || errorMessage.includes('unique constraint')) {
+        addToast('Some files already in playlist', 'error')
+      } else {
+        logger.error('Bulk add to playlist failed', error)
+        addToast('Failed to add files to playlist', 'error')
+      }
+    }
+  }
+
   const handleSelectAll = () => {
     if (selectedFileIds.size === audioFiles.length) {
       setSelectedFileIds(new Set())
@@ -612,6 +678,85 @@ export default function AudioPage() {
               >
                 {selectedFileIds.size === audioFiles.length ? 'Deselect All' : 'Select All'}
               </button>
+              {/* Add Tag Dropdown */}
+              <div className="relative">
+                <button
+                  onClick={() => {
+                    setIsBulkTagModalOpen(!isBulkTagModalOpen)
+                    setIsBulkPlaylistModalOpen(false)
+                  }}
+                  className="px-3 py-1.5 text-[13px] text-white/70 hover:text-white hover:bg-white/5 rounded-[6px] transition-colors flex items-center gap-1.5"
+                >
+                  <Tag className="w-3.5 h-3.5" />
+                  Add Tag
+                </button>
+
+                {isBulkTagModalOpen && (
+                  <div data-bulk-dropdown className="absolute top-full left-0 mt-1 bg-[#191919] border border-white/10 rounded-[8px] shadow-2xl min-w-[240px] z-50" onClick={(e) => e.stopPropagation()}>
+                    <div className="p-3">
+                      <input
+                        type="text"
+                        placeholder="Enter tag name..."
+                        autoFocus
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            const target = e.target as HTMLInputElement
+                            if (target.value.trim()) {
+                              handleBulkAddTag(target.value)
+                            }
+                          }
+                        }}
+                        className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-[6px] text-[13px] text-white placeholder:text-white/40 focus:outline-none focus:border-white/20"
+                      />
+                    </div>
+
+                    {allTags.length > 0 && (
+                      <>
+                        <div className="h-px bg-white/10" />
+                        <div className="py-1 max-h-[200px] overflow-y-auto scrollbar-custom">
+                          {allTags.map(tag => (
+                            <button
+                              key={tag}
+                              onClick={() => handleBulkAddTag(tag)}
+                              className="w-full px-3 py-2 text-left text-[13px] text-white hover:bg-white/5 transition-colors"
+                            >
+                              {tag}
+                            </button>
+                          ))}
+                        </div>
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Add to Playlist Dropdown */}
+              <div className="relative">
+                <button
+                  onClick={() => {
+                    setIsBulkPlaylistModalOpen(!isBulkPlaylistModalOpen)
+                    setIsBulkTagModalOpen(false)
+                  }}
+                  className="px-3 py-1.5 text-[13px] text-white/70 hover:text-white hover:bg-white/5 rounded-[6px] transition-colors flex items-center gap-1.5"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  Add to Playlist
+                </button>
+
+                {isBulkPlaylistModalOpen && playlists.length > 0 && (
+                  <div data-bulk-dropdown className="absolute top-full left-0 mt-1 bg-[#191919] border border-white/10 rounded-[8px] shadow-2xl min-w-[200px] max-h-[300px] overflow-y-auto scrollbar-custom z-50 py-1" onClick={(e) => e.stopPropagation()}>
+                    {playlists.map(playlist => (
+                      <button
+                        key={playlist.id}
+                        onClick={() => handleBulkAddToPlaylist(playlist.id)}
+                        className="w-full px-4 py-2 text-left text-[13px] text-white hover:bg-white/5 transition-colors"
+                      >
+                        {playlist.name}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
               <button
                 onClick={handleBulkDelete}
                 className="px-3 py-1.5 text-[13px] text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-[6px] transition-colors flex items-center gap-1.5"
@@ -932,7 +1077,6 @@ export default function AudioPage() {
         onAddToNewPlaylist={handleAddToNewPlaylistClick}
         playlists={playlists}
         allTags={allTags}
-        closeMenuTimeoutRef={closeMenuTimeoutRef}
       />
 
       {/* Delete Confirmation Dialog */}
@@ -961,6 +1105,7 @@ export default function AudioPage() {
         submitText="Create & Add"
         isLoading={isCreatingPlaylist}
       />
+
     </DashboardLayoutWithSidebar>
   )
 }

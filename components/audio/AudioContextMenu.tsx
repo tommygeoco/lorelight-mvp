@@ -26,7 +26,6 @@ interface AudioContextMenuProps {
   onAddToNewPlaylist: (file: AudioFile) => void
   playlists: AudioPlaylist[]
   allTags: string[]
-  closeMenuTimeoutRef: React.MutableRefObject<NodeJS.Timeout | null>
 }
 
 export function AudioContextMenu({
@@ -42,7 +41,6 @@ export function AudioContextMenu({
   onAddToNewPlaylist,
   playlists,
   allTags,
-  closeMenuTimeoutRef,
 }: AudioContextMenuProps) {
   const tagInputRef = useRef<HTMLInputElement>(null)
   const isInputFocusedRef = useRef(false)
@@ -56,10 +54,12 @@ export function AudioContextMenu({
 
   if (!contextMenu) return null
 
-  const handleAddTag = async (audioFile: AudioFile, newTag: string) => {
+  const handleAddTagToFile = async (audioFile: AudioFile, newTag: string) => {
     if (!newTag.trim()) return
 
-    const tags = audioFile.tags || []
+    // Get current tags from the store to ensure we have the latest data
+    const currentFile = audioFileMap.get(audioFile.id)
+    const tags = currentFile?.tags || []
     const tagToAdd = newTag.trim().toLowerCase()
     if (tags.includes(tagToAdd)) {
       addToast('Tag already exists', 'error')
@@ -70,8 +70,10 @@ export function AudioContextMenu({
     addToast('Tag added', 'success')
   }
 
-  const handleRemoveTag = async (audioFile: AudioFile, tagToRemove: string) => {
-    const tags = audioFile.tags || []
+  const handleRemoveTagFromFile = async (audioFile: AudioFile, tagToRemove: string) => {
+    // Get current tags from the store to ensure we have the latest data
+    const currentFile = audioFileMap.get(audioFile.id)
+    const tags = currentFile?.tags || []
     await updateAudioFile(audioFile.id, { tags: tags.filter(t => t !== tagToRemove) })
     addToast('Tag removed', 'success')
   }
@@ -85,28 +87,19 @@ export function AudioContextMenu({
   }
 
   const handleMenuItemHover = () => {
-    if (closeMenuTimeoutRef.current) {
-      clearTimeout(closeMenuTimeoutRef.current)
-      closeMenuTimeoutRef.current = null
-    }
     setShowTagsSubmenu(false)
     setShowAddToSubmenu(false)
   }
 
   return (
     <div
+      data-context-menu
       className="fixed z-[60] bg-[#191919] border border-white/10 rounded-[8px] shadow-2xl min-w-[180px] py-1"
       style={{
         left: `${contextMenu.x}px`,
         top: `${contextMenu.y}px`,
       }}
-      onMouseLeave={() => {
-        closeMenuTimeoutRef.current = setTimeout(() => {
-          if (isInputFocusedRef.current) return
-          setContextMenu(null)
-          setShowTagsSubmenu(false)
-        }, 200)
-      }}
+      onClick={(e) => e.stopPropagation()}
     >
       {!contextMenu.audioFile ? (
         <button
@@ -152,18 +145,8 @@ export function AudioContextMenu({
           <div
             className="relative"
             onMouseEnter={() => {
-              if (closeMenuTimeoutRef.current) {
-                clearTimeout(closeMenuTimeoutRef.current)
-                closeMenuTimeoutRef.current = null
-              }
               setShowAddToSubmenu(false)
               setShowTagsSubmenu(true)
-            }}
-            onMouseLeave={() => {
-              closeMenuTimeoutRef.current = setTimeout(() => {
-                if (isInputFocusedRef.current) return
-                setShowTagsSubmenu(false)
-              }, 200)
             }}
           >
             <button
@@ -185,6 +168,10 @@ export function AudioContextMenu({
               const spaceBelow = viewportHeight - contextMenu.y
               const shouldPositionFromBottom = spaceBelow < 400
 
+              // Get fresh data from the store
+              const currentFile = audioFileMap.get(contextMenu.audioFile.id)
+              const currentTags = currentFile?.tags || []
+
               return (
                 <div
                   data-tags-submenu
@@ -199,19 +186,12 @@ export function AudioContextMenu({
                       maxHeight: 'min(400px, ' + spaceBelow + 'px)'
                     })
                   }}
-                  onMouseEnter={() => {
-                    if (closeMenuTimeoutRef.current) {
-                      clearTimeout(closeMenuTimeoutRef.current)
-                      closeMenuTimeoutRef.current = null
-                    }
-                    setShowTagsSubmenu(true)
-                  }}
                   onClick={(e) => e.stopPropagation()}
                 >
                   {/* Current tags */}
-                  {contextMenu.audioFile.tags && contextMenu.audioFile.tags.length > 0 && (
+                  {currentTags.length > 0 && (
                     <div className="px-3 pb-2 flex flex-wrap gap-1.5">
-                      {[...contextMenu.audioFile.tags].sort().map(tag => (
+                      {[...currentTags].sort().map(tag => (
                         <div
                           key={tag}
                           className="px-2 py-1 bg-purple-500/20 border border-purple-500/30 rounded-[6px] text-[12px] text-white flex items-center gap-1.5"
@@ -220,7 +200,7 @@ export function AudioContextMenu({
                           <button
                             onClick={(e) => {
                               e.stopPropagation()
-                              handleRemoveTag(contextMenu.audioFile!, tag)
+                              handleRemoveTagFromFile(contextMenu.audioFile!, tag)
                             }}
                             className="text-white/50 hover:text-white transition-colors"
                           >
@@ -237,30 +217,18 @@ export function AudioContextMenu({
                       ref={tagInputRef}
                       type="text"
                       value={tagInput}
-                      onChange={(e) => {
-                        setTagInput(e.target.value)
-                        if (closeMenuTimeoutRef.current) {
-                          clearTimeout(closeMenuTimeoutRef.current)
-                          closeMenuTimeoutRef.current = null
-                        }
-                      }}
+                      onChange={(e) => setTagInput(e.target.value)}
                       onFocus={(e) => {
                         isInputFocusedRef.current = true
-                        if (closeMenuTimeoutRef.current) {
-                          clearTimeout(closeMenuTimeoutRef.current)
-                          closeMenuTimeoutRef.current = null
-                        }
                         e.stopPropagation()
                       }}
                       onBlur={() => {
-                        setTimeout(() => {
-                          isInputFocusedRef.current = false
-                        }, 300)
+                        isInputFocusedRef.current = false
                       }}
                       onKeyDown={(e) => {
                         if (e.key === 'Enter' && tagInput.trim()) {
                           e.preventDefault()
-                          handleAddTag(contextMenu.audioFile!, tagInput)
+                          handleAddTagToFile(contextMenu.audioFile!, tagInput)
                           setTagInput('')
                           setTimeout(() => tagInputRef.current?.focus(), 0)
                         }
@@ -281,7 +249,7 @@ export function AudioContextMenu({
                       <button
                         onClick={(e) => {
                           e.stopPropagation()
-                          handleAddTag(contextMenu.audioFile!, tagInput)
+                          handleAddTagToFile(contextMenu.audioFile!, tagInput)
                           setTagInput('')
                           setTimeout(() => tagInputRef.current?.focus(), 0)
                         }}
@@ -303,8 +271,7 @@ export function AudioContextMenu({
                         if (tagInput.trim()) {
                           return tag.toLowerCase().includes(tagInput.toLowerCase())
                         }
-                        const currentFile = audioFileMap.get(contextMenu.audioFile!.id)
-                        return !currentFile?.tags?.includes(tag)
+                        return !currentTags.includes(tag)
                       })
                       .sort()
                       .map(tag => (
@@ -312,7 +279,7 @@ export function AudioContextMenu({
                           key={tag}
                           onClick={(e) => {
                             e.stopPropagation()
-                            handleAddTag(contextMenu.audioFile!, tag)
+                            handleAddTagToFile(contextMenu.audioFile!, tag)
                             setTagInput('')
                             setTimeout(() => tagInputRef.current?.focus(), 0)
                           }}
@@ -331,17 +298,8 @@ export function AudioContextMenu({
           <div
             className="relative"
             onMouseEnter={() => {
-              if (closeMenuTimeoutRef.current) {
-                clearTimeout(closeMenuTimeoutRef.current)
-                closeMenuTimeoutRef.current = null
-              }
               setShowTagsSubmenu(false)
               setShowAddToSubmenu(true)
-            }}
-            onMouseLeave={() => {
-              closeMenuTimeoutRef.current = setTimeout(() => {
-                setShowAddToSubmenu(false)
-              }, 200)
             }}
           >
             <button
