@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useMemo, useState, useCallback, useEffect, useRef } from 'react'
 import { Volume2, VolumeX, Pause, Play, Volume1, SkipBack, SkipForward, Repeat, Shuffle } from 'lucide-react'
 import { useAudioStore } from '@/store/audioStore'
 import { useAudioFileMap } from '@/hooks/useAudioFileMap'
@@ -45,10 +45,102 @@ export function AudioPlayerFooter() {
   const audioFileMap = useAudioFileMap()
   const currentTrack = currentTrackId ? audioFileMap.get(currentTrackId) : null
 
+  // Progress bar dragging state
+  const [isDragging, setIsDragging] = useState(false)
+  const [dragProgress, setDragProgress] = useState(0)
+  const progressBarRef = useRef<HTMLDivElement>(null)
+
+  // Calculate seek position from mouse/touch event
+  const calculateSeekPosition = useCallback((clientX: number): number => {
+    if (!progressBarRef.current) return 0
+    const rect = progressBarRef.current.getBoundingClientRect()
+    const x = clientX - rect.left
+    const percentage = Math.max(0, Math.min(1, x / rect.width))
+    return percentage
+  }, [])
+
+  // Handle mouse/touch down - start dragging
+  const handleSeekStart = useCallback((clientX: number) => {
+    if (!currentTrack) return
+    setIsDragging(true)
+    const percentage = calculateSeekPosition(clientX)
+    setDragProgress(percentage * 100)
+  }, [currentTrack, calculateSeekPosition])
+
+  // Handle mouse/touch move - update preview position
+  const handleSeekMove = useCallback((clientX: number) => {
+    if (!isDragging) return
+    const percentage = calculateSeekPosition(clientX)
+    setDragProgress(percentage * 100)
+  }, [isDragging, calculateSeekPosition])
+
+  // Handle mouse/touch up - commit seek
+  const handleSeekEnd = useCallback(() => {
+    if (!isDragging) return
+    const newTime = (dragProgress / 100) * duration
+    seek(newTime)
+    setIsDragging(false)
+  }, [isDragging, dragProgress, duration, seek])
+
+  // Mouse event handlers
+  const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    e.preventDefault()
+    handleSeekStart(e.clientX)
+  }
+
+  // Touch event handlers
+  const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (e.touches.length > 0) {
+      handleSeekStart(e.touches[0].clientX)
+    }
+  }
+
+  // Global mouse/touch move and up listeners
+  useEffect(() => {
+    if (!isDragging) return
+
+    const handleGlobalMouseMove = (e: MouseEvent) => {
+      e.preventDefault()
+      handleSeekMove(e.clientX)
+    }
+
+    const handleGlobalTouchMove = (e: TouchEvent) => {
+      if (e.touches.length > 0) {
+        e.preventDefault()
+        handleSeekMove(e.touches[0].clientX)
+      }
+    }
+
+    const handleGlobalMouseUp = () => {
+      handleSeekEnd()
+    }
+
+    const handleGlobalTouchEnd = () => {
+      handleSeekEnd()
+    }
+
+    document.addEventListener('mousemove', handleGlobalMouseMove)
+    document.addEventListener('mouseup', handleGlobalMouseUp)
+    document.addEventListener('touchmove', handleGlobalTouchMove, { passive: false })
+    document.addEventListener('touchend', handleGlobalTouchEnd)
+
+    return () => {
+      document.removeEventListener('mousemove', handleGlobalMouseMove)
+      document.removeEventListener('mouseup', handleGlobalMouseUp)
+      document.removeEventListener('touchmove', handleGlobalTouchMove)
+      document.removeEventListener('touchend', handleGlobalTouchEnd)
+    }
+  }, [isDragging, handleSeekMove, handleSeekEnd])
+
   // Memoize calculations
-  const progress = useMemo(
-    () => (duration > 0 ? (currentTime / duration) * 100 : 0),
-    [currentTime, duration]
+  const displayProgress = useMemo(
+    () => isDragging ? dragProgress : (duration > 0 ? (currentTime / duration) * 100 : 0),
+    [isDragging, dragProgress, currentTime, duration]
+  )
+
+  const displayTime = useMemo(
+    () => isDragging ? (dragProgress / 100) * duration : currentTime,
+    [isDragging, dragProgress, duration, currentTime]
   )
 
   const artworkGradient = useMemo(
@@ -66,15 +158,6 @@ export function AudioPlayerFooter() {
   const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newVolume = parseFloat(e.target.value)
     setVolume(newVolume)
-  }
-
-  const handleProgressClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!currentTrack) return
-    const rect = e.currentTarget.getBoundingClientRect()
-    const x = e.clientX - rect.left
-    const percentage = x / rect.width
-    const newTime = percentage * duration
-    seek(newTime)
   }
 
   return (
@@ -213,43 +296,49 @@ export function AudioPlayerFooter() {
           {/* Progress Bar with purple gradient */}
           <div className="flex items-center gap-2 w-full">
             <div className="text-xs text-white/50 tabular-nums w-10 text-right font-mono">
-              {formatTime(currentTime)}
+              {formatTime(displayTime)}
             </div>
 
             <div
-              className="relative flex-1 h-1 rounded-full bg-white/10 cursor-pointer group overflow-visible"
-              onClick={handleProgressClick}
+              ref={progressBarRef}
+              className={`relative flex-1 rounded-full bg-white/10 group overflow-visible transition-all ${
+                isDragging ? 'h-1.5 cursor-grabbing' : 'h-1 cursor-pointer'
+              }`}
+              onMouseDown={handleMouseDown}
+              onTouchStart={handleTouchStart}
               role="slider"
               aria-label="Seek"
               aria-valuemin={0}
               aria-valuemax={duration}
-              aria-valuenow={currentTime}
+              aria-valuenow={displayTime}
             >
               {/* Purple glow underneath */}
-              {currentTrack && progress > 0 && (
+              {currentTrack && displayProgress > 0 && (
                 <div
-                  className="absolute inset-y-0 left-0 rounded-full blur-sm opacity-50 transition-all duration-150"
+                  className="absolute inset-y-0 left-0 rounded-full blur-sm opacity-50 transition-all"
                   style={{
-                    width: `${progress}%`,
+                    width: `${displayProgress}%`,
                     background: PURPLE_PINK_GRADIENT,
+                    transitionDuration: isDragging ? '0ms' : '150ms',
                   }}
                 />
               )}
 
               {/* Filled progress with purple gradient */}
               <div
-                className="absolute inset-y-0 left-0 rounded-full transition-all duration-150"
+                className="absolute inset-y-0 left-0 rounded-full transition-all"
                 style={{
-                  width: `${progress}%`,
+                  width: `${displayProgress}%`,
                   background: currentTrack ? PURPLE_PINK_GRADIENT : 'white',
+                  transitionDuration: isDragging ? '0ms' : '150ms',
                 }}
               />
 
-              {/* Shimmer effect when playing */}
-              {isPlaying && currentTrack && progress > 0 && (
+              {/* Shimmer effect when playing (not while dragging) */}
+              {isPlaying && currentTrack && displayProgress > 0 && !isDragging && (
                 <div
                   className="absolute inset-y-0 left-0 rounded-full overflow-hidden"
-                  style={{ width: `${progress}%` }}
+                  style={{ width: `${displayProgress}%` }}
                 >
                   <div
                     className="absolute inset-0 shimmer-effect"
@@ -260,11 +349,13 @@ export function AudioPlayerFooter() {
                 </div>
               )}
 
-              {/* Hover scrubber with purple glow */}
+              {/* Scrubber handle - visible on hover or while dragging */}
               {currentTrack && (
                 <div
-                  className="absolute top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"
-                  style={{ left: `calc(${progress}% - 6px)` }}
+                  className={`absolute top-1/2 -translate-y-1/2 transition-opacity pointer-events-none ${
+                    isDragging || displayProgress > 0 ? 'opacity-0 group-hover:opacity-100' : 'opacity-0'
+                  } ${isDragging ? '!opacity-100' : ''}`}
+                  style={{ left: `calc(${displayProgress}% - 6px)` }}
                 >
                   <div className="w-3 h-3 bg-white rounded-full shadow-lg relative">
                     <div className="absolute inset-0 bg-purple-500/50 rounded-full blur-sm" />
