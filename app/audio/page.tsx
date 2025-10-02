@@ -432,7 +432,6 @@ export default function AudioPage() {
 
     try {
       await updateAudioFile(editingFileId, { name: newName })
-      addToast('Renamed successfully', 'success')
       setEditingFileId(null)
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : String(error)

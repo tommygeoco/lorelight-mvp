@@ -129,7 +129,6 @@ export function PlaylistsSidebar({
 
     try {
       await updatePlaylist(playlistId, { name: editingName })
-      addToast('Renamed successfully', 'success')
       setEditingPlaylistId(null)
     } catch (error) {
       console.error('Failed to rename playlist:', error)

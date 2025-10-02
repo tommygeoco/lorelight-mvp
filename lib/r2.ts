@@ -2,43 +2,37 @@ import { S3Client, PutObjectCommand, DeleteObjectCommand } from '@aws-sdk/client
 
 /**
  * Cloudflare R2 client for audio file storage
- * Context7: Lazy initialization, environment validation
+ * Context7: Fresh client per request to avoid SSL connection reuse issues
  */
 
-let r2Client: S3Client | null = null
-
 export function getR2Client(): S3Client {
-  if (!r2Client) {
-    const accountId = process.env.R2_ACCOUNT_ID
-    const accessKeyId = process.env.R2_ACCESS_KEY_ID
-    const secretAccessKey = process.env.R2_SECRET_ACCESS_KEY
+  // Always create a fresh client - don't cache
+  // This prevents SSL connection reuse issues
+  const accountId = process.env.R2_ACCOUNT_ID
+  const accessKeyId = process.env.R2_ACCESS_KEY_ID
+  const secretAccessKey = process.env.R2_SECRET_ACCESS_KEY
 
-    if (!accountId || !accessKeyId || !secretAccessKey) {
-      throw new Error('R2 credentials not configured')
-    }
-
-    r2Client = new S3Client({
-      region: 'auto',
-      endpoint: `https://${accountId}.r2.cloudflarestorage.com`,
-      credentials: {
-        accessKeyId,
-        secretAccessKey,
-      },
-      requestHandler: {
-        requestTimeout: 900000, // 15 minutes for very large files
-        httpsAgent: {
-          maxSockets: 10, // Reduce concurrent connections to avoid SSL issues
-          keepAlive: true,
-          keepAliveMsecs: 60000, // Keep connections alive for 1 minute
-        },
-      },
-      // SDK retry configuration
-      maxAttempts: 5, // SDK-level retries
-      retryMode: 'adaptive', // Adaptive retry mode for better handling
-    })
+  if (!accountId || !accessKeyId || !secretAccessKey) {
+    throw new Error('R2 credentials not configured')
   }
 
-  return r2Client
+  return new S3Client({
+    region: 'auto',
+    endpoint: `https://${accountId}.r2.cloudflarestorage.com`,
+    credentials: {
+      accessKeyId,
+      secretAccessKey,
+    },
+    requestHandler: {
+      requestTimeout: 900000, // 15 minutes for very large files
+      httpsAgent: {
+        maxSockets: 1, // Single connection only
+        keepAlive: false, // Disable keepAlive to prevent connection reuse
+      },
+    },
+    // Disable SDK retries - we handle retries manually
+    maxAttempts: 1,
+  })
 }
 
 export async function uploadToR2(
@@ -46,7 +40,6 @@ export async function uploadToR2(
   key: string,
   contentType: string
 ): Promise<string> {
-  const client = getR2Client()
   const bucketName = process.env.R2_BUCKET_NAME
 
   if (!bucketName) {
@@ -54,13 +47,13 @@ export async function uploadToR2(
   }
 
   // Retry logic for SSL/network errors
-  const maxRetries = 5 // Increased from 3 to 5
+  const maxRetries = 7 // Increased to 7 for very persistent SSL issues
   let lastError: Error | null = null
 
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
-      // Recreate client on retry to get fresh connection
-      const freshClient = attempt > 1 ? getR2Client() : client
+      // Get fresh client for every attempt (no caching, no connection reuse)
+      const freshClient = getR2Client()
 
       await freshClient.send(
         new PutObjectCommand({
@@ -97,15 +90,12 @@ export async function uploadToR2(
         throw error
       }
 
-      // Wait before retry with exponential backoff + jitter
+      // Wait before retry with aggressive exponential backoff
       if (attempt < maxRetries) {
-        const baseDelay = Math.min(2000 * Math.pow(2, attempt - 1), 10000) // 2s, 4s, 8s, 10s, 10s
-        const jitter = Math.random() * 1000 // Add up to 1s random jitter
+        const baseDelay = Math.min(3000 * Math.pow(1.5, attempt - 1), 15000) // 3s, 4.5s, 6.75s, 10s, 15s...
+        const jitter = Math.random() * 2000 // Add up to 2s random jitter
         const delay = baseDelay + jitter
-        console.log(`[R2 Upload] Retrying in ${Math.round(delay)}ms...`)
-
-        // Reset client to force new connection
-        r2Client = null
+        console.log(`[R2 Upload] Retrying in ${Math.round(delay)}ms... (fresh connection)`)
 
         await new Promise(resolve => setTimeout(resolve, delay))
       }
