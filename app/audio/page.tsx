@@ -52,6 +52,7 @@ export default function AudioPage() {
   const closeMenuTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const [focusedQueueItemId, setFocusedQueueItemId] = useState<string | null>(null)
   const [isDraggingOver, setIsDraggingOver] = useState(false)
+  const dragCounterRef = useRef(0)
 
   const {
     isLoading,
@@ -188,17 +189,23 @@ export default function AudioPage() {
     }
   }
 
+  const handleDragEnter = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault()
+    e.stopPropagation()
+    dragCounterRef.current++
+    setIsDraggingOver(true)
+  }
+
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault()
     e.stopPropagation()
-    setIsDraggingOver(true)
   }
 
   const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault()
     e.stopPropagation()
-    // Only set to false if leaving the drop zone entirely
-    if (e.currentTarget === e.target) {
+    dragCounterRef.current--
+    if (dragCounterRef.current === 0) {
       setIsDraggingOver(false)
     }
   }
@@ -206,6 +213,7 @@ export default function AudioPage() {
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault()
     e.stopPropagation()
+    dragCounterRef.current = 0
     setIsDraggingOver(false)
 
     const files = e.dataTransfer.files
@@ -746,6 +754,7 @@ export default function AudioPage() {
         <div
           className={`flex-1 overflow-y-auto scrollbar-custom relative ${isDraggingOver ? 'bg-white/5' : ''}`}
           onContextMenu={handleEmptySpaceContextMenu}
+          onDragEnter={handleDragEnter}
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
