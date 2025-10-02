@@ -2,6 +2,55 @@
 
 ## Recent Updates
 
+### ✅ useFormSubmission Hook Implementation (2025-10-02)
+
+**Consolidated Form Submission Logic:**
+
+1. **Created Enhanced useFormSubmission Hook**
+   - Handles create vs edit mode detection automatically
+   - Manages form initialization from entity
+   - Centralizes loading states (isSubmitting, isDeleting, isDeleteDialogOpen)
+   - Integrated delete confirmation flow
+   - Comprehensive error logging with context
+   - Supports stores that return void for optimistic updates
+
+2. **Updated CampaignModal**
+   - Removed 60+ lines of boilerplate code
+   - All form state management handled by hook
+   - Cleaner component structure with separation of concerns
+   - Automatic form initialization on entity change
+
+3. **Updated SceneModal**
+   - Removed 50+ lines of duplicate logic
+   - Special handling for session association after scene creation
+   - Simplified audio config handling
+   - Consistent error handling via hook
+
+4. **Hook Features**
+   - Generic types for entity, create data, and update data
+   - Flexible callbacks: onCreate, onUpdate, onDelete, onSuccess
+   - Form lifecycle: initializeFields, resetFields
+   - Data builders: buildCreateData, buildUpdateData
+   - Optional validation function
+   - Comprehensive JSDoc with usage examples
+
+**Files Modified:**
+- `/hooks/useFormSubmission.ts` - Enhanced hook implementation
+- `/components/campaigns/CampaignModal.tsx` - Migrated to hook
+- `/components/scenes/SceneModal.tsx` - Migrated to hook
+
+**Code Quality:**
+- ✅ ESLint: 0 errors, 0 warnings
+- ✅ TypeScript: Only expected Immer+Map warning (sceneStore.ts:141)
+- ✅ ~120 lines of code eliminated across modals
+- ✅ Consistent error handling and logging patterns
+
+**Benefits:**
+- Single source of truth for form submission patterns
+- Reduced duplication across all create/edit modals
+- Easier to maintain and test
+- Future modals can integrate in minutes, not hours
+
 ### ✅ Design System Uniformity Sprint (2025-10-02)
 
 **Complete Design System Audit & Standardization:**
@@ -248,9 +297,9 @@
 - [x] Performance optimization (campaign page flash)
 
 ### Medium Priority
-- [ ] Create `useFormSubmission` hook
+- [x] Create `useFormSubmission` hook ✅
+- [x] Extract `<EmptyState>` component ✅
 - [ ] Consolidate list component logic (CampaignList, SessionList, SceneList)
-- [ ] Extract `<EmptyState>` component
 - [ ] Create `<Textarea>` UI component
 - [ ] Add CSS variable for bg-[#222222]
 

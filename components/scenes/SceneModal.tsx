@@ -1,14 +1,14 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { X, Trash2, Music } from 'lucide-react'
 import { useSceneStore } from '@/store/sceneStore'
 import { useSessionSceneStore } from '@/store/sessionSceneStore'
 import { useAudioFileMap } from '@/hooks/useAudioFileMap'
 import { useModalBackdrop } from '@/hooks/useModalBackdrop'
+import { useFormSubmission } from '@/hooks/useFormSubmission'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { AudioLibrary } from '@/components/audio/AudioLibrary'
-import { logger } from '@/lib/utils/logger'
 import { STRINGS } from '@/lib/constants/strings'
 import type { Scene } from '@/types'
 
@@ -28,85 +28,57 @@ export function SceneModal({ isOpen, onClose, campaignId, sessionId, scene }: Sc
   const [name, setName] = useState('')
   const [selectedAudioId, setSelectedAudioId] = useState<string | null>(null)
   const [isAudioLibraryOpen, setIsAudioLibraryOpen] = useState(false)
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
-  const [isDeleting, setIsDeleting] = useState(false)
 
-  const isEditMode = !!scene
-
-  // Initialize form with scene data in edit mode
-  useEffect(() => {
-    if (isEditMode && scene) {
-      setName(scene.name)
-      // Extract audio_id from audio_config JSON
-      const audioConfig = scene.audio_config as { audio_id?: string } | null
+  const {
+    isEditMode,
+    isSubmitting,
+    isDeleting,
+    isDeleteDialogOpen,
+    openDeleteDialog,
+    closeDeleteDialog,
+    handleSubmit,
+    handleDelete,
+  } = useFormSubmission({
+    entity: scene,
+    onCreate: async (data) => {
+      const newScene = await createScene(data)
+      // If sessionId provided, add scene to session
+      if (sessionId) {
+        await addSceneToSession(sessionId, newScene.id)
+      }
+      return newScene
+    },
+    onUpdate: updateScene,
+    onDelete: deleteScene,
+    onSuccess: onClose,
+    getId: (s) => s.id,
+    initializeFields: (s) => {
+      setName(s.name)
+      const audioConfig = s.audio_config as { audio_id?: string } | null
       setSelectedAudioId(audioConfig?.audio_id || null)
-    } else {
-      // Reset form in create mode
+    },
+    resetFields: () => {
       setName('')
       setSelectedAudioId(null)
-    }
-  }, [isEditMode, scene])
+    },
+    buildCreateData: () => ({
+      campaign_id: campaignId,
+      name: name.trim(),
+      scene_type: 'default' as const,
+      audio_config: selectedAudioId ? { audio_id: selectedAudioId } : null,
+      is_active: false,
+      order_index: 0,
+    }),
+    buildUpdateData: () => ({
+      name: name.trim(),
+      audio_config: selectedAudioId ? { audio_id: selectedAudioId } : null,
+    }),
+    validate: () => name.trim().length > 0,
+    entityType: 'scene',
+    logContext: { campaignId, sessionId, sceneName: name },
+  })
 
   if (!isOpen) return null
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!name.trim()) return
-
-    setIsSubmitting(true)
-    try {
-      const audioConfig = selectedAudioId ? { audio_id: selectedAudioId } : null
-
-      if (isEditMode && scene) {
-        // Update existing scene
-        await updateScene(scene.id, {
-          name: name.trim(),
-          audio_config: audioConfig,
-        })
-      } else {
-        // Create new scene
-        const newScene = await createScene({
-          campaign_id: campaignId,
-          name: name.trim(),
-          scene_type: 'default',
-          audio_config: audioConfig,
-          is_active: false,
-          order_index: 0,
-        })
-
-        // If sessionId provided, add scene to session
-        if (sessionId) {
-          await addSceneToSession(sessionId, newScene.id)
-        }
-      }
-      onClose()
-    } catch (error) {
-      logger.error(`Failed to ${isEditMode ? 'update' : 'create'} scene`, error, {
-        campaignId,
-        sessionId,
-        sceneName: name,
-        sceneId: scene?.id,
-      })
-    } finally {
-      setIsSubmitting(false)
-    }
-  }
-
-  const handleDelete = async () => {
-    if (!scene) return
-
-    setIsDeleting(true)
-    try {
-      await deleteScene(scene.id)
-      setIsDeleteDialogOpen(false)
-      onClose()
-    } catch (error) {
-      logger.error('Failed to delete scene', error, { sceneId: scene.id })
-    } finally {
-      setIsDeleting(false)
-    }
-  }
 
   return (
     <>
@@ -125,7 +97,7 @@ export function SceneModal({ isOpen, onClose, campaignId, sessionId, scene }: Sc
                 {isEditMode && (
                   <button
                     type="button"
-                    onClick={() => setIsDeleteDialogOpen(true)}
+                    onClick={openDeleteDialog}
                     className="w-10 h-10 rounded-[8px] hover:bg-red-500/10 flex items-center justify-center transition-colors group"
                   >
                     <Trash2 className="w-[18px] h-[18px] text-white/40 group-hover:text-red-400" />
@@ -225,7 +197,7 @@ export function SceneModal({ isOpen, onClose, campaignId, sessionId, scene }: Sc
       {isEditMode && scene && (
         <ConfirmDialog
           isOpen={isDeleteDialogOpen}
-          onClose={() => setIsDeleteDialogOpen(false)}
+          onClose={closeDeleteDialog}
           onConfirm={handleDelete}
           title={STRINGS.scenes.deleteConfirmTitle}
           description={STRINGS.scenes.deleteConfirmDescription}

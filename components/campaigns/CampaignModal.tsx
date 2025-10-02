@@ -1,12 +1,12 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { X, Trash2 } from 'lucide-react'
 import { useCampaignStore } from '@/store/campaignStore'
 import { useModalBackdrop } from '@/hooks/useModalBackdrop'
+import { useFormSubmission } from '@/hooks/useFormSubmission'
 import { Textarea } from '@/components/ui/textarea'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
-import { logger } from '@/lib/utils/logger'
 import { STRINGS } from '@/lib/constants/strings'
 import type { Campaign } from '@/types'
 
@@ -21,71 +21,46 @@ export function CampaignModal({ isOpen, onClose, campaign }: CampaignModalProps)
   const { handleBackdropClick } = useModalBackdrop({ isOpen, onClose })
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
-  const [isDeleting, setIsDeleting] = useState(false)
 
-  const isEditMode = !!campaign
-
-  // Initialize form with campaign data in edit mode
-  useEffect(() => {
-    if (isEditMode && campaign) {
-      setName(campaign.name)
-      setDescription(campaign.description || '')
-    } else {
-      // Reset form in create mode
+  const {
+    isEditMode,
+    isSubmitting,
+    isDeleting,
+    isDeleteDialogOpen,
+    openDeleteDialog,
+    closeDeleteDialog,
+    handleSubmit,
+    handleDelete,
+  } = useFormSubmission({
+    entity: campaign,
+    onCreate: createCampaign,
+    onUpdate: updateCampaign,
+    onDelete: deleteCampaign,
+    onSuccess: onClose,
+    getId: (c) => c.id,
+    initializeFields: (c) => {
+      setName(c.name)
+      setDescription(c.description || '')
+    },
+    resetFields: () => {
       setName('')
       setDescription('')
-    }
-  }, [isEditMode, campaign])
+    },
+    buildCreateData: () => ({
+      name: name.trim(),
+      description: description.trim() || null,
+      thumbnail_url: null,
+    }),
+    buildUpdateData: () => ({
+      name: name.trim(),
+      description: description.trim() || null,
+    }),
+    validate: () => name.trim().length > 0,
+    entityType: 'campaign',
+    logContext: { campaignName: name },
+  })
 
   if (!isOpen) return null
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!name.trim()) return
-
-    setIsSubmitting(true)
-    try {
-      if (isEditMode && campaign) {
-        // Update existing campaign
-        await updateCampaign(campaign.id, {
-          name: name.trim(),
-          description: description.trim() || null,
-        })
-      } else {
-        // Create new campaign
-        await createCampaign({
-          name: name.trim(),
-          description: description.trim() || null,
-          thumbnail_url: null,
-        })
-      }
-      onClose()
-    } catch (error) {
-      logger.error(`Failed to ${isEditMode ? 'update' : 'create'} campaign`, error, {
-        campaignName: name,
-        campaignId: campaign?.id,
-      })
-    } finally {
-      setIsSubmitting(false)
-    }
-  }
-
-  const handleDelete = async () => {
-    if (!campaign) return
-
-    setIsDeleting(true)
-    try {
-      await deleteCampaign(campaign.id)
-      setIsDeleteDialogOpen(false)
-      onClose()
-    } catch (error) {
-      logger.error('Failed to delete campaign', error, { campaignId: campaign.id })
-    } finally {
-      setIsDeleting(false)
-    }
-  }
 
   return (
     <>
@@ -104,7 +79,7 @@ export function CampaignModal({ isOpen, onClose, campaign }: CampaignModalProps)
                 {isEditMode && (
                   <button
                     type="button"
-                    onClick={() => setIsDeleteDialogOpen(true)}
+                    onClick={openDeleteDialog}
                     className="w-10 h-10 rounded-[8px] hover:bg-red-500/10 flex items-center justify-center transition-colors group"
                   >
                     <Trash2 className="w-[18px] h-[18px] text-white/40 group-hover:text-red-400" />
@@ -185,7 +160,7 @@ export function CampaignModal({ isOpen, onClose, campaign }: CampaignModalProps)
       {isEditMode && campaign && (
         <ConfirmDialog
           isOpen={isDeleteDialogOpen}
-          onClose={() => setIsDeleteDialogOpen(false)}
+          onClose={closeDeleteDialog}
           onConfirm={handleDelete}
           title={STRINGS.campaigns.deleteConfirmTitle}
           description={STRINGS.campaigns.deleteConfirmDescription}
