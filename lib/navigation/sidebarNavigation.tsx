@@ -1,4 +1,4 @@
-import { ChevronLeft, CirclePlay, Settings, Music, Flame, Home, Lightbulb } from 'lucide-react'
+import { ChevronLeft, CirclePlay, Settings, Music, Flame } from 'lucide-react'
 import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime'
 import type { SidebarButton } from '@/types'
 
@@ -24,7 +24,7 @@ interface NavigationContext {
  * - Position 5: Settings (placeholder for future)
  */
 export function getSidebarButtons(context: NavigationContext): SidebarButton[] {
-  const { view, campaignId, router, onOpenAudioLibrary, onOpenHueSetup } = context
+  const { view, campaignId, router } = context
 
   // Determine back button destination based on current view hierarchy
   let backLabel = 'Back'

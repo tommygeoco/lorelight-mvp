@@ -7,7 +7,6 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { Plus, Music, Trash2, Edit2 } from 'lucide-react'
-import { SectionHeader } from '@/components/ui/SectionHeader'
 import { useAudioPlaylistStore } from '@/store/audioPlaylistStore'
 import { useToastStore } from '@/store/toastStore'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
@@ -16,13 +15,17 @@ import type { AudioPlaylist } from '@/types'
 interface PlaylistsSidebarProps {
   selectedPlaylistId: string | null
   onSelectPlaylist: (id: string | null) => void
+  audioFileForNewPlaylist?: { id: string; name: string } | null
+  onClearAudioFileForNewPlaylist?: () => void
 }
 
 export function PlaylistsSidebar({
   selectedPlaylistId,
   onSelectPlaylist,
+  audioFileForNewPlaylist,
+  onClearAudioFileForNewPlaylist,
 }: PlaylistsSidebarProps) {
-  const { createPlaylist, deletePlaylist, updatePlaylist, playlists: playlistMap, playlistAudio } = useAudioPlaylistStore()
+  const { createPlaylist, deletePlaylist, updatePlaylist, playlists: playlistMap, playlistAudio, addAudioToPlaylist } = useAudioPlaylistStore()
   const { addToast } = useToastStore()
 
   const [contextMenu, setContextMenu] = useState<{
@@ -60,6 +63,13 @@ export function PlaylistsSidebar({
     }
   }, [isCreatingNew])
 
+  // Trigger inline creation when audioFileForNewPlaylist is set
+  useEffect(() => {
+    if (audioFileForNewPlaylist && !isCreatingNew) {
+      setIsCreatingNew(true)
+    }
+  }, [audioFileForNewPlaylist, isCreatingNew])
+
   const handleCreateSubmit = async () => {
     if (!newPlaylistName.trim()) {
       setIsCreatingNew(false)
@@ -70,8 +80,17 @@ export function PlaylistsSidebar({
     setIsSubmitting(true)
     try {
       const newPlaylist = await createPlaylist({ name: newPlaylistName.trim() })
+
+      // If there's a file waiting to be added, add it to the new playlist
+      if (audioFileForNewPlaylist) {
+        await addAudioToPlaylist(newPlaylist.id, audioFileForNewPlaylist.id)
+        addToast(`Added "${audioFileForNewPlaylist.name}" to "${newPlaylistName.trim()}"`, 'success')
+        onClearAudioFileForNewPlaylist?.()
+      } else {
+        addToast(`Created "${newPlaylistName.trim()}"`, 'success')
+      }
+
       onSelectPlaylist(newPlaylist.id)
-      addToast(`Created "${newPlaylistName.trim()}"`, 'success')
       setIsCreatingNew(false)
       setNewPlaylistName('')
     } catch (error) {
@@ -164,23 +183,27 @@ export function PlaylistsSidebar({
   }
 
   return (
-    <div
-      className="bg-[#191919] rounded-[8px] p-3 h-full flex flex-col overflow-y-auto scrollbar-custom"
-      onContextMenu={handleEmptySpaceContextMenu}
-    >
-      <SectionHeader
-        title="Playlists"
-        variant="sidebar"
-        action={{
-          icon: <Plus className="w-[18px] h-[18px] text-white/70" />,
-          onClick: () => setIsCreatingNew(true),
-          variant: 'icon-only',
-          ariaLabel: 'New Playlist'
-        }}
-      />
+    <div className="w-[320px] h-full bg-[#191919] rounded-[8px] flex flex-col">
+      {/* Header */}
+      <div className="px-6 py-4 border-b border-white/10 flex items-center justify-between">
+        <h2 className="text-base font-semibold text-white">Playlists</h2>
+        <button
+          onClick={() => setIsCreatingNew(true)}
+          className="w-8 h-8 rounded-[8px] hover:bg-white/5 flex items-center justify-center transition-colors"
+          aria-label="New Playlist"
+        >
+          <Plus className="w-[18px] h-[18px] text-white/70" />
+        </button>
+      </div>
+
+      {/* Scrollable List */}
+      <div
+        className="flex-1 overflow-y-auto scrollbar-custom px-6 py-4"
+        onContextMenu={handleEmptySpaceContextMenu}
+      >
 
       {/* Playlists List */}
-      <ul role="list" className="space-y-2 mt-4">
+      <ul role="list" className="space-y-2">
         {/* All Files */}
         <li>
           <div
@@ -238,8 +261,7 @@ export function PlaylistsSidebar({
         {playlists.length === 0 && !isCreatingNew ? (
           <li>
             <div className="text-center py-8">
-              <p className="text-neutral-400">No playlists yet</p>
-              <p className="text-xs text-neutral-500 mt-1">Create a playlist to get started</p>
+              <p className="text-white/40 text-[0.875rem]">Your collection awaits...<br />Forge a playlist to begin</p>
             </div>
           </li>
         ) : (
@@ -314,6 +336,7 @@ export function PlaylistsSidebar({
           </>
         )}
       </ul>
+      </div>
 
       {/* Context Menu */}
       {contextMenu && (

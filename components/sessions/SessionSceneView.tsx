@@ -248,31 +248,31 @@ export function SessionSceneView({ campaignId, sessionId }: SessionSceneViewProp
   })
 
   const scenesSidebar = (
-    <aside className="h-full" aria-label="Scenes list">
+    <div className="w-[320px] h-full bg-[#191919] rounded-[8px] flex flex-col" aria-label="Scenes list">
+      {/* Header */}
+      <div className="px-6 py-4 border-b border-white/10 flex items-center justify-between">
+        <h2 className="text-base font-semibold text-white">Scenes</h2>
+        <button
+          onClick={() => {
+            setEditingScene(undefined)
+            setIsSceneModalOpen(true)
+          }}
+          className="w-8 h-8 rounded-[8px] hover:bg-white/5 flex items-center justify-center transition-colors"
+          aria-label="Add new scene"
+        >
+          <Plus className="w-[18px] h-[18px] text-white/70" />
+        </button>
+      </div>
+
+      {/* Scrollable List */}
       <div
-        className="bg-[#191919] rounded-[8px] p-3 h-full flex flex-col overflow-y-auto scrollbar-custom"
+        className="flex-1 overflow-y-auto scrollbar-custom px-6 py-4"
         onContextMenu={handleEmptySpaceContextMenu}
       >
-        <SectionHeader
-          title="Scenes"
-          variant="sidebar"
-          action={{
-            icon: <Plus className="w-[18px] h-[18px] text-white/70" />,
-            onClick: () => {
-              setEditingScene(undefined)
-              setIsSceneModalOpen(true)
-            },
-            variant: 'icon-only',
-            ariaLabel: 'Add new scene'
-          }}
-        />
-
         {sortedScenes.length === 0 ? (
-          <EmptyState
-            title="No scenes yet"
-            description="Click + to create your first scene"
-            variant="simple"
-          />
+          <div className="text-center py-8">
+            <p className="text-white/40 text-[0.875rem]">The stage is dark and empty...<br />Create a scene to begin</p>
+          </div>
         ) : (
           <ul role="list" className="space-y-2">
             {sortedScenes.map((scene) => (
@@ -290,7 +290,7 @@ export function SessionSceneView({ campaignId, sessionId }: SessionSceneViewProp
           </ul>
         )}
       </div>
-    </aside>
+    </div>
   )
 
   return (
@@ -342,8 +342,8 @@ export function SessionSceneView({ campaignId, sessionId }: SessionSceneViewProp
       ) : (
         <div className="flex items-center justify-center h-full">
           <EmptyState
-            title="No scene selected"
-            description="Select a scene from the sidebar to view details"
+            title="No scene chosen"
+            description="The stage awaits your selection"
             variant="centered"
           />
         </div>

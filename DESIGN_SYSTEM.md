@@ -279,18 +279,76 @@ Standard context menu pattern:
 #### EmptyState Component
 Location: `/components/ui/EmptyState.tsx`
 
+Provides consistent empty state messaging across the application with variant-specific typography.
+
 **Props:**
-- `title: string`
-- `description: string`
-- `variant?: 'simple' | 'centered'`
+- `title: string` - Main heading
+- `description?: string` - Optional description text
+- `actionLabel?: string` - Optional action button text
+- `onAction?: () => void` - Action button handler
+- `icon?: React.ReactNode` - Optional icon
+- `variant?: 'bordered' | 'simple' | 'centered' | 'inline'` - Visual variant (default: 'bordered')
+- `isLoading?: boolean` - Show loading state
+- `disabled?: boolean` - Disable action button
+
+**Variants:**
+
+1. **Bordered** - Primary empty states with dashed border box
+   - Description: `text-[1rem]` (16px)
+   - Used in: Main content areas (campaigns, sessions)
+   - Includes optional action button
+
+2. **Simple** - Compact text-only for sidebars
+   - Description: `text-[0.875rem]` (14px)
+   - Single `<p>` tag with `<br />` for line breaks
+   - Used in: Sidebar empty states
+   - Example: `Your collection awaits...<br />Forge a playlist to begin`
+
+3. **Centered** - Full-screen selection prompts
+   - Description: `text-[1rem]` (16px)
+   - Used in: Main content when no item selected
+   - Vertically centered with max-width
+
+4. **Inline** - Minimal single-line text
+   - Used in: Small list areas
+
+**Typography Standards:**
+- Sidebar empty states: `text-[0.875rem]` (14px) with `text-white/40`
+- Main content descriptions: `text-[1rem]` (16px) with `text-white/40`
+- All titles: `text-lg` (18px) with `text-white`
+- Use `<br />` for line breaks, not separate paragraphs
 
 **Usage:**
 ```tsx
+// Bordered variant (main content)
 <EmptyState
-  title="No items yet"
-  description="Click + to create your first item"
+  title="No sessions yet"
+  description="The adventure awaits your first gathering"
+  actionLabel="Create Session"
+  onAction={handleCreateSession}
+  variant="bordered"
+/>
+
+// Simple variant (inline sidebar text)
+<EmptyState
+  title="No playlists yet"
+  description="Forge a playlist to begin"
   variant="simple"
 />
+
+// Centered variant (no selection)
+<EmptyState
+  title="No scene chosen"
+  description="The stage awaits your selection"
+  variant="centered"
+/>
+
+// Custom inline sidebar empty state (recommended for sidebars)
+<div className="text-center py-8">
+  <p className="text-white/40 text-[0.875rem]">
+    The stage is dark and empty...<br />Create a scene to begin
+  </p>
+</div>
 ```
 
 ### Tables
@@ -764,16 +822,33 @@ input[type="range"].slider:active::-moz-range-thumb {
 **Effect**: Interactive feedback that makes audio controls feel enchanted. Only visible during interaction to avoid visual clutter.
 
 #### 6. Thematic Empty States
-**Location**: Audio library, playlists
+**Location**: All sidebars, audio library, main content areas
 
-Fantasy-themed microcopy for empty states with line breaks between sentences.
+Fantasy-themed microcopy for empty states that evoke D&D atmosphere through language.
 
-**Examples:**
-- "This tome is empty.\nAdd tracks to fill its pages."
-- "Your arcane library awaits..."
-- "No scenes set.\nThe stage is dark and empty..."
+**Implemented Examples:**
 
-**Effect**: Reinforces the D&D theme through language rather than visuals. Maintains professional tone while adding personality.
+*Sidebar Empty States (0.875rem):*
+- **Playlists Sidebar**: "Your collection awaits...<br />Forge a playlist to begin"
+- **Scenes Sidebar**: "The stage is dark and empty...<br />Create a scene to begin"
+- **Lights Sidebar (no bridge)**: "The lights await your command...<br />Connect your bridge via settings"
+- **Lights Rooms**: "No chambers found...<br />Configure rooms in your Hue app"
+- **Lights Individual**: "No lights discovered...<br />Check your Hue bridge connection"
+
+*Main Content Empty States (1rem):*
+- **Audio Library (playlist)**: "This tome is empty.<br />Add tracks to fill its pages"
+- **Audio Library (all files)**: "Your arcane library awaits...<br />Upload audio to begin"
+- **Campaigns Page**: "Forge a new world to begin your journey"
+- **Sessions Page**: "The adventure awaits your first gathering"
+- **Lights (centered)**: "Link your Hue bridge to command the lights"
+- **Scenes (centered)**: "The stage awaits your selection"
+
+**Typography Rules:**
+- Sidebar: Single `<p>` tag with `text-white/40 text-[0.875rem]`, line breaks via `<br />`
+- Main content: `text-white/40 text-[1rem]` for descriptions under `text-lg` titles
+- No opacity variation within same empty state (all same `text-white/40`)
+
+**Effect**: Reinforces the D&D theme through language rather than visuals. Maintains professional tone while adding personality. Consistent sizing creates clear visual hierarchy between sidebar (compact) and main content (readable).
 
 ### Future Dark Fantasy Charm Ideas
 
@@ -928,28 +1003,78 @@ useEffect(() => {
 #### Content Sidebar Pattern
 320px wide sidebar for playlists, scenes, or navigation.
 
+**Structure:**
+- `w-[320px] h-full bg-[#191919] rounded-[8px]` - Consistent with nav sidebar and main content
+- No `border-r` - 2px gap in layout provides visual separation
+- Header: `px-6 py-4 border-b border-white/10` with h2 title + icon button
+- Scrollable area: `flex-1 overflow-y-auto scrollbar-custom px-6 py-4`
+
+**Creation Patterns:**
+- **Inline Creation** (for simple items like playlists): Click Plus → inline input appears in list → Enter to save, Escape to cancel
+- **Modal Creation** (for complex items like scenes): Click Plus → modal opens with full form
+
+**Empty State Typography:**
+- Font size: `text-[0.875rem]` (14px) - compact for sidebar
+- Color: `text-white/40` - single color, no opacity variation
+- Line breaks: Use `<br />` not separate `<p>` tags
+- Example: `<p className="text-white/40 text-[0.875rem]">The stage is dark and empty...<br />Create a scene to begin</p>`
+
 ```tsx
-<div className="w-[320px] h-full bg-[#191919] border-r border-white/10 flex flex-col">
-  {/* Header */}
-  <div className="px-6 py-4 border-b border-white/10">
-    <SectionHeader
-      title="Playlists"
-      variant="sidebar"
-      action={{
-        icon: <Plus className="w-[18px] h-[18px]" />,
-        onClick: handleCreate,
-        variant: 'icon-only',
-        ariaLabel: 'Create playlist'
-      }}
-    />
+<div className="w-[320px] h-full bg-[#191919] rounded-[8px] flex flex-col">
+  {/* Header - No SectionHeader component */}
+  <div className="px-6 py-4 border-b border-white/10 flex items-center justify-between">
+    <h2 className="text-base font-semibold text-white">Playlists</h2>
+    <button
+      onClick={handleCreate}
+      className="w-8 h-8 rounded-[8px] hover:bg-white/5 flex items-center justify-center transition-colors"
+      aria-label="Create playlist"
+    >
+      <Plus className="w-[18px] h-[18px] text-white/70" />
+    </button>
   </div>
 
   {/* Scrollable List */}
   <div className="flex-1 overflow-y-auto scrollbar-custom px-6 py-4">
     <ul role="list" className="space-y-2">
+      {/* Empty state with Dark Fantasy Charm */}
+      {items.length === 0 && !isCreatingNew && (
+        <li>
+          <div className="text-center py-8">
+            <p className="text-white/40 text-[0.875rem]">
+              Your collection awaits...<br />Forge a playlist to begin
+            </p>
+          </div>
+        </li>
+      )}
+
+      {/* Inline creation input (when creating new) */}
+      {isCreatingNew && (
+        <li>
+          <form onSubmit={handleCreateSubmit} className="px-3 py-2">
+            <div className="flex items-center gap-2">
+              <Music className="w-4 h-4 flex-shrink-0 text-white/70" />
+              <input
+                ref={inputRef}
+                type="text"
+                value={newItemName}
+                onChange={(e) => setNewItemName(e.target.value)}
+                onBlur={handleCancelCreate}
+                onKeyDown={(e) => {
+                  if (e.key === 'Escape') handleCancelCreate()
+                }}
+                placeholder="Playlist name..."
+                className="flex-1 px-2 py-1 bg-white/10 border border-white/20 rounded text-[13px] text-white placeholder:text-white/40 focus:outline-none focus:border-white/40"
+                autoFocus
+              />
+            </div>
+          </form>
+        </li>
+      )}
+
+      {/* Regular items */}
       {items.map(item => (
         <li key={item.id}>
-          <button className="w-full flex items-center gap-2 px-3 py-2 rounded-[8px] text-[14px] text-white/70 hover:text-white hover:bg-white/5 transition-colors">
+          <button className="w-full flex items-center gap-2 px-3 py-2 rounded-[8px] text-sm text-white/60 hover:text-white hover:bg-white/5 transition-colors">
             <Music className="w-4 h-4 flex-shrink-0" />
             <span className="flex-1 truncate">{item.name}</span>
           </button>
@@ -959,6 +1084,16 @@ useEffect(() => {
   </div>
 </div>
 ```
+
+**Key Features:**
+- Direct header with h2 + button (no SectionHeader component in sidebars)
+- Rounded corners matching nav sidebar and main content
+- Plus button triggers inline creation for simple items (playlists)
+- Input appears in list with icon and auto-focus
+- Enter key submits, Escape key cancels
+- Created item auto-selected after creation
+- Modal creation used for complex items (scenes with audio + lights config)
+- Empty states use Dark Fantasy Charm microcopy at 0.875rem with single `<p>` tag and `<br />`
 
 ### Tags
 

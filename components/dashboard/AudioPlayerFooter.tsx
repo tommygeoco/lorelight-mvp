@@ -9,11 +9,14 @@ export function AudioPlayerFooter() {
   const {
     isPlaying,
     isMuted,
+    volume,
     currentTime,
     duration,
     currentTrackId,
     togglePlay,
-    toggleMute
+    toggleMute,
+    setVolume,
+    seek
   } = useAudioStore()
 
   const audioFileMap = useAudioFileMap()
@@ -21,6 +24,19 @@ export function AudioPlayerFooter() {
 
   // Calculate progress percentage
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0
+
+  const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newVolume = parseFloat(e.target.value)
+    setVolume(newVolume)
+  }
+
+  const handleProgressClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect()
+    const x = e.clientX - rect.left
+    const percentage = x / rect.width
+    const newTime = percentage * duration
+    seek(newTime)
+  }
 
   return (
     <div className="flex items-center gap-6 px-6 pt-2 pb-4 bg-[#111111]">
@@ -65,12 +81,20 @@ export function AudioPlayerFooter() {
         </div>
 
         {/* Progress Bar */}
-        <div className="flex-1 max-w-md h-[5px] rounded-[8px] overflow-hidden flex">
+        <div
+          className="flex-1 max-w-md h-[5px] rounded-[8px] overflow-hidden flex cursor-pointer hover:h-[6px] transition-all group"
+          onClick={handleProgressClick}
+          role="slider"
+          aria-label="Seek"
+          aria-valuemin={0}
+          aria-valuemax={duration}
+          aria-valuenow={currentTime}
+        >
           <div
             className="bg-white transition-all duration-150"
             style={{ width: `${progress}%` }}
           />
-          <div className="bg-white/20 flex-1" />
+          <div className="bg-white/20 group-hover:bg-white/30 flex-1 transition-colors" />
         </div>
 
         {/* Duration */}
@@ -80,7 +104,7 @@ export function AudioPlayerFooter() {
       </div>
 
       {/* Right: Volume & Play Controls */}
-      <div className="flex-1 flex items-center justify-end gap-6">
+      <div className="flex-1 flex items-center justify-end gap-4">
         {/* Mute Button */}
         <button
           onClick={toggleMute}
@@ -90,13 +114,17 @@ export function AudioPlayerFooter() {
           {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
         </button>
 
-        {/* Volume Up Icon (decorative) */}
-        <button
-          className="w-6 h-6 flex items-center justify-center text-white/70 hover:text-white transition-colors"
-          aria-label="Volume up"
-        >
-          <Volume2 className="w-5 h-5" />
-        </button>
+        {/* Volume Slider */}
+        <input
+          type="range"
+          min="0"
+          max="1"
+          step="0.01"
+          value={isMuted ? 0 : volume}
+          onChange={handleVolumeChange}
+          className="w-24 h-2 bg-white/10 rounded-full appearance-none cursor-pointer slider"
+          aria-label="Volume"
+        />
 
         {/* Play/Pause Button */}
         <button

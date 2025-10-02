@@ -2,12 +2,12 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Lightbulb, RefreshCw, Settings } from 'lucide-react'
+import { RefreshCw, Settings } from 'lucide-react'
 import { DashboardLayoutWithSidebar } from '@/components/layouts/DashboardLayoutWithSidebar'
 import { DashboardSidebar } from '@/components/layouts/DashboardSidebar'
-import { SectionHeader } from '@/components/ui/SectionHeader'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { PageHeader } from '@/components/ui/PageHeader'
+import { SectionHeader } from '@/components/ui/SectionHeader'
 import { HueSetup } from '@/components/hue/HueSetup'
 import { AudioLibrary } from '@/components/audio/AudioLibrary'
 import { LightCard } from '@/components/hue/LightCard'
@@ -81,33 +81,31 @@ export default function LightsPage() {
 
   // Lights sidebar component
   const lightsSidebar = (
-    <aside className="h-full" aria-label="Lights list">
-      <div className="bg-[#191919] rounded-[8px] p-3 h-full flex flex-col overflow-y-auto">
-        <SectionHeader
-          title="Lights"
-          variant="sidebar"
-          action={{
-            icon: <Settings className="w-[18px] h-[18px] text-white/70" />,
-            onClick: () => setIsHueSetupOpen(true),
-            variant: 'icon-only',
-            ariaLabel: 'Hue settings'
-          }}
-        />
+    <div className="w-[320px] h-full bg-[#191919] rounded-[8px] flex flex-col" aria-label="Lights list">
+      {/* Header */}
+      <div className="px-6 py-4 border-b border-white/10 flex items-center justify-between">
+        <h2 className="text-base font-semibold text-white">Lights</h2>
+        <button
+          onClick={() => setIsHueSetupOpen(true)}
+          className="w-8 h-8 rounded-[8px] hover:bg-white/5 flex items-center justify-center transition-colors"
+          aria-label="Hue settings"
+        >
+          <Settings className="w-[18px] h-[18px] text-white/70" />
+        </button>
+      </div>
 
+      {/* Scrollable Content */}
+      <div className="flex-1 overflow-y-auto scrollbar-custom">
         {!isConnected ? (
-          <div className="mt-4">
-            <EmptyState
-              title="No bridge connected"
-              description="Connect your Hue bridge to get started"
-              actionLabel="Connect Bridge"
-              onAction={() => setIsHueSetupOpen(true)}
-              variant="simple"
-            />
+          <div className="px-6 py-4">
+            <div className="text-center py-8">
+              <p className="text-white/40 text-[0.875rem]">The lights await your command...<br />Connect your bridge via settings</p>
+            </div>
           </div>
         ) : (
           <>
             {/* Tabs */}
-            <div className="flex gap-2 mt-4 mb-3">
+            <div className="flex gap-2 px-6 pt-4 pb-3">
               <button
                 onClick={() => {
                   setActiveTab('rooms')
@@ -138,13 +136,11 @@ export default function LightsPage() {
 
             {/* Rooms List */}
             {activeTab === 'rooms' && (
-              <>
+              <div className="px-6 pb-4">
                 {roomsArray.length === 0 ? (
-                  <EmptyState
-                    title="No rooms found"
-                    description="No rooms configured"
-                    variant="simple"
-                  />
+                  <div className="text-center py-8">
+                    <p className="text-white/40 text-[0.875rem]">No chambers found...<br />Configure rooms in your Hue app</p>
+                  </div>
                 ) : (
                   <ul role="list" className="space-y-2">
                     {roomsArray.map((room) => (
@@ -166,18 +162,16 @@ export default function LightsPage() {
                     ))}
                   </ul>
                 )}
-              </>
+              </div>
             )}
 
             {/* Individual Lights List */}
             {activeTab === 'lights' && (
-              <>
+              <div className="px-6 pb-4">
                 {lightsArray.length === 0 ? (
-                  <EmptyState
-                    title="No lights found"
-                    description="No lights connected"
-                    variant="simple"
-                  />
+                  <div className="text-center py-8">
+                    <p className="text-white/40 text-[0.875rem]">No lights discovered...<br />Check your Hue bridge connection</p>
+                  </div>
                 ) : (
                   <ul role="list" className="space-y-2">
                     {lightsArray.map((light) => (
@@ -199,12 +193,12 @@ export default function LightsPage() {
                     ))}
                   </ul>
                 )}
-              </>
+              </div>
             )}
           </>
         )}
       </div>
-    </aside>
+    </div>
   )
 
   return (
@@ -271,8 +265,8 @@ export default function LightsPage() {
           {!selectedRoom && !selectedLight && (
             <div className="flex items-center justify-center h-full">
               <EmptyState
-                title={activeTab === 'rooms' ? 'No room selected' : 'No light selected'}
-                description={`Select a ${activeTab === 'rooms' ? 'room' : 'light'} from the sidebar to view controls`}
+                title={activeTab === 'rooms' ? 'No chamber selected' : 'No light selected'}
+                description={`Choose a ${activeTab === 'rooms' ? 'chamber' : 'light'} from the sidebar`}
                 variant="centered"
               />
             </div>
@@ -282,7 +276,7 @@ export default function LightsPage() {
         <div className="flex items-center justify-center h-full">
           <EmptyState
             title="No bridge connected"
-            description="Connect your Hue bridge from the sidebar to get started"
+            description="Link your Hue bridge to command the lights"
             variant="centered"
           />
         </div>

@@ -2,6 +2,60 @@
 
 ## Recent Updates
 
+### ✅ Design System Uniformity Sprint (2025-10-02)
+
+**Complete Design System Audit & Standardization:**
+
+1. **Empty State Typography Standardization**
+   - Sidebar empty states: `text-[0.875rem]` (14px) with `text-white/40`
+   - Main content empty states: `text-[1rem]` (16px) with `text-white/40`
+   - Single `<p>` tag with `<br />` for line breaks (not separate paragraphs)
+   - Removed opacity variation within same empty state
+   - Updated EmptyState component (all 4 variants: bordered, simple, centered, inline)
+
+2. **Sidebar Pattern Fixes**
+   - Removed SectionHeader from all content sidebars (playlists, scenes, lights)
+   - Standardized header: `px-6 py-4 border-b border-white/10` with h2 + icon button
+   - Added `rounded-[8px]` to all content sidebars (was missing)
+   - Removed `border-r` - 2px gap provides visual separation
+   - All sidebars now match: `w-[320px] h-full bg-[#191919] rounded-[8px]`
+
+3. **Main Content Pattern Uniformity**
+   - All list pages now follow same structure:
+     - PageHeader with title + description
+     - SectionHeader with "New" action button
+     - EmptyState variant="bordered" with action button
+     - List items with `pt-[24px]` spacing
+   - Standardized across campaigns, sessions pages
+
+4. **Dark Fantasy Charm Microcopy**
+   - Updated all empty states with thematic language
+   - Playlists: "Your collection awaits...<br />Forge a playlist to begin"
+   - Scenes: "The stage is dark and empty...<br />Create a scene to begin"
+   - Lights: "The lights await your command...", "No chambers found...", etc.
+   - Audio library: "This tome is empty.<br />Add tracks to fill its pages"
+   - Sessions: "The adventure awaits your first gathering"
+   - Delete dialogs: "This session will be lost to the void..."
+
+5. **Files Modified**
+   - `/components/ui/EmptyState.tsx` - Standardized all variant typography
+   - `/components/audio/PlaylistsSidebar.tsx` - Removed SectionHeader, fixed empty state, added rounded corners
+   - `/components/sessions/SessionSceneView.tsx` - Removed SectionHeader, updated microcopy, rounded corners
+   - `/app/lights/page.tsx` - Removed SectionHeader, updated all empty states, rounded corners
+   - `/app/audio/page.tsx` - Updated table empty state font size
+   - `/components/dashboard/DashboardView.tsx` - Added SectionHeader, bordered EmptyState for consistency
+   - `/app/campaigns/[id]/sessions/page.tsx` - Updated delete dialog microcopy
+   - `/DESIGN_SYSTEM.md` - Comprehensive documentation of all patterns
+
+**Key Achievements:**
+- ✅ Complete design system uniformity across all pages
+- ✅ Consistent empty state typography (sidebar: 14px, main: 16px)
+- ✅ All sidebars have matching structure with rounded corners
+- ✅ Dark Fantasy Charm microcopy throughout
+- ✅ Main content pages follow identical patterns
+- ✅ Zero lint errors/warnings
+- ✅ Updated design system documentation
+
 ### ✅ Sprint 3 Completed (2025-10-01)
 
 **Design System & Modal Improvements:**

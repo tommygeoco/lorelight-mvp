@@ -87,7 +87,7 @@ export function EmptyState({
         {icon && <div className="mb-4 flex justify-center text-white/40">{icon}</div>}
         <h3 className="text-lg font-medium text-white">{title}</h3>
         {description && (
-          <p className="mt-2 text-sm text-neutral-400">{description}</p>
+          <p className="mt-2 text-[1rem] text-white/40">{description}</p>
         )}
         {actionLabel && onAction && (
           <Button className="mt-4" onClick={onAction} disabled={disabled}>
@@ -103,10 +103,15 @@ export function EmptyState({
   if (variant === 'simple') {
     return (
       <div className={`text-center py-8 ${className}`}>
-        <p className="text-neutral-400">{title}</p>
-        {description && (
-          <p className="text-xs text-neutral-500 mt-1">{description}</p>
-        )}
+        <p className="text-white/40 text-[0.875rem]">
+          {title}
+          {description && (
+            <>
+              <br />
+              {description}
+            </>
+          )}
+        </p>
         {actionLabel && onAction && (
           <Button
             className="mt-3"
@@ -130,7 +135,7 @@ export function EmptyState({
           {icon && <div className="mb-4 flex justify-center text-white/40">{icon}</div>}
           <h3 className="text-lg font-medium text-white mb-2">{title}</h3>
           {description && (
-            <p className="text-neutral-400">{description}</p>
+            <p className="text-white/40 text-[1rem]">{description}</p>
           )}
           {actionLabel && onAction && (
             <Button className="mt-4" onClick={onAction} disabled={disabled}>
@@ -154,10 +159,10 @@ export function EmptyState({
   // Fallback to bordered
   return (
     <div className={`rounded-[8px] border-2 border-dashed border-neutral-800 p-12 text-center ${className}`}>
-      {icon && <div className="mb-4 flex justify-center">{icon}</div>}
+      {icon && <div className="mb-4 flex justify-center text-white/40">{icon}</div>}
       <h3 className="text-lg font-medium text-white">{title}</h3>
       {description && (
-        <p className="mt-2 text-sm text-neutral-400">{description}</p>
+        <p className="mt-2 text-[1rem] text-white/40">{description}</p>
       )}
     </div>
   )

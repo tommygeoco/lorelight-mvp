@@ -99,8 +99,6 @@ export default function SessionsPage({
     view: 'sessions',
     campaignId: resolvedParams.id,
     router,
-    onOpenAudioLibrary: () => {}, // TODO: Implement when AudioLibrary modal is added
-    onOpenHueSetup: () => {}, // TODO: Implement when HueSetup modal is added
   })
 
   return (
@@ -131,7 +129,7 @@ export default function SessionsPage({
               <div className="pt-[24px]">
                 <EmptyState
                   title="No sessions yet"
-                  description="Create your first session to start playing"
+                  description="The adventure awaits your first gathering"
                   actionLabel="Create Session"
                   onAction={handleCreateSession}
                   disabled={isCreating}
@@ -183,7 +181,7 @@ export default function SessionsPage({
         onClose={() => setDeleteConfirmId(null)}
         onConfirm={handleDeleteConfirm}
         title="Delete Session"
-        description="Are you sure you want to delete this session? This action cannot be undone."
+        description="This session will be lost to the void. This cannot be undone."
         confirmText="Delete"
         variant="destructive"
         isLoading={isDeleting}

@@ -6,7 +6,6 @@ import { Upload, Trash2, Play, Pause, Search, Plus, SlidersHorizontal, Tag, Minu
 import { DashboardLayoutWithSidebar } from '@/components/layouts/DashboardLayoutWithSidebar'
 import { DashboardSidebar } from '@/components/layouts/DashboardSidebar'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
-import { InputModal } from '@/components/ui/InputModal'
 import { PlaylistsSidebar } from '@/components/audio/PlaylistsSidebar'
 import { AudioContextMenu } from '@/components/audio/AudioContextMenu'
 import { UploadQueue } from '@/components/audio/UploadQueue'
@@ -43,9 +42,7 @@ export default function AudioPage() {
   const [showTagsSubmenu, setShowTagsSubmenu] = useState(false)
   const [editingFileId, setEditingFileId] = useState<string | null>(null)
   const editInputRef = useRef<HTMLInputElement>(null)
-  const [isAddToNewPlaylistModalOpen, setIsAddToNewPlaylistModalOpen] = useState(false)
   const [audioFileForNewPlaylist, setAudioFileForNewPlaylist] = useState<AudioFile | null>(null)
-  const [isCreatingPlaylist, setIsCreatingPlaylist] = useState(false)
   const [selectedFileIds, setSelectedFileIds] = useState<Set<string>>(new Set())
   const [showBulkActions, setShowBulkActions] = useState(false)
   const [showFilters, setShowFilters] = useState(false)
@@ -72,7 +69,7 @@ export default function AudioPage() {
     updateAudioFile,
   } = useAudioFileStore()
 
-  const { createPlaylist, addAudioToPlaylist, removeAudioFromPlaylist } = useAudioPlaylistStore()
+  const { addAudioToPlaylist, removeAudioFromPlaylist } = useAudioPlaylistStore()
   const { handlePlay, currentTrackId, isPlaying } = useAudioPlayback()
   const audioFileMap = useAudioFileMap()
   const playlistMap = useAudioPlaylistMap()
@@ -502,28 +499,10 @@ export default function AudioPage() {
   }
 
   const handleAddToNewPlaylistClick = (audioFile: AudioFile) => {
+    // Set file to add after playlist creation, then trigger inline creation in sidebar
     setAudioFileForNewPlaylist(audioFile)
-    setIsAddToNewPlaylistModalOpen(true)
     setContextMenu(null)
     setShowAddToSubmenu(false)
-  }
-
-  const handleAddToNewPlaylist = async (name: string) => {
-    if (!audioFileForNewPlaylist) return
-
-    setIsCreatingPlaylist(true)
-    try {
-      const newPlaylist = await createPlaylist({ name })
-      await addAudioToPlaylist(newPlaylist.id, audioFileForNewPlaylist.id)
-      addToast(`Added to "${name}"`, 'success')
-      setIsAddToNewPlaylistModalOpen(false)
-      setAudioFileForNewPlaylist(null)
-    } catch (error) {
-      logger.error('Failed to create playlist and add audio', error)
-      addToast('Failed to add to playlist', 'error')
-    } finally {
-      setIsCreatingPlaylist(false)
-    }
   }
 
 
@@ -780,6 +759,8 @@ export default function AudioPage() {
         <PlaylistsSidebar
           selectedPlaylistId={selectedPlaylistId}
           onSelectPlaylist={setSelectedPlaylistId}
+          audioFileForNewPlaylist={audioFileForNewPlaylist}
+          onClearAudioFileForNewPlaylist={() => setAudioFileForNewPlaylist(null)}
         />
       }
     >
@@ -1247,7 +1228,7 @@ export default function AudioPage() {
             <div className="text-center py-12 text-white/40">Loading...</div>
           ) : audioFiles.length === 0 ? (
             <div className="text-center py-12">
-              <p className="text-white/40">
+              <p className="text-white/40 text-[1rem]">
                 {searchQuery
                   ? 'The archives yield no matching scrolls'
                   : selectedPlaylistId
@@ -1442,21 +1423,6 @@ export default function AudioPage() {
         confirmText="Delete"
         variant="destructive"
         isLoading={isDeleting}
-      />
-
-      {/* Add to New Playlist Modal */}
-      <InputModal
-        isOpen={isAddToNewPlaylistModalOpen}
-        onClose={() => {
-          setIsAddToNewPlaylistModalOpen(false)
-          setAudioFileForNewPlaylist(null)
-        }}
-        onSubmit={handleAddToNewPlaylist}
-        title="Create Playlist"
-        label="Playlist Name"
-        placeholder="Enter playlist name..."
-        submitText="Create & Add"
-        isLoading={isCreatingPlaylist}
       />
 
     </DashboardLayoutWithSidebar>
