@@ -1169,7 +1169,7 @@ export default function AudioPage() {
                     data-audio-row
                     className={`group transition-colors cursor-pointer border-b border-white/5 ${
                       isCurrentlyPlaying
-                        ? 'playing-track-gradient hover:bg-white/[0.12]'
+                        ? 'playing-track-gradient active'
                         : isSelected
                         ? 'bg-white/5 hover:bg-white/[0.07]'
                         : 'hover:bg-white/5'
@@ -1193,27 +1193,38 @@ export default function AudioPage() {
                       />
                     </div>
 
-                    {/* Play/Pause Button - visible on hover or when playing, hidden when checkbox is shown */}
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        handlePlay(audioFile)
-                      }}
-                      className={`w-4 h-4 ml-6 text-white/50 hover:text-white transition-all flex-shrink-0 ${
-                        isCurrentlyPlaying
-                          ? 'opacity-100'
-                          : isSelected || selectedFileIds.size > 0
-                          ? 'opacity-0'
-                          : 'opacity-0 group-hover:opacity-100'
-                      }`}
-                      title="Play/Pause"
-                    >
-                      {isCurrentlyPlaying ? (
-                        <Pause className="w-4 h-4 fill-current" />
-                      ) : (
-                        <Play className="w-4 h-4 fill-current" />
+                    {/* Play/Pause Button with Visualizer - visible on hover or when playing */}
+                    <div className="flex items-center gap-2 ml-6">
+                      {/* Visualizer Bars - only when playing */}
+                      {isCurrentlyPlaying && (
+                        <div className="flex items-center gap-0.5 h-4">
+                          <div className={`visualizer-bar ${isCurrentlyPlaying ? 'active' : ''}`} />
+                          <div className={`visualizer-bar ${isCurrentlyPlaying ? 'active' : ''}`} />
+                          <div className={`visualizer-bar ${isCurrentlyPlaying ? 'active' : ''}`} />
+                        </div>
                       )}
-                    </button>
+
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handlePlay(audioFile)
+                        }}
+                        className={`w-4 h-4 text-white/50 hover:text-white transition-all flex-shrink-0 ${
+                          isCurrentlyPlaying
+                            ? 'opacity-100'
+                            : isSelected || selectedFileIds.size > 0
+                            ? 'opacity-0'
+                            : 'opacity-0 group-hover:opacity-100'
+                        }`}
+                        title="Play/Pause"
+                      >
+                        {isCurrentlyPlaying ? (
+                          <Pause className={`w-4 h-4 fill-current ${isCurrentlyPlaying ? 'icon-playing-glow' : ''}`} />
+                        ) : (
+                          <Play className="w-4 h-4 fill-current" />
+                        )}
+                      </button>
+                    </div>
 
                     {/* File Info */}
                     <div className="flex-1 ml-6 min-w-0">
