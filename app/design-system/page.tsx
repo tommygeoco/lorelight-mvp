@@ -141,9 +141,11 @@ export default function DesignSystemPage() {
               <li><a href="#cards" className="text-white/60 hover:text-white transition-colors">Cards</a></li>
               <li><a href="#tables" className="text-white/60 hover:text-white transition-colors">Tables</a></li>
               <li><a href="#dropdowns" className="text-white/60 hover:text-white transition-colors">Dropdowns</a></li>
+              <li><a href="#sidebars" className="text-white/60 hover:text-white transition-colors">Sidebars</a></li>
               <li><a href="#tags" className="text-white/60 hover:text-white transition-colors">Tags</a></li>
               <li><a href="#bulk-actions" className="text-white/60 hover:text-white transition-colors">Bulk Actions</a></li>
               <li><a href="#inline-editing" className="text-white/60 hover:text-white transition-colors">Inline Editing</a></li>
+              <li><a href="#scrollable-containers" className="text-white/60 hover:text-white transition-colors">Scrollable Containers</a></li>
               <li><a href="#context-menus" className="text-white/60 hover:text-white transition-colors">Context Menus</a></li>
               <li><a href="#tooltips" className="text-white/60 hover:text-white transition-colors">Tooltips</a></li>
               <li><a href="#empty-states" className="text-white/60 hover:text-white transition-colors">Empty States</a></li>
@@ -553,6 +555,478 @@ export default function DesignSystemPage() {
       </div>
     </div>
   ))}
+</div>`}
+              />
+            </div>
+          </Section>
+
+          {/* Dropdowns */}
+          <Section title="Dropdowns">
+            <div id="dropdowns" className="space-y-6">
+              <Example title="Filter Dropdown" description="Click-outside handling with positioning">
+                <div className="flex justify-center p-8">
+                  <div className="relative" ref={dropdownRef}>
+                    <button
+                      onClick={() => setShowDropdown(!showDropdown)}
+                      className="px-3 py-1.5 text-[13px] text-white/70 hover:text-white hover:bg-white/5 rounded-[6px] transition-colors flex items-center gap-1.5"
+                    >
+                      <SlidersHorizontal className="w-3.5 h-3.5" />
+                      Filter
+                      <ChevronDown className="w-3 h-3" />
+                    </button>
+
+                    {showDropdown && (
+                      <div className="absolute top-full right-0 mt-1 bg-[#191919] border border-white/10 rounded-[8px] shadow-2xl min-w-[200px] py-2 z-50">
+                        <button className="w-full px-4 py-2 text-left text-[13px] text-white hover:bg-white/5 transition-colors">
+                          All Files
+                        </button>
+                        <button className="w-full px-4 py-2 text-left text-[13px] text-white hover:bg-white/5 transition-colors">
+                          Music Only
+                        </button>
+                        <button className="w-full px-4 py-2 text-left text-[13px] text-white hover:bg-white/5 transition-colors">
+                          Ambience Only
+                        </button>
+                        <div className="h-px bg-white/10 my-1" />
+                        <button className="w-full px-4 py-2 text-left text-[13px] text-white hover:bg-white/5 transition-colors">
+                          Reset Filters
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </Example>
+
+              <CodeBlock
+                id="dropdown-pattern"
+                code={`const [isOpen, setIsOpen] = useState(false)
+const dropdownRef = useRef<HTMLDivElement>(null)
+
+// Close on click outside
+useEffect(() => {
+  const handleClickOutside = (e: MouseEvent) => {
+    if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+      setIsOpen(false)
+    }
+  }
+  document.addEventListener('mousedown', handleClickOutside)
+  return () => document.removeEventListener('mousedown', handleClickOutside)
+}, [])
+
+// Dropdown JSX
+<div className="relative" ref={dropdownRef}>
+  <button
+    onClick={() => setIsOpen(!isOpen)}
+    className="px-3 py-1.5 text-[13px] text-white/70 hover:text-white hover:bg-white/5 rounded-[6px] transition-colors flex items-center gap-1.5"
+  >
+    <FilterIcon className="w-3.5 h-3.5" />
+    Filter
+    <ChevronDown className="w-3 h-3" />
+  </button>
+
+  {isOpen && (
+    <div className="absolute top-full right-0 mt-1 bg-[#191919] border border-white/10 rounded-[8px] shadow-2xl min-w-[200px] py-2 z-50">
+      <button className="w-full px-4 py-2 text-left text-[13px] text-white hover:bg-white/5 transition-colors">
+        Option 1
+      </button>
+      <button className="w-full px-4 py-2 text-left text-[13px] text-white hover:bg-white/5 transition-colors">
+        Option 2
+      </button>
+    </div>
+  )}
+</div>`}
+              />
+            </div>
+          </Section>
+
+          {/* Sidebars */}
+          <Section title="Sidebars">
+            <div id="sidebars" className="space-y-6">
+              <Example title="Content Sidebar" description="320px wide sidebar pattern for playlists/scenes">
+                <div className="w-full h-[400px] bg-[#111111] rounded-[8px] overflow-hidden flex">
+                  <div className="w-[320px] h-full bg-[#191919] border-r border-white/10 flex flex-col">
+                    {/* Header */}
+                    <div className="px-6 py-4 border-b border-white/10 flex items-center justify-between">
+                      <h3 className="text-[16px] font-semibold text-white">Playlists</h3>
+                      <button className="w-8 h-8 flex items-center justify-center hover:bg-white/5 rounded transition-colors">
+                        <Plus className="w-[18px] h-[18px] text-white/70" />
+                      </button>
+                    </div>
+
+                    {/* Scrollable List */}
+                    <div className="flex-1 overflow-y-auto scrollbar-custom px-6 py-4">
+                      <ul role="list" className="space-y-2">
+                        {['All Files', 'Battle Music', 'Tavern Ambience', 'Forest Sounds', 'Epic Themes'].map((item, i) => (
+                          <li key={i}>
+                            <button className="w-full flex items-center gap-2 px-3 py-2 rounded-[8px] text-[14px] text-white/70 hover:text-white hover:bg-white/5 transition-colors">
+                              <Music className="w-4 h-4 flex-shrink-0" />
+                              <span className="flex-1 truncate text-left">{item}</span>
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+
+                  <div className="flex-1 flex items-center justify-center text-white/40">
+                    Main content area
+                  </div>
+                </div>
+              </Example>
+
+              <CodeBlock
+                id="sidebar-pattern"
+                code={`<div className="w-[320px] h-full bg-[#191919] border-r border-white/10 flex flex-col">
+  {/* Header */}
+  <div className="px-6 py-4 border-b border-white/10">
+    <SectionHeader
+      title="Playlists"
+      variant="sidebar"
+      action={{
+        icon: <Plus className="w-[18px] h-[18px]" />,
+        onClick: handleCreate,
+        variant: 'icon-only',
+        ariaLabel: 'Create playlist'
+      }}
+    />
+  </div>
+
+  {/* Scrollable List */}
+  <div className="flex-1 overflow-y-auto scrollbar-custom px-6 py-4">
+    <ul role="list" className="space-y-2">
+      {items.map(item => (
+        <li key={item.id}>
+          <button className="w-full flex items-center gap-2 px-3 py-2 rounded-[8px] text-[14px] text-white/70 hover:text-white hover:bg-white/5 transition-colors">
+            <Music className="w-4 h-4 flex-shrink-0" />
+            <span className="flex-1 truncate">{item.name}</span>
+          </button>
+        </li>
+      ))}
+    </ul>
+  </div>
+</div>`}
+              />
+            </div>
+          </Section>
+
+          {/* Tags */}
+          <Section title="Tags">
+            <div id="tags" className="space-y-6">
+              <Example title="Display Tags" description="Pills with remove buttons">
+                <div className="flex flex-wrap gap-1.5">
+                  {['ambient', 'battle', 'tavern'].map(tag => (
+                    <div
+                      key={tag}
+                      className="px-2 py-1 bg-purple-500/20 border border-purple-500/30 rounded-[6px] text-[12px] text-white flex items-center gap-1.5"
+                    >
+                      {tag}
+                      <button className="text-white/50 hover:text-white">
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </Example>
+
+              <Example title="Clickable Filter Tags" description="Toggle tags for filtering">
+                <div className="flex flex-wrap gap-1.5">
+                  {sampleTags.map(tag => (
+                    <button
+                      key={tag}
+                      onClick={() => handleTagClick(tag)}
+                      className={`px-2 py-1 rounded-[6px] text-[12px] transition-colors ${
+                        selectedTags.has(tag)
+                          ? 'bg-purple-500/30 border border-purple-500/50 text-white'
+                          : 'bg-white/5 border border-white/10 text-white/60 hover:bg-white/10 hover:text-white'
+                      }`}
+                    >
+                      {tag}
+                    </button>
+                  ))}
+                </div>
+              </Example>
+
+              <CodeBlock
+                id="tags-pattern"
+                code={`// Display Tags
+<div className="flex flex-wrap gap-1.5">
+  {tags.map(tag => (
+    <div
+      key={tag}
+      className="px-2 py-1 bg-purple-500/20 border border-purple-500/30 rounded-[6px] text-[12px] text-white flex items-center gap-1.5"
+    >
+      {tag}
+      <button onClick={() => handleRemove(tag)} className="text-white/50 hover:text-white">
+        <X className="w-3 h-3" />
+      </button>
+    </div>
+  ))}
+</div>
+
+// Clickable Filter Tags
+<div className="flex flex-wrap gap-1.5">
+  {tags.map(tag => (
+    <button
+      key={tag}
+      onClick={() => handleTagClick(tag)}
+      className={\`px-2 py-1 rounded-[6px] text-[12px] transition-colors \${
+        isActive
+          ? 'bg-purple-500/30 border border-purple-500/50 text-white'
+          : 'bg-white/5 border border-white/10 text-white/60 hover:bg-white/10 hover:text-white'
+      }\`}
+    >
+      {tag}
+    </button>
+  ))}
+</div>`}
+              />
+            </div>
+          </Section>
+
+          {/* Bulk Actions */}
+          <Section title="Bulk Actions">
+            <div id="bulk-actions" className="space-y-6">
+              <Example title="Selection & Bulk Operations" description="Checkbox-based selection with action toolbar">
+                <div className="flex flex-col bg-[#111111] rounded-[8px] overflow-hidden">
+                  {/* Selection toolbar (appears when items selected) */}
+                  {selectedIds.size > 0 && (
+                    <div className="flex items-center gap-3 px-6 py-3 border-b border-white/10 bg-white/5">
+                      <span className="text-[14px] text-white font-medium">
+                        {selectedIds.size} selected
+                      </span>
+                      <button className="px-3 py-1.5 text-[13px] text-white/70 hover:text-white hover:bg-white/5 rounded-[6px] flex items-center gap-1.5">
+                        <Tag className="w-3.5 h-3.5" />
+                        Add Tag
+                      </button>
+                      <button className="px-3 py-1.5 text-[13px] text-white/70 hover:text-white hover:bg-white/5 rounded-[6px] flex items-center gap-1.5">
+                        <Plus className="w-3.5 h-3.5" />
+                        Add to Playlist
+                      </button>
+                      <button className="px-3 py-1.5 text-[13px] text-red-400 hover:text-white hover:bg-red-500/10 rounded-[6px] flex items-center gap-1.5">
+                        <Trash2 className="w-3.5 h-3.5" />
+                        Delete
+                      </button>
+                      <button
+                        onClick={() => setSelectedIds(new Set())}
+                        className="ml-auto text-[13px] text-white/60 hover:text-white"
+                      >
+                        Clear
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Items with checkboxes */}
+                  <div className="p-4 space-y-2">
+                    {sampleTableData.map(item => (
+                      <div
+                        key={item.id}
+                        className="flex items-center gap-3 px-3 py-2 hover:bg-white/5 rounded-[8px] transition-colors"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedIds.has(item.id)}
+                          onChange={() => {
+                            const newSet = new Set(selectedIds)
+                            if (newSet.has(item.id)) {
+                              newSet.delete(item.id)
+                            } else {
+                              newSet.add(item.id)
+                            }
+                            setSelectedIds(newSet)
+                          }}
+                          className="w-3.5 h-3.5 cursor-pointer"
+                        />
+                        <Music className="w-4 h-4 text-white/40" />
+                        <span className="text-[14px] text-white">{item.name}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </Example>
+
+              <CodeBlock
+                id="bulk-actions-pattern"
+                code={`const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+
+// Selection toolbar (appears when items selected)
+{selectedIds.size > 0 && (
+  <div className="flex items-center gap-3 px-6 py-3 border-b border-white/10 bg-white/5">
+    <span className="text-[14px] text-white font-medium">
+      {selectedIds.size} selected
+    </span>
+    <button className="px-3 py-1.5 text-[13px] text-white/70 hover:text-white hover:bg-white/5 rounded-[6px]">
+      <Tag className="w-3.5 h-3.5" />
+      Add Tag
+    </button>
+    <button className="px-3 py-1.5 text-[13px] text-red-400 hover:text-white hover:bg-red-500/10 rounded-[6px]">
+      <Trash2 className="w-3.5 h-3.5" />
+      Delete
+    </button>
+  </div>
+)}
+
+// Checkbox in table row
+<input
+  type="checkbox"
+  checked={selectedIds.has(item.id)}
+  onChange={(e) => {
+    e.stopPropagation()
+    const newSet = new Set(selectedIds)
+    if (newSet.has(item.id)) {
+      newSet.delete(item.id)
+    } else {
+      newSet.add(item.id)
+    }
+    setSelectedIds(newSet)
+  }}
+  onClick={(e) => e.stopPropagation()}
+  className="w-3.5 h-3.5 cursor-pointer"
+/>`}
+              />
+            </div>
+          </Section>
+
+          {/* Inline Editing */}
+          <Section title="Inline Editing">
+            <div id="inline-editing" className="space-y-6">
+              <Example title="Editable Table Cells" description="Click to edit, Enter to save, Escape to cancel">
+                <div className="space-y-2">
+                  {sampleTableData.map(item => (
+                    <div
+                      key={item.id}
+                      className="flex items-center gap-4 px-4 py-3 hover:bg-white/5 rounded-[8px] transition-colors"
+                    >
+                      <Music className="w-4 h-4 text-white/40 flex-shrink-0" />
+                      <div className="flex-1">
+                        {editingId === item.id ? (
+                          <form
+                            onSubmit={(e) => {
+                              e.preventDefault()
+                              setEditingId(null)
+                            }}
+                            className="w-full py-1"
+                          >
+                            <input
+                              ref={editInputRef}
+                              type="text"
+                              defaultValue={item.name}
+                              onClick={(e) => e.stopPropagation()}
+                              onBlur={() => setTimeout(() => setEditingId(null), 100)}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Escape') {
+                                  e.preventDefault()
+                                  setEditingId(null)
+                                }
+                              }}
+                              className="w-full px-2 py-1 bg-white/10 border border-white/20 rounded text-[13px] text-white focus:outline-none focus:border-white/40"
+                            />
+                          </form>
+                        ) : (
+                          <div
+                            onClick={() => setEditingId(item.id)}
+                            className="py-1 text-[14px] text-white truncate cursor-pointer"
+                          >
+                            {item.name}
+                          </div>
+                        )}
+                      </div>
+                      <div className="w-24 text-[13px] text-white/60">{item.duration}</div>
+                    </div>
+                  ))}
+                </div>
+                <p className="text-[13px] text-white/60 mt-4">Click on any track name to edit it</p>
+              </Example>
+
+              <CodeBlock
+                id="inline-editing-pattern"
+                code={`const [editingId, setEditingId] = useState<string | null>(null)
+const inputRef = useRef<HTMLInputElement>(null)
+
+// Auto-focus when editing starts
+useEffect(() => {
+  if (editingId && inputRef.current) {
+    inputRef.current.focus()
+    inputRef.current.select()
+  }
+}, [editingId])
+
+// Editable cell
+{editingId === item.id ? (
+  <form
+    onSubmit={(e) => {
+      e.preventDefault()
+      handleSave()
+    }}
+    className="w-full py-1"
+  >
+    <input
+      ref={inputRef}
+      type="text"
+      defaultValue={item.name}
+      onClick={(e) => e.stopPropagation()}
+      onBlur={() => setTimeout(handleSave, 100)}
+      onKeyDown={(e) => {
+        if (e.key === 'Escape') {
+          e.preventDefault()
+          setEditingId(null)
+        }
+      }}
+      className="w-full px-2 py-1 bg-white/10 border border-white/20 rounded text-[13px] text-white focus:outline-none focus:border-white/40"
+    />
+  </form>
+) : (
+  <div
+    onDoubleClick={() => setEditingId(item.id)}
+    className="py-1 text-[14px] text-white truncate"
+  >
+    {item.name}
+  </div>
+)}`}
+              />
+            </div>
+          </Section>
+
+          {/* Scrollable Containers */}
+          <Section title="Scrollable Containers">
+            <div id="scrollable-containers" className="space-y-6">
+              <Example title="Custom Scrollbar Styling" description="Consistent scrollbar appearance">
+                <div className="h-64 overflow-y-auto scrollbar-custom bg-[#111111] rounded-[8px] p-4">
+                  {Array.from({ length: 30 }, (_, i) => (
+                    <div key={i} className="py-2 px-3 mb-2 bg-white/5 rounded-[6px] text-[14px] text-white">
+                      Scrollable item {i + 1}
+                    </div>
+                  ))}
+                </div>
+              </Example>
+
+              <CodeBlock
+                id="scrollbar-pattern"
+                code={`/* In globals.css */
+.scrollbar-custom {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+}
+
+.scrollbar-custom::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.scrollbar-custom::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-custom::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+}
+
+.scrollbar-custom::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(255, 255, 255, 0.3);
+}
+
+/* Usage */
+<div className="h-64 overflow-y-auto scrollbar-custom">
+  {/* Scrollable content */}
 </div>`}
               />
             </div>

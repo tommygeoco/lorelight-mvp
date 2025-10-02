@@ -5,12 +5,11 @@
 
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Plus, Music, Trash2, Edit2 } from 'lucide-react'
 import { SectionHeader } from '@/components/ui/SectionHeader'
 import { useAudioPlaylistStore } from '@/store/audioPlaylistStore'
 import { useToastStore } from '@/store/toastStore'
-import { InputModal } from '@/components/ui/InputModal'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import type { AudioPlaylist } from '@/types'
 
@@ -33,10 +32,12 @@ export function PlaylistsSidebar({
   } | null>(null)
   const [editingPlaylistId, setEditingPlaylistId] = useState<string | null>(null)
   const [editingName, setEditingName] = useState('')
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
+  const [isCreatingNew, setIsCreatingNew] = useState(false)
+  const [newPlaylistName, setNewPlaylistName] = useState('')
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [playlistToDelete, setPlaylistToDelete] = useState<AudioPlaylist | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const inputRef = useRef<HTMLInputElement>(null)
 
   const playlists = Array.from(playlistMap.values()).sort((a, b) =>
     a.name.localeCompare(b.name)
@@ -51,19 +52,39 @@ export function PlaylistsSidebar({
     }
   }, [contextMenu])
 
-  const handleCreatePlaylist = async (name: string) => {
+  // Auto-focus input when creating new playlist
+  useEffect(() => {
+    if (isCreatingNew && inputRef.current) {
+      inputRef.current.focus()
+      inputRef.current.select()
+    }
+  }, [isCreatingNew])
+
+  const handleCreateSubmit = async () => {
+    if (!newPlaylistName.trim()) {
+      setIsCreatingNew(false)
+      setNewPlaylistName('')
+      return
+    }
+
     setIsSubmitting(true)
     try {
-      const newPlaylist = await createPlaylist({ name })
+      const newPlaylist = await createPlaylist({ name: newPlaylistName.trim() })
       onSelectPlaylist(newPlaylist.id)
-      addToast(`Created "${name}"`, 'success')
-      setIsCreateModalOpen(false)
+      addToast(`Created "${newPlaylistName.trim()}"`, 'success')
+      setIsCreatingNew(false)
+      setNewPlaylistName('')
     } catch (error) {
       console.error('Failed to create playlist:', error)
       addToast('Failed to create playlist', 'error')
     } finally {
       setIsSubmitting(false)
     }
+  }
+
+  const handleCancelCreate = () => {
+    setIsCreatingNew(false)
+    setNewPlaylistName('')
   }
 
   const handleDeletePlaylist = async () => {
@@ -152,7 +173,7 @@ export function PlaylistsSidebar({
         variant="sidebar"
         action={{
           icon: <Plus className="w-[18px] h-[18px] text-white/70" />,
-          onClick: () => setIsCreateModalOpen(true),
+          onClick: () => setIsCreatingNew(true),
           variant: 'icon-only',
           ariaLabel: 'New Playlist'
         }}
@@ -175,8 +196,46 @@ export function PlaylistsSidebar({
           </div>
         </li>
 
+        {/* New Playlist Input */}
+        {isCreatingNew && (
+          <li>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault()
+                handleCreateSubmit()
+              }}
+              className="px-3 py-2"
+            >
+              <div className="flex items-center gap-2">
+                <Music className="w-4 h-4 flex-shrink-0 text-white/70" />
+                <input
+                  ref={inputRef}
+                  type="text"
+                  value={newPlaylistName}
+                  onChange={(e) => setNewPlaylistName(e.target.value)}
+                  onBlur={() => {
+                    if (!newPlaylistName.trim()) {
+                      handleCancelCreate()
+                    } else {
+                      handleCreateSubmit()
+                    }
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Escape') {
+                      e.preventDefault()
+                      handleCancelCreate()
+                    }
+                  }}
+                  placeholder="Playlist name..."
+                  className="flex-1 px-2 py-1 bg-white/10 border border-white/20 rounded text-[13px] text-white placeholder:text-white/40 focus:outline-none focus:border-white/40"
+                />
+              </div>
+            </form>
+          </li>
+        )}
+
         {/* User Playlists */}
-        {playlists.length === 0 ? (
+        {playlists.length === 0 && !isCreatingNew ? (
           <li>
             <div className="text-center py-8">
               <p className="text-neutral-400">No playlists yet</p>
@@ -270,7 +329,7 @@ export function PlaylistsSidebar({
           {!contextMenu.playlist ? (
             <button
               onClick={() => {
-                setIsCreateModalOpen(true)
+                setIsCreatingNew(true)
                 setContextMenu(null)
               }}
               className="w-full px-4 py-2 text-left text-[13px] text-white hover:bg-white/5 flex items-center gap-2 transition-colors"
@@ -302,18 +361,6 @@ export function PlaylistsSidebar({
           )}
         </div>
       )}
-
-      {/* Create Playlist Modal */}
-      <InputModal
-        isOpen={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
-        onSubmit={handleCreatePlaylist}
-        title="Create Playlist"
-        label="Playlist Name"
-        placeholder="Enter playlist name..."
-        submitText="Create"
-        isLoading={isSubmitting}
-      />
 
       {/* Delete Confirmation Dialog */}
       <ConfirmDialog
