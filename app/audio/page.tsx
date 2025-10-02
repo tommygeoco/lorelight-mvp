@@ -110,6 +110,14 @@ export default function AudioPage() {
     fetchAudioFiles()
   }, [fetchAudioFiles])
 
+  // Set selected playlist from URL parameter
+  useEffect(() => {
+    const playlistId = searchParams.get('playlist')
+    if (playlistId && playlistId !== selectedPlaylistId) {
+      setSelectedPlaylistId(playlistId)
+    }
+  }, [searchParams, selectedPlaylistId])
+
   // Scroll to track when track param is present
   useEffect(() => {
     const trackId = searchParams.get('track')
@@ -784,6 +792,16 @@ export default function AudioPage() {
     router,
   })
 
+  const handleSelectPlaylist = (playlistId: string | null) => {
+    setSelectedPlaylistId(playlistId)
+    // Update URL to reflect selected playlist
+    if (playlistId) {
+      router.push(`/audio?playlist=${playlistId}`)
+    } else {
+      router.push('/audio')
+    }
+  }
+
   if (!user) return null
 
   return (
@@ -792,7 +810,7 @@ export default function AudioPage() {
       contentSidebar={
         <PlaylistsSidebar
           selectedPlaylistId={selectedPlaylistId}
-          onSelectPlaylist={setSelectedPlaylistId}
+          onSelectPlaylist={handleSelectPlaylist}
           audioFileForNewPlaylist={audioFileForNewPlaylist}
           onClearAudioFileForNewPlaylist={() => setAudioFileForNewPlaylist(null)}
         />
