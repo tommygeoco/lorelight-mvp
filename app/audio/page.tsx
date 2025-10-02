@@ -922,6 +922,7 @@ export default function AudioPage() {
         onDelete={handleDeleteClick}
         onAddToNewPlaylist={handleAddToNewPlaylistClick}
         playlists={playlists}
+        allTags={allTags}
         closeMenuTimeoutRef={closeMenuTimeoutRef}
       />
 

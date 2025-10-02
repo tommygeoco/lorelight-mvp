@@ -1,10 +1,11 @@
 'use client'
 
-import { useRef } from 'react'
+import { useRef, useState } from 'react'
 import { Upload, Play, Pause, Edit2, Tag, ChevronRight, Trash2, Plus, X } from 'lucide-react'
 import { useAudioPlayback } from '@/hooks/useAudioPlayback'
 import { useAudioFileStore } from '@/store/audioFileStore'
 import { useAudioPlaylistStore } from '@/store/audioPlaylistStore'
+import { useAudioFileMap } from '@/hooks/useAudioFileMap'
 import { useToastStore } from '@/store/toastStore'
 import type { AudioFile, AudioPlaylist } from '@/types'
 
@@ -24,6 +25,7 @@ interface AudioContextMenuProps {
   onDelete: (file: AudioFile) => void
   onAddToNewPlaylist: (file: AudioFile) => void
   playlists: AudioPlaylist[]
+  allTags: string[]
   closeMenuTimeoutRef: React.MutableRefObject<NodeJS.Timeout | null>
 }
 
@@ -39,12 +41,17 @@ export function AudioContextMenu({
   onDelete,
   onAddToNewPlaylist,
   playlists,
+  allTags,
   closeMenuTimeoutRef,
 }: AudioContextMenuProps) {
   const tagInputRef = useRef<HTMLInputElement>(null)
+  const isInputFocusedRef = useRef(false)
+  const [tagInput, setTagInput] = useState('')
+
   const { handlePlay, currentTrackId, isPlaying } = useAudioPlayback()
   const { updateAudioFile } = useAudioFileStore()
   const { addAudioToPlaylist } = useAudioPlaylistStore()
+  const audioFileMap = useAudioFileMap()
   const { addToast } = useToastStore()
 
   if (!contextMenu) return null
@@ -53,12 +60,13 @@ export function AudioContextMenu({
     if (!newTag.trim()) return
 
     const tags = audioFile.tags || []
-    if (tags.includes(newTag)) {
+    const tagToAdd = newTag.trim().toLowerCase()
+    if (tags.includes(tagToAdd)) {
       addToast('Tag already exists', 'error')
       return
     }
 
-    await updateAudioFile(audioFile.id, { tags: [...tags, newTag] })
+    await updateAudioFile(audioFile.id, { tags: [...tags, tagToAdd] })
     addToast('Tag added', 'success')
   }
 
@@ -94,7 +102,7 @@ export function AudioContextMenu({
       }}
       onMouseLeave={() => {
         closeMenuTimeoutRef.current = setTimeout(() => {
-          if (tagInputRef.current === document.activeElement) return
+          if (isInputFocusedRef.current) return
           setContextMenu(null)
           setShowTagsSubmenu(false)
         }, 200)
@@ -153,7 +161,7 @@ export function AudioContextMenu({
             }}
             onMouseLeave={() => {
               closeMenuTimeoutRef.current = setTimeout(() => {
-                if (tagInputRef.current === document.activeElement) return
+                if (isInputFocusedRef.current) return
                 setShowTagsSubmenu(false)
               }, 200)
             }}
@@ -172,42 +180,151 @@ export function AudioContextMenu({
               <ChevronRight className="w-3 h-3 text-white/40" />
             </button>
 
-            {showTagsSubmenu && contextMenu.audioFile && (
-              <div className="absolute left-full top-0 ml-1 bg-[#191919] border border-white/10 rounded-[8px] shadow-2xl min-w-[220px] max-w-[280px] p-3">
-                <div className="space-y-2">
+            {showTagsSubmenu && contextMenu.audioFile && (() => {
+              const viewportHeight = window.innerHeight
+              const spaceBelow = viewportHeight - contextMenu.y
+              const shouldPositionFromBottom = spaceBelow < 400
+
+              return (
+                <div
+                  data-tags-submenu
+                  className="absolute left-full bg-[#191919] border border-white/10 rounded-[8px] py-2 shadow-lg min-w-[240px] flex flex-col"
+                  style={{
+                    marginLeft: '-2px',
+                    ...(shouldPositionFromBottom ? {
+                      bottom: '0',
+                      maxHeight: 'min(400px, ' + (contextMenu.y + 20) + 'px)'
+                    } : {
+                      top: '0',
+                      maxHeight: 'min(400px, ' + spaceBelow + 'px)'
+                    })
+                  }}
+                  onMouseEnter={() => {
+                    if (closeMenuTimeoutRef.current) {
+                      clearTimeout(closeMenuTimeoutRef.current)
+                      closeMenuTimeoutRef.current = null
+                    }
+                    setShowTagsSubmenu(true)
+                  }}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {/* Current tags */}
                   {contextMenu.audioFile.tags && contextMenu.audioFile.tags.length > 0 && (
-                    <div className="flex flex-wrap gap-1.5 pb-2 border-b border-white/10">
-                      {contextMenu.audioFile.tags.map((tag) => (
-                        <button
+                    <div className="px-3 pb-2 flex flex-wrap gap-1.5">
+                      {[...contextMenu.audioFile.tags].sort().map(tag => (
+                        <div
                           key={tag}
-                          onClick={() => handleRemoveTag(contextMenu.audioFile!, tag)}
-                          className="inline-flex items-center gap-1 px-2 py-1 bg-purple-500/20 hover:bg-purple-500/30 text-purple-200 text-[11px] rounded-md transition-colors group"
+                          className="px-2 py-1 bg-purple-500/20 border border-purple-500/30 rounded-[6px] text-[12px] text-white flex items-center gap-1.5"
                         >
                           {tag}
-                          <X className="w-3 h-3 opacity-60 group-hover:opacity-100" />
-                        </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              handleRemoveTag(contextMenu.audioFile!, tag)
+                            }}
+                            className="text-white/50 hover:text-white transition-colors"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </div>
                       ))}
                     </div>
                   )}
 
-                  <input
-                    ref={tagInputRef}
-                    type="text"
-                    placeholder="Search or create tag..."
-                    className="w-full px-2 py-1.5 bg-white/5 border border-white/10 rounded-md text-[13px] text-white placeholder:text-white/40 focus:outline-none focus:border-purple-500/50"
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
+                  {/* Input field */}
+                  <div className="px-3 pb-2">
+                    <input
+                      ref={tagInputRef}
+                      type="text"
+                      value={tagInput}
+                      onChange={(e) => {
+                        setTagInput(e.target.value)
+                        if (closeMenuTimeoutRef.current) {
+                          clearTimeout(closeMenuTimeoutRef.current)
+                          closeMenuTimeoutRef.current = null
+                        }
+                      }}
+                      onFocus={(e) => {
+                        isInputFocusedRef.current = true
+                        if (closeMenuTimeoutRef.current) {
+                          clearTimeout(closeMenuTimeoutRef.current)
+                          closeMenuTimeoutRef.current = null
+                        }
+                        e.stopPropagation()
+                      }}
+                      onBlur={() => {
+                        setTimeout(() => {
+                          isInputFocusedRef.current = false
+                        }, 300)
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && tagInput.trim()) {
+                          e.preventDefault()
+                          handleAddTag(contextMenu.audioFile!, tagInput)
+                          setTagInput('')
+                          setTimeout(() => tagInputRef.current?.focus(), 0)
+                        }
+                      }}
+                      placeholder="Search or create tag..."
+                      className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-[6px] text-[13px] text-white placeholder:text-white/40 focus:outline-none focus:border-white/20 transition-colors"
+                      onClick={(e) => {
+                        e.stopPropagation()
                         e.preventDefault()
-                        const input = e.currentTarget
-                        handleAddTag(contextMenu.audioFile!, input.value)
-                        input.value = ''
-                      }
-                    }}
-                    onClick={(e) => e.stopPropagation()}
-                  />
+                      }}
+                      onMouseDown={(e) => e.stopPropagation()}
+                    />
+                  </div>
+
+                  {/* Create new tag option */}
+                  {tagInput.trim() && !allTags.includes(tagInput.trim().toLowerCase()) && (
+                    <>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleAddTag(contextMenu.audioFile!, tagInput)
+                          setTagInput('')
+                          setTimeout(() => tagInputRef.current?.focus(), 0)
+                        }}
+                        className="w-full px-3 py-2 text-left text-[13px] text-white hover:bg-white/5 transition-colors flex items-center gap-2"
+                      >
+                        <span className="text-white/60">Create</span>
+                        <span className="px-2 py-0.5 bg-purple-500/20 border border-purple-500/30 rounded text-[12px]">
+                          {tagInput.trim().toLowerCase()}
+                        </span>
+                      </button>
+                      <div className="h-px bg-white/10 my-1" />
+                    </>
+                  )}
+
+                  {/* Filtered tag list */}
+                  <div className="overflow-y-auto flex-1 scrollbar-custom">
+                    {allTags
+                      .filter(tag => {
+                        if (tagInput.trim()) {
+                          return tag.toLowerCase().includes(tagInput.toLowerCase())
+                        }
+                        const currentFile = audioFileMap.get(contextMenu.audioFile!.id)
+                        return !currentFile?.tags?.includes(tag)
+                      })
+                      .sort()
+                      .map(tag => (
+                        <button
+                          key={tag}
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleAddTag(contextMenu.audioFile!, tag)
+                            setTagInput('')
+                            setTimeout(() => tagInputRef.current?.focus(), 0)
+                          }}
+                          className="w-full px-3 py-2 text-left text-[13px] text-white hover:bg-white/5 transition-colors"
+                        >
+                          {tag}
+                        </button>
+                      ))}
+                  </div>
                 </div>
-              </div>
-            )}
+              )
+            })()}
           </div>
 
           {/* Add To Submenu */}
