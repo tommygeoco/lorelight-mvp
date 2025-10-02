@@ -156,11 +156,12 @@ export default function AudioPage() {
       })
     }
 
-    // Apply tag filter
+    // Apply tag filter (AND logic - must have ALL selected tags)
     if (selectedTags.size > 0) {
-      files = files.filter(file =>
-        file.tags && file.tags.some(tag => selectedTags.has(tag))
-      )
+      files = files.filter(file => {
+        if (!file.tags || file.tags.length === 0) return false
+        return Array.from(selectedTags).every(tag => file.tags?.includes(tag))
+      })
     }
 
     return files
@@ -536,23 +537,25 @@ export default function AudioPage() {
     const trimmedTag = tag.trim().toLowerCase()
 
     try {
-      for (const fileId of selectedFileIds) {
-        const file = audioFileMap.get(fileId)
-        if (!file) continue
+      // Run all updates in parallel for performance
+      await Promise.all(
+        Array.from(selectedFileIds).map(async (fileId) => {
+          const file = audioFileMap.get(fileId)
+          if (!file) return
 
-        const currentTags = file.tags || []
-        // Only add if tag doesn&apos;t already exist
-        if (!currentTags.includes(trimmedTag)) {
-          await updateAudioFile(fileId, {
-            tags: [...currentTags, trimmedTag]
-          })
-        }
-      }
+          const currentTags = file.tags || []
+          // Only add if tag doesn't already exist
+          if (!currentTags.includes(trimmedTag)) {
+            await updateAudioFile(fileId, {
+              tags: [...currentTags, trimmedTag]
+            })
+          }
+        })
+      )
 
       addToast(`Added tag "${trimmedTag}" to ${selectedFileIds.size} file(s)`, 'success')
       setIsBulkTagModalOpen(false)
-      setSelectedFileIds(new Set())
-      setShowBulkActions(false)
+      // Don't deselect - let user continue working
     } catch (error) {
       logger.error('Bulk tag failed', error)
       addToast('Failed to add tags', 'error')
@@ -563,18 +566,20 @@ export default function AudioPage() {
     if (selectedFileIds.size === 0) return
 
     try {
-      for (const fileId of selectedFileIds) {
-        await addAudioToPlaylist(playlistId, fileId)
-      }
+      // Run all additions in parallel for performance
+      await Promise.all(
+        Array.from(selectedFileIds).map(fileId =>
+          addAudioToPlaylist(playlistId, fileId)
+        )
+      )
 
       const playlist = playlistMap.get(playlistId)
       addToast(`Added ${selectedFileIds.size} file(s) to "${playlist?.name}"`, 'success')
       setIsBulkPlaylistModalOpen(false)
-      setSelectedFileIds(new Set())
-      setShowBulkActions(false)
+      // Don't deselect - let user continue working
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error)
-      // Check if it&apos;s a duplicate error
+      // Check if it's a duplicate error
       if (errorMessage.includes('duplicate key') || errorMessage.includes('unique constraint')) {
         addToast('Some files already in playlist', 'error')
       } else {
@@ -815,7 +820,7 @@ export default function AudioPage() {
               {/* Tags Filter - Only show if there are tags */}
               {allTags.length > 0 && (
                 <div>
-                  <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2 mb-3">
                     <h3 className="text-[13px] font-semibold text-white/70 flex items-center gap-1.5">
                       <Tag className="w-3.5 h-3.5" />
                       Tags

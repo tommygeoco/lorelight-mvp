@@ -23,7 +23,7 @@ export function PlaylistsSidebar({
   selectedPlaylistId,
   onSelectPlaylist,
 }: PlaylistsSidebarProps) {
-  const { createPlaylist, deletePlaylist, updatePlaylist, playlists: playlistMap } = useAudioPlaylistStore()
+  const { createPlaylist, deletePlaylist, updatePlaylist, playlists: playlistMap, playlistAudio } = useAudioPlaylistStore()
   const { addToast } = useToastStore()
 
   const [contextMenu, setContextMenu] = useState<{
@@ -188,7 +188,7 @@ export function PlaylistsSidebar({
           <>
           {playlists.map((playlist) => {
             const isEditing = editingPlaylistId === playlist.id
-            const trackCount = playlist.audio_file_ids?.length || 0
+            const trackCount = playlistAudio.get(playlist.id)?.length || 0
 
             return (
               <li key={playlist.id}>
