@@ -123,7 +123,11 @@ export function AudioLibrary({ isOpen, onClose, onSelect }: AudioLibraryProps) {
         addToast('This audio file is missing its URL. Please re-upload.', 'error')
         return
       }
-      loadTrack(audioFile.id, audioFile.file_url)
+      loadTrack(audioFile.id, audioFile.file_url, {
+        type: 'library',
+        id: null,
+        name: 'Audio Library'
+      })
       // Wait for loadTrack to complete, then play
       // The audio element needs time to set src and load metadata
       setTimeout(() => {

@@ -1,5 +1,5 @@
 import { useCallback } from 'react'
-import { useAudioStore } from '@/store/audioStore'
+import { useAudioStore, type AudioSourceContext } from '@/store/audioStore'
 import { useToastStore } from '@/store/toastStore'
 import type { AudioFile } from '@/types'
 
@@ -7,7 +7,7 @@ import type { AudioFile } from '@/types'
  * Custom hook for audio playback functionality
  * Provides a unified interface for playing, pausing, and managing audio tracks
  */
-export function useAudioPlayback() {
+export function useAudioPlayback(sourceContext?: AudioSourceContext) {
   const { currentTrackId, currentTrackUrl, isPlaying, loadTrack, togglePlay } = useAudioStore()
   const { addToast } = useToastStore()
 
@@ -27,8 +27,8 @@ export function useAudioPlayback() {
           addToast('This audio file is missing its URL. Please re-upload.', 'error')
           return
         }
-        // Load and immediately play the new track
-        loadTrack(audioFile.id, audioFile.file_url)
+        // Load and immediately play the new track with source context
+        loadTrack(audioFile.id, audioFile.file_url, sourceContext)
         // Ensure it starts playing even if another track was playing
         if (!isPlaying) {
           setTimeout(() => {
@@ -37,7 +37,7 @@ export function useAudioPlayback() {
         }
       }
     },
-    [currentTrackId, currentTrackUrl, isPlaying, loadTrack, togglePlay, addToast]
+    [currentTrackId, currentTrackUrl, isPlaying, loadTrack, togglePlay, addToast, sourceContext]
   )
 
   return {

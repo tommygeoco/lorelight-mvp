@@ -117,7 +117,11 @@ export function SessionSceneView({ campaignId, sessionId }: SessionSceneViewProp
       if (audioId) {
         const audioFile = audioFileMap.get(audioId)
         if (audioFile) {
-          loadTrack(audioFile.id, audioFile.file_url)
+          loadTrack(audioFile.id, audioFile.file_url, {
+            type: 'scene',
+            id: selectedScene.id,
+            name: selectedScene.name
+          })
         }
       }
     }

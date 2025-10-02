@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, useRef, useMemo } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { Upload, Trash2, Play, Pause, Search, Plus, SlidersHorizontal, Tag, Minus, Edit2, MoreVertical, ChevronUp, ChevronDown } from 'lucide-react'
 import { DashboardLayoutWithSidebar } from '@/components/layouts/DashboardLayoutWithSidebar'
 import { DashboardSidebar } from '@/components/layouts/DashboardSidebar'
@@ -24,8 +24,10 @@ import type { AudioFile } from '@/types'
 
 export default function AudioPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { user } = useAuthStore()
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const audioRowRefs = useRef<Map<string, HTMLDivElement>>(new Map())
 
   const [uploadQueue, setUploadQueue] = useState<Array<{file: File, name: string, id: string, progress: number, status: 'pending' | 'uploading' | 'complete' | 'error', message: string}>>([])
   const [deleteConfirmFile, setDeleteConfirmFile] = useState<AudioFile | null>(null)
@@ -70,7 +72,11 @@ export default function AudioPage() {
   } = useAudioFileStore()
 
   const { addAudioToPlaylist, removeAudioFromPlaylist } = useAudioPlaylistStore()
-  const { handlePlay, currentTrackId, isPlaying } = useAudioPlayback()
+  const { handlePlay, currentTrackId, isPlaying } = useAudioPlayback({
+    type: 'library',
+    id: null,
+    name: 'Audio Library'
+  })
   const audioFileMap = useAudioFileMap()
   const playlistMap = useAudioPlaylistMap()
   const playlistAudioMap = useAudioPlaylistStore((state) => state.playlistAudio)
@@ -89,6 +95,20 @@ export default function AudioPage() {
   useEffect(() => {
     fetchAudioFiles()
   }, [fetchAudioFiles])
+
+  // Scroll to track when track param is present
+  useEffect(() => {
+    const trackId = searchParams.get('track')
+    if (trackId && !isLoading && audioFileMap.size > 0) {
+      // Small delay to ensure DOM is fully rendered
+      setTimeout(() => {
+        const rowElement = audioRowRefs.current.get(trackId)
+        if (rowElement) {
+          rowElement.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        }
+      }, 100)
+    }
+  }, [searchParams, isLoading, audioFileMap])
 
   // Close context menu and bulk action dropdowns when clicking outside
   useEffect(() => {
@@ -1247,6 +1267,13 @@ export default function AudioPage() {
                 return (
                   <div
                     key={audioFile.id}
+                    ref={(el) => {
+                      if (el) {
+                        audioRowRefs.current.set(audioFile.id, el)
+                      } else {
+                        audioRowRefs.current.delete(audioFile.id)
+                      }
+                    }}
                     data-audio-row
                     className={`group transition-colors cursor-pointer border-b border-white/5 ${
                       isCurrentlyPlaying

@@ -3,6 +3,14 @@ import { persist } from 'zustand/middleware'
 import { immer } from 'zustand/middleware/immer'
 import { useToastStore } from './toastStore'
 
+export type AudioSource = 'library' | 'playlist' | 'scene'
+
+export interface AudioSourceContext {
+  type: AudioSource
+  id: string | null // playlist ID, scene ID, or null for library
+  name: string // Display name for the source
+}
+
 interface AudioPlayerState {
   // Current playback state
   currentTrackId: string | null
@@ -13,12 +21,13 @@ interface AudioPlayerState {
   isLooping: boolean
   currentTime: number
   duration: number
+  sourceContext: AudioSourceContext | null
 
   // Audio element (not persisted)
   audioElement: HTMLAudioElement | null
 
   // Actions
-  loadTrack: (trackId: string, trackUrl: string) => void
+  loadTrack: (trackId: string, trackUrl: string, sourceContext?: AudioSourceContext) => void
   play: () => void
   pause: () => void
   togglePlay: () => void
@@ -47,9 +56,10 @@ export const useAudioStore = create<AudioPlayerState>()(
       isLooping: false,
       currentTime: 0,
       duration: 0,
+      sourceContext: null,
       audioElement: null,
 
-      loadTrack: (trackId, trackUrl) => {
+      loadTrack: (trackId, trackUrl, sourceContext) => {
         const { audioElement, volume, isLooping, currentTrackId, isPlaying } = get()
 
         if (!trackUrl) {
@@ -69,6 +79,7 @@ export const useAudioStore = create<AudioPlayerState>()(
           state.currentTrackUrl = trackUrl
           state.isPlaying = false
           state.currentTime = 0
+          state.sourceContext = sourceContext || null
         })
 
         if (audioElement) {

@@ -2,6 +2,7 @@
 
 import { useMemo, useState, useCallback, useEffect, useRef } from 'react'
 import { Volume2, VolumeX, Pause, Play, Volume1, SkipBack, SkipForward, Repeat, Shuffle } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 import { useAudioStore } from '@/store/audioStore'
 import { useAudioFileMap } from '@/hooks/useAudioFileMap'
 import { formatTime } from '@/lib/utils/time'
@@ -28,6 +29,7 @@ function getSceneGradient(trackId: string): string {
 }
 
 export function AudioPlayerFooter() {
+  const router = useRouter()
   const {
     isPlaying,
     isMuted,
@@ -36,6 +38,7 @@ export function AudioPlayerFooter() {
     currentTime,
     duration,
     currentTrackId,
+    sourceContext,
     togglePlay,
     toggleMute,
     toggleLoop,
@@ -161,6 +164,38 @@ export function AudioPlayerFooter() {
     setVolume(newVolume)
   }
 
+  // Always navigate to audio library with track ID when clicking track name
+  const handleTrackClick = () => {
+    if (!currentTrackId) return
+    router.push(`/audio?track=${currentTrackId}`)
+  }
+
+  // Navigate to source (scene or playlist) when clicking source name
+  const handleSourceClick = () => {
+    if (!sourceContext) return
+
+    switch (sourceContext.type) {
+      case 'library':
+        // Audio Library is not clickable
+        break
+      case 'playlist':
+        // Navigate to audio library with playlist selected
+        if (sourceContext.id) {
+          router.push(`/audio?playlist=${sourceContext.id}`)
+        }
+        break
+      case 'scene':
+        // Navigate to scene page
+        if (sourceContext.id) {
+          router.push(`/scenes/${sourceContext.id}`)
+        }
+        break
+    }
+  }
+
+  const sourceDisplayName = sourceContext?.name || 'Audio Library'
+  const isSourceClickable = sourceContext?.type === 'scene' || sourceContext?.type === 'playlist'
+
   return (
     <div
       className="relative bg-[#111111] flex items-center px-4 pt-5 pb-5"
@@ -204,7 +239,12 @@ export function AudioPlayerFooter() {
           {/* Track Details */}
           <div className="flex flex-col min-w-0 flex-1 gap-0.5">
             <Tooltip content={currentTrack?.name || 'No track loaded'} position="bottom">
-              <div className="text-[15px] font-medium text-white truncate">
+              <div
+                className={`text-[15px] font-medium text-white truncate ${
+                  currentTrack ? 'cursor-pointer hover:text-white/80 transition-colors' : ''
+                }`}
+                onClick={handleTrackClick}
+              >
                 {currentTrack?.name || 'No track loaded'}
               </div>
             </Tooltip>
@@ -212,7 +252,12 @@ export function AudioPlayerFooter() {
               {currentTrack ? (
                 <span className="flex items-center gap-1.5">
                   <span className="text-purple-400/60">♪</span>
-                  Scene Audio
+                  <span
+                    className={isSourceClickable ? 'cursor-pointer hover:text-white/60 transition-colors' : ''}
+                    onClick={isSourceClickable ? handleSourceClick : undefined}
+                  >
+                    {sourceDisplayName}
+                  </span>
                 </span>
               ) : (
                 'Select a scene to begin'

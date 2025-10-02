@@ -54,7 +54,11 @@ export function AudioContextMenu({
   const [editingTagValue, setEditingTagValue] = useState('')
   const [tagMenuOpen, setTagMenuOpen] = useState<string | null>(null)
 
-  const { handlePlay, currentTrackId, isPlaying } = useAudioPlayback()
+  const { handlePlay, currentTrackId, isPlaying } = useAudioPlayback({
+    type: 'library',
+    id: null,
+    name: 'Audio Library'
+  })
   const { updateAudioFile } = useAudioFileStore()
   const { addAudioToPlaylist, removeAudioFromPlaylist } = useAudioPlaylistStore()
   const audioFileMap = useAudioFileMap()
