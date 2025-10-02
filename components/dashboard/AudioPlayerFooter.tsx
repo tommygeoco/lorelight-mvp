@@ -226,26 +226,28 @@ export function AudioPlayerFooter() {
           {/* Control Buttons */}
           <div className="flex items-center gap-2">
             {/* Shuffle (disabled for now) */}
-            <div title="Shuffle (coming soon)" className="inline-flex">
+            <span title="Shuffle (coming soon)" className="inline-block">
               <button
                 disabled
-                className="w-8 h-8 flex items-center justify-center text-white/20 cursor-not-allowed transition-colors pointer-events-none"
+                className="w-8 h-8 flex items-center justify-center text-white/20 cursor-not-allowed transition-colors"
                 aria-label="Shuffle"
+                style={{ pointerEvents: 'none' }}
               >
                 <Shuffle className="w-4 h-4" />
               </button>
-            </div>
+            </span>
 
             {/* Skip Back (disabled for now) */}
-            <div title="Previous track (coming soon)" className="inline-flex">
+            <span title="Previous track (coming soon)" className="inline-block">
               <button
                 disabled
-                className="w-8 h-8 flex items-center justify-center text-white/20 cursor-not-allowed transition-colors pointer-events-none"
+                className="w-8 h-8 flex items-center justify-center text-white/20 cursor-not-allowed transition-colors"
                 aria-label="Previous track"
+                style={{ pointerEvents: 'none' }}
               >
                 <SkipBack className="w-4 h-4" fill="currentColor" />
               </button>
-            </div>
+            </span>
 
             {/* Play/Pause */}
             <button
@@ -269,35 +271,40 @@ export function AudioPlayerFooter() {
             </button>
 
             {/* Skip Forward (disabled for now) */}
-            <div title="Next track (coming soon)" className="inline-flex">
+            <span title="Next track (coming soon)" className="inline-block">
               <button
                 disabled
-                className="w-8 h-8 flex items-center justify-center text-white/20 cursor-not-allowed transition-colors pointer-events-none"
+                className="w-8 h-8 flex items-center justify-center text-white/20 cursor-not-allowed transition-colors"
                 aria-label="Next track"
+                style={{ pointerEvents: 'none' }}
               >
                 <SkipForward className="w-4 h-4" fill="currentColor" />
               </button>
-            </div>
+            </span>
 
             {/* Loop */}
-            <div title={!currentTrack ? "No track loaded" : isLooping ? "Loop enabled - Click to disable" : "Loop disabled - Click to enable"} className="inline-flex">
+            <span
+              title={!currentTrack ? "No track loaded" : isLooping ? "Loop enabled - Click to disable" : "Loop disabled - Click to enable"}
+              className="inline-block"
+            >
               <button
                 onClick={toggleLoop}
                 disabled={!currentTrack}
                 className={`
                   w-8 h-8 flex items-center justify-center transition-colors
                   ${!currentTrack
-                    ? 'text-white/20 cursor-not-allowed pointer-events-none'
+                    ? 'text-white/20 cursor-not-allowed'
                     : isLooping
                       ? 'text-purple-400 hover:text-purple-300'
                       : 'text-white/60 hover:text-white'
                   }
                 `}
+                style={!currentTrack ? { pointerEvents: 'none' } : undefined}
                 aria-label={isLooping ? "Loop enabled" : "Loop disabled"}
               >
                 <Repeat className="w-4 h-4" />
               </button>
-            </div>
+            </span>
           </div>
 
           {/* Progress Bar with purple gradient */}
