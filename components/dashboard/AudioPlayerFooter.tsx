@@ -375,7 +375,7 @@ export function AudioPlayerFooter() {
         </div>
 
         {/* Right: Volume Control */}
-        <div className="flex items-center gap-2 w-32 justify-end">
+        <div className="flex items-center gap-2 w-80 justify-end">
           <button
             onClick={toggleMute}
             className="flex items-center justify-center text-white/70 hover:text-purple-400 transition-colors"
