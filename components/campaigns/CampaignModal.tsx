@@ -93,7 +93,7 @@ export function CampaignModal({ isOpen, onClose, campaign }: CampaignModalProps)
         className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
         onClick={handleBackdropClick}
       >
-        <div className="bg-[var(--card-surface)] border border-white/10 rounded-[8px] w-[402px] max-h-[90vh] overflow-y-auto shadow-2xl">
+        <div className="bg-[var(--card-surface)] border border-white/10 rounded-[8px] w-[402px] max-h-[90vh] overflow-y-auto scrollbar-custom shadow-2xl">
           <form onSubmit={handleSubmit} className="flex flex-col">
             {/* Header */}
             <div className="flex items-center justify-between px-6 py-5 border-b border-white/10">

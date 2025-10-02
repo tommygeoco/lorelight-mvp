@@ -29,7 +29,7 @@ export function DashboardLayoutWithSidebar({
         )}
 
         {/* Main content - scrollable */}
-        <main className="flex-1 bg-[#191919] rounded-[8px] overflow-y-auto overflow-x-hidden">
+        <main className="flex-1 bg-[#191919] rounded-[8px] overflow-y-auto overflow-x-hidden scrollbar-custom">
           {children}
         </main>
       </div>

@@ -920,7 +920,7 @@ export default function AudioPage() {
 
         {/* Audio Files List */}
         <div
-          className={`flex-1 overflow-y-auto relative ${isDraggingOver ? 'bg-white/5' : ''}`}
+          className={`flex-1 overflow-y-auto scrollbar-custom relative ${isDraggingOver ? 'bg-white/5' : ''}`}
           onContextMenu={handleEmptySpaceContextMenu}
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}

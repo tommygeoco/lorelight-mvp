@@ -250,7 +250,7 @@ export function SessionSceneView({ campaignId, sessionId }: SessionSceneViewProp
   const scenesSidebar = (
     <aside className="h-full" aria-label="Scenes list">
       <div
-        className="bg-[#191919] rounded-[8px] p-3 h-full flex flex-col overflow-y-auto"
+        className="bg-[#191919] rounded-[8px] p-3 h-full flex flex-col overflow-y-auto scrollbar-custom"
         onContextMenu={handleEmptySpaceContextMenu}
       >
         <SectionHeader

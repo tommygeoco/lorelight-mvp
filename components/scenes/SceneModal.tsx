@@ -142,7 +142,7 @@ export function SceneModal({ isOpen, onClose, campaignId, sessionId, scene }: Sc
             </div>
 
             {/* Form Fields */}
-            <div className="px-6 py-6 space-y-5 overflow-y-auto flex-1 scrollbar-hide">
+            <div className="px-6 py-6 space-y-5 overflow-y-auto flex-1 scrollbar-custom">
               {/* Name Field */}
               <div className="space-y-2">
                 <label htmlFor="scene-name" className="block text-[14px] font-semibold text-[#eeeeee]">
