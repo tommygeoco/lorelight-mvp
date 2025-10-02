@@ -14,8 +14,9 @@ The Lorelight design system provides a consistent, reusable set of UI components
 - **Text Tertiary**: `rgba(255, 255, 255, 0.4)` (Disabled/subtle text)
 
 ### Accent Colors
-- **Purple**: Used in gradients and highlights
-- **Pink**: Used in gradients and highlights
+- **Purple**: `#8b5cf6` / `rgb(139, 92, 246)` (Primary accent, interactive elements)
+- **Pink**: `#ec4899` / `rgb(236, 72, 153)` (Secondary accent, gradient partner)
+- **Purple-Pink Gradient**: `linear-gradient(90deg, #8b5cf6 0%, #ec4899 100%)` (Progress bars, sliders)
 - **Red**: `#EF4444` / `rgb(239, 68, 68)` (Destructive actions)
 
 ### Borders & Dividers
@@ -438,6 +439,262 @@ const sortedItems = [...items].sort((a, b) => {
 - Chevron icon shows current sort direction
 - Fixed width headers (`w-16`, `w-20`) align with data columns
 - Use `<span>` wrapper for text + icon to keep them grouped
+
+### Audio Player Footer
+
+#### Component Overview
+Location: `/components/dashboard/AudioPlayerFooter.tsx`
+
+The audio player footer provides persistent audio playback controls across all dashboard views with subtle Dark Fantasy Charm accents.
+
+**Layout Structure:**
+- Three-column layout: Track Info (256px) | Playback Controls (flex-1) | Volume (128px)
+- Natural height with padding: `pt-5 pb-6` (20px top, 24px bottom)
+- Background: `#111111` with subtle purple vignette radial gradient
+- Always sits flush against bottom of viewport (no gaps)
+
+**Visual Features:**
+- **Purple-Pink Gradient**: Progress bar and volume slider use `linear-gradient(90deg, #8b5cf6 0%, #ec4899 100%)`
+- **Scene-Aware Artwork**: Gradient background generated from track ID hash
+- **Equalizer Bars**: Animated purple bars on artwork when playing (3 bars with staggered timing)
+- **Shimmer Effect**: Subtle animated shimmer on progress bar when playing
+- **Purple Glow**: Soft glow underneath progress bar when active
+
+**Track Info Section (Left):**
+```tsx
+<div className="flex items-center gap-3 min-w-0 w-64">
+  {/* Artwork with gradient background */}
+  <div
+    className="w-14 h-14 rounded-md flex-shrink-0 relative group overflow-hidden shadow-lg"
+    style={{
+      background: currentTrack
+        ? getSceneGradient(currentTrack.id)
+        : 'linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%)'
+    }}
+  >
+    {/* Equalizer bars when playing */}
+    {isPlaying && currentTrack && (
+      <div className="absolute -bottom-1 -right-1 bg-black/80 backdrop-blur-sm rounded-md px-1 py-0.5">
+        <div className="flex items-end gap-0.5">
+          <div className="w-0.5 bg-purple-500 animate-equalizer-1" style={{ height: '8px' }} />
+          <div className="w-0.5 bg-purple-500 animate-equalizer-2" style={{ height: '12px' }} />
+          <div className="w-0.5 bg-purple-500 animate-equalizer-3" style={{ height: '6px' }} />
+        </div>
+      </div>
+    )}
+  </div>
+
+  {/* Track details */}
+  <div className="flex flex-col min-w-0 flex-1">
+    <div className="text-sm font-medium text-white truncate">
+      {currentTrack?.name || 'No track loaded'}
+    </div>
+    <div className="text-xs text-white/40 truncate">
+      <span className="flex items-center gap-1">
+        <span className="text-purple-400/60">♪</span>
+        Scene Audio
+      </span>
+    </div>
+  </div>
+</div>
+```
+
+**Playback Controls (Center):**
+```tsx
+<div className="flex-1 flex flex-col items-center gap-2 max-w-2xl mx-auto">
+  {/* Control buttons */}
+  <div className="flex items-center gap-2">
+    <button disabled className="w-8 h-8 text-white/20 cursor-not-allowed">
+      <SkipBack className="w-4 h-4" fill="currentColor" />
+    </button>
+
+    {/* Play/Pause button */}
+    <button
+      onClick={togglePlay}
+      className="w-10 h-10 rounded-full bg-white hover:bg-white/90 hover:scale-105 shadow-lg"
+    >
+      {isPlaying ? (
+        <Pause className="w-4 h-4 text-black" fill="currentColor" />
+      ) : (
+        <Play className="w-4 h-4 text-black ml-0.5" fill="currentColor" />
+      )}
+    </button>
+
+    <button disabled className="w-8 h-8 text-white/20 cursor-not-allowed">
+      <SkipForward className="w-4 h-4" fill="currentColor" />
+    </button>
+  </div>
+
+  {/* Progress bar */}
+  <div className="flex items-center gap-2 w-full">
+    <div className="text-xs text-white/50 tabular-nums w-10 text-right font-mono">
+      {formatTime(currentTime)}
+    </div>
+
+    <div
+      className="relative flex-1 h-1 rounded-full bg-white/10 cursor-pointer group"
+      onClick={handleProgressClick}
+    >
+      {/* Purple glow underneath */}
+      <div
+        className="absolute inset-y-0 left-0 rounded-full blur-sm opacity-50"
+        style={{
+          width: `${progress}%`,
+          background: 'linear-gradient(90deg, #8b5cf6 0%, #ec4899 100%)',
+        }}
+      />
+
+      {/* Filled progress with gradient */}
+      <div
+        className="absolute inset-y-0 left-0 rounded-full"
+        style={{
+          width: `${progress}%`,
+          background: 'linear-gradient(90deg, #8b5cf6 0%, #ec4899 100%)',
+        }}
+      />
+
+      {/* Shimmer effect when playing */}
+      {isPlaying && currentTrack && (
+        <div className="shimmer-effect" />
+      )}
+
+      {/* Hover scrubber with purple glow */}
+      <div
+        className="opacity-0 group-hover:opacity-100"
+        style={{ left: `calc(${progress}% - 6px)` }}
+      >
+        <div className="w-3 h-3 bg-white rounded-full shadow-lg relative">
+          <div className="absolute inset-0 bg-purple-500/50 rounded-full blur-sm" />
+        </div>
+      </div>
+    </div>
+
+    <div className="text-xs text-white/50 tabular-nums w-10 font-mono">
+      {formatTime(duration)}
+    </div>
+  </div>
+</div>
+```
+
+**Volume Controls (Right):**
+```tsx
+<div className="flex items-center gap-2 w-32 justify-end">
+  <button
+    onClick={toggleMute}
+    className="flex items-center justify-center text-white/70 hover:text-purple-400 transition-colors"
+  >
+    <VolumeIcon className="w-5 h-5" />
+  </button>
+
+  <div className="flex-1 flex items-center">
+    <input
+      type="range"
+      min="0"
+      max="1"
+      step="0.01"
+      value={isMuted ? 0 : volume}
+      onChange={handleVolumeChange}
+      className="volume-slider w-full h-1 rounded-full appearance-none cursor-pointer"
+    />
+  </div>
+</div>
+```
+
+**CSS Animations:**
+```css
+/* Equalizer bars - staggered timing for organic feel */
+@keyframes equalizer-1 {
+  0%, 100% { height: 8px; }
+  50% { height: 14px; }
+}
+@keyframes equalizer-2 {
+  0%, 100% { height: 12px; }
+  50% { height: 6px; }
+}
+@keyframes equalizer-3 {
+  0%, 100% { height: 6px; }
+  50% { height: 12px; }
+}
+
+.animate-equalizer-1 {
+  animation: equalizer-1 0.8s ease-in-out infinite;
+}
+.animate-equalizer-2 {
+  animation: equalizer-2 0.9s ease-in-out infinite;
+  animation-delay: 0.2s;
+}
+.animate-equalizer-3 {
+  animation: equalizer-3 0.7s ease-in-out infinite;
+  animation-delay: 0.4s;
+}
+
+/* Shimmer effect on progress bar */
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(400%); }
+}
+.shimmer-effect {
+  animation: shimmer 3s linear infinite;
+}
+
+/* Volume slider with purple-pink gradient */
+.volume-slider {
+  background: linear-gradient(
+    to right,
+    #8b5cf6 0%,
+    #ec4899 ${volume * 50}%,
+    #ec4899 ${volume * 100}%,
+    rgba(255, 255, 255, 0.2) ${volume * 100}%,
+    rgba(255, 255, 255, 0.2) 100%
+  );
+}
+
+.volume-slider::-webkit-slider-thumb {
+  appearance: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: white;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+  transition: all 0.2s ease;
+}
+
+.volume-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+  box-shadow: 0 0 8px 2px rgba(139, 92, 246, 0.5);
+}
+```
+
+**Scene-Aware Gradient Function:**
+```tsx
+const getSceneGradient = (trackId: string) => {
+  const gradients = [
+    'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+    'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+    'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
+    'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
+    'linear-gradient(135deg, #30cfd0 0%, #330867 100%)',
+  ]
+  const hash = trackId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0)
+  return gradients[hash % gradients.length]
+}
+```
+
+**Interactive States:**
+- **No Track**: Disabled play button (white/10), no gradient effects
+- **Playing**: Equalizer bars animate, shimmer on progress bar, purple gradient active
+- **Paused**: Static artwork, no animations, gradient colors remain
+- **Hover (Progress Bar)**: White scrubber appears with purple glow
+- **Hover (Volume)**: Slider thumb scales up with purple glow
+
+**Design Principles:**
+- Minimal and clean aesthetic with purposeful purple accents
+- No excessive glows or pulsing effects (removed during refinement)
+- Equalizer bars use static background container to prevent visual artifacts
+- Purple ring and blur effects removed for cleaner look
+- All animations are subtle and enhance rather than distract
 
 ### Lists
 

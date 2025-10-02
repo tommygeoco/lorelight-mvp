@@ -173,6 +173,7 @@ export default function DesignSystemPage() {
               <li><a href="#empty-states" className="text-white/60 hover:text-white transition-colors">Empty States</a></li>
               <li><a href="#layouts" className="text-white/60 hover:text-white transition-colors">Layouts</a></li>
               <li><a href="#playing-track-animation" className="text-white/60 hover:text-white transition-colors">Playing Track Animation</a></li>
+              <li><a href="#audio-player-footer" className="text-white/60 hover:text-white transition-colors">Audio Player Footer</a></li>
               <li><a href="#dark-fantasy-charm" className="text-white/60 hover:text-white transition-colors">Dark Fantasy Charm</a></li>
             </ul>
           </div>
@@ -1477,6 +1478,129 @@ useEffect(() => {
 
 /* All animation classes defined in globals.css */
 /* See DESIGN_SYSTEM.md for complete CSS implementation */`}
+              />
+            </div>
+          </Section>
+
+          {/* Audio Player Footer */}
+          <Section title="Audio Player Footer">
+            <div id="audio-player-footer" className="space-y-6">
+              <Example title="Component Overview" description="Persistent audio playback controls with Dark Fantasy Charm accents">
+                <div className="space-y-4 text-[13px]">
+                  <div>
+                    <p className="text-white font-medium mb-2">Layout Structure</p>
+                    <ul className="space-y-1 text-white/60">
+                      <li>• Three-column: Track Info (256px) | Playback Controls (flex-1) | Volume (128px)</li>
+                      <li>• Natural height with padding: pt-5 pb-6 (20px top, 24px bottom)</li>
+                      <li>• Background: #111111 with subtle purple vignette</li>
+                      <li>• Always flush against viewport bottom (no gaps)</li>
+                    </ul>
+                  </div>
+                  <div>
+                    <p className="text-white font-medium mb-2">Visual Features</p>
+                    <ul className="space-y-1 text-white/60">
+                      <li>• Purple-Pink Gradient on progress bar and volume slider</li>
+                      <li>• Scene-aware artwork with gradient from track ID hash</li>
+                      <li>• Animated equalizer bars (3 bars, staggered timing)</li>
+                      <li>• Shimmer effect on progress bar when playing</li>
+                      <li>• Purple glow underneath active progress bar</li>
+                    </ul>
+                  </div>
+                </div>
+              </Example>
+
+              <Example title="Key Animations">
+                <div className="space-y-3 text-[13px]">
+                  <div className="bg-black/20 rounded-[6px] p-3">
+                    <p className="text-white font-medium mb-1">Equalizer Bars</p>
+                    <p className="text-white/60 text-[12px]">Three bars with staggered animations (0.8s, 0.9s, 0.7s) and delays (0s, 0.2s, 0.4s)</p>
+                  </div>
+                  <div className="bg-black/20 rounded-[6px] p-3">
+                    <p className="text-white font-medium mb-1">Shimmer Effect</p>
+                    <p className="text-white/60 text-[12px]">3s linear infinite animation translating gradient overlay across progress bar</p>
+                  </div>
+                  <div className="bg-black/20 rounded-[6px] p-3">
+                    <p className="text-white font-medium mb-1">Volume Slider</p>
+                    <p className="text-white/60 text-[12px]">Gradient thumb with scale(1.2) and purple glow on hover</p>
+                  </div>
+                </div>
+              </Example>
+
+              <Example title="Interactive States">
+                <div className="grid grid-cols-2 gap-4 text-[13px]">
+                  <div className="bg-black/20 rounded-[6px] p-3">
+                    <p className="text-white font-medium mb-1">No Track</p>
+                    <p className="text-white/60 text-[12px]">Disabled play button, no gradient effects, neutral gray artwork</p>
+                  </div>
+                  <div className="bg-black/20 rounded-[6px] p-3">
+                    <p className="text-white font-medium mb-1">Playing</p>
+                    <p className="text-white/60 text-[12px]">Equalizer bars animate, shimmer on progress, purple gradient active</p>
+                  </div>
+                  <div className="bg-black/20 rounded-[6px] p-3">
+                    <p className="text-white font-medium mb-1">Paused</p>
+                    <p className="text-white/60 text-[12px]">Static artwork, no animations, gradient colors remain</p>
+                  </div>
+                  <div className="bg-black/20 rounded-[6px] p-3">
+                    <p className="text-white font-medium mb-1">Hover</p>
+                    <p className="text-white/60 text-[12px]">White scrubber with purple glow, volume thumb scales up</p>
+                  </div>
+                </div>
+              </Example>
+
+              <Example title="Design Principles">
+                <div className="space-y-2 text-[13px]">
+                  <div className="flex items-start gap-2">
+                    <span className="text-green-400 flex-shrink-0">✓</span>
+                    <p className="text-white/60">Minimal and clean aesthetic with purposeful purple accents</p>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <span className="text-green-400 flex-shrink-0">✓</span>
+                    <p className="text-white/60">No excessive glows or pulsing effects (removed during refinement)</p>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <span className="text-green-400 flex-shrink-0">✓</span>
+                    <p className="text-white/60">Equalizer bars use static background to prevent visual artifacts</p>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <span className="text-green-400 flex-shrink-0">✓</span>
+                    <p className="text-white/60">All animations are subtle and enhance rather than distract</p>
+                  </div>
+                </div>
+              </Example>
+
+              <CodeBlock
+                id="audio-player-usage"
+                code={`import { AudioPlayerFooter } from '@/components/dashboard/AudioPlayerFooter'
+
+// In layout component
+<div className="h-screen w-full flex flex-col overflow-hidden">
+  {/* Main content */}
+  <div className="flex-1 overflow-hidden">
+    {children}
+  </div>
+
+  {/* Audio footer - always at bottom */}
+  <div className="flex-shrink-0">
+    <AudioPlayerFooter />
+  </div>
+</div>
+
+// Purple-pink gradient pattern
+const gradient = 'linear-gradient(90deg, #8b5cf6 0%, #ec4899 100%)'
+
+// Scene-aware gradient function
+const getSceneGradient = (trackId: string) => {
+  const gradients = [
+    'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+    'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+    'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
+    'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
+    'linear-gradient(135deg, #30cfd0 0%, #330867 100%)',
+  ]
+  const hash = trackId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0)
+  return gradients[hash % gradients.length]
+}`}
               />
             </div>
           </Section>

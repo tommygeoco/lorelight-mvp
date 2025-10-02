@@ -78,35 +78,26 @@ export function AudioPlayerFooter() {
 
         {/* Left: Track Info */}
         <div className="flex items-center gap-3 min-w-0 w-64">
-          {/* Artwork with purple accent */}
+          {/* Artwork */}
           <div className="relative">
             <div
-              className={`
-                w-14 h-14 rounded-md flex-shrink-0 relative group overflow-hidden shadow-lg
-                transition-all duration-300
-                ${isPlaying && currentTrack ? 'ring-2 ring-purple-500/50' : ''}
-              `}
+              className="w-14 h-14 rounded-md flex-shrink-0 relative group overflow-hidden shadow-lg"
               style={{
                 background: currentTrack
                   ? getSceneGradient(currentTrack.id)
                   : 'linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%)'
               }}
             >
-              {/* Subtle pulse when playing */}
-              {isPlaying && currentTrack && (
-                <div
-                  className="absolute inset-0 opacity-20 animate-pulse"
-                  style={{ background: getSceneGradient(currentTrack.id) }}
-                />
-              )}
             </div>
 
-            {/* Animated equalizer bars when playing */}
+            {/* Static background for equalizer */}
             {isPlaying && currentTrack && (
-              <div className="absolute -bottom-1 -right-1 flex items-end gap-0.5 bg-black/80 backdrop-blur-sm rounded-md px-1 py-0.5">
-                <div className="w-0.5 bg-purple-500 rounded-full animate-equalizer-1" style={{ height: '8px' }} />
-                <div className="w-0.5 bg-purple-500 rounded-full animate-equalizer-2" style={{ height: '12px' }} />
-                <div className="w-0.5 bg-purple-500 rounded-full animate-equalizer-3" style={{ height: '6px' }} />
+              <div className="absolute -bottom-1 -right-1 bg-black/80 backdrop-blur-sm rounded-md px-1 py-0.5">
+                <div className="flex items-end gap-0.5">
+                  <div className="w-0.5 bg-purple-500 animate-equalizer-1" style={{ height: '8px' }} />
+                  <div className="w-0.5 bg-purple-500 animate-equalizer-2" style={{ height: '12px' }} />
+                  <div className="w-0.5 bg-purple-500 animate-equalizer-3" style={{ height: '6px' }} />
+                </div>
               </div>
             )}
           </div>
