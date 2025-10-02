@@ -60,6 +60,7 @@ export default function AudioPage() {
   const [focusedQueueItemId, setFocusedQueueItemId] = useState<string | null>(null)
   const [isDraggingOver, setIsDraggingOver] = useState(false)
   const dragCounterRef = useRef(0)
+  const [shimmerCheckboxes, setShimmerCheckboxes] = useState(false)
 
   const {
     isLoading,
@@ -535,7 +536,7 @@ export default function AudioPage() {
   const handleBulkDelete = async () => {
     if (selectedFileIds.size === 0) return
 
-    const confirmed = window.confirm(`Delete ${selectedFileIds.size} file(s)? This action cannot be undone.`)
+    const confirmed = window.confirm(`Remove these ${selectedFileIds.size} tracks from your collection? This action cannot be undone.`)
     if (!confirmed) return
 
     try {
@@ -680,8 +681,12 @@ export default function AudioPage() {
   const handleSelectAll = () => {
     if (selectedFileIds.size === audioFiles.length) {
       setSelectedFileIds(new Set())
+      setShimmerCheckboxes(false)
     } else {
       setSelectedFileIds(new Set(audioFiles.map(f => f.id)))
+      // Trigger shimmer animation
+      setShimmerCheckboxes(true)
+      setTimeout(() => setShimmerCheckboxes(false), 600)
     }
   }
 
@@ -1108,7 +1113,7 @@ export default function AudioPage() {
                 title="Select all files"
               />
             </div>
-            <div className="w-4 flex-shrink-0 ml-6" /> {/* Play button space */}
+            <div className="w-[24px] flex-shrink-0 ml-6" /> {/* Play button space - matches row w-[24px] */}
             <div className="flex-1 ml-6 min-w-0">Name</div>
             <div className="flex items-center gap-16 text-[12px] flex-shrink-0 font-mono">
               <div className="w-16 text-right">Duration</div>
@@ -1129,10 +1134,10 @@ export default function AudioPage() {
         >
           {/* Drag-and-drop overlay */}
           {isDraggingOver && (
-            <div className="absolute inset-0 z-50 flex items-center justify-center bg-purple-500/10 border-2 border-dashed border-purple-500/50 pointer-events-none">
+            <div className="absolute inset-0 z-50 flex items-center justify-center bg-purple-500/10 border-2 border-dashed border-purple-500/50 pointer-events-none arcane-drop-zone">
               <div className="text-center">
                 <Upload className="w-12 h-12 text-purple-400 mx-auto mb-2" />
-                <p className="text-lg text-white font-semibold">Drop audio files here</p>
+                <p className="text-lg text-white font-semibold">Release to add to your collection</p>
                 <p className="text-sm text-white/60">Files will be added to the upload queue</p>
               </div>
             </div>
@@ -1152,8 +1157,14 @@ export default function AudioPage() {
           {isLoading ? (
             <div className="text-center py-12 text-white/40">Loading...</div>
           ) : audioFiles.length === 0 ? (
-            <div className="text-center py-12 text-white/40">
-              {searchQuery ? 'No results found' : 'No audio files yet'}
+            <div className="text-center py-12">
+              <p className="text-white/40">
+                {searchQuery
+                  ? 'The archives yield no matching scrolls'
+                  : selectedPlaylistId
+                  ? 'This tome is empty. Add tracks to fill its pages'
+                  : 'Your arcane library awaits... Upload audio to begin'}
+              </p>
             </div>
           ) : (
             <div>
@@ -1189,7 +1200,7 @@ export default function AudioPage() {
                           handleCheckboxChange(audioFile.id)
                         }}
                         onClick={(e) => e.stopPropagation()}
-                        className="w-3.5 h-3.5 cursor-pointer"
+                        className={`w-3.5 h-3.5 cursor-pointer ${shimmerCheckboxes && isSelected ? 'shimmer-select' : ''}`}
                       />
                     </div>
 

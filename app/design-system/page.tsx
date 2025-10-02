@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { Plus, Music, Trash2, Edit2, Play, Volume2, AlertCircle, MoreVertical, Info, X, Tag, ChevronDown, SlidersHorizontal } from 'lucide-react'
+import { Plus, Music, Trash2, Edit2, Play, Pause, AlertCircle, MoreVertical, Info, X, Tag, ChevronDown, SlidersHorizontal } from 'lucide-react'
 import { BaseModal } from '@/components/ui/BaseModal'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { InputModal } from '@/components/ui/InputModal'
@@ -9,7 +9,6 @@ import { PageHeader } from '@/components/ui/PageHeader'
 import { SectionHeader } from '@/components/ui/SectionHeader'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { Button } from '@/components/ui/button'
-import { DashboardLayoutWithSidebar } from '@/components/layouts/DashboardLayoutWithSidebar'
 
 export default function DesignSystemPage() {
   const [showBaseModal, setShowBaseModal] = useState(false)
@@ -22,11 +21,11 @@ export default function DesignSystemPage() {
     y: number
     item?: { id: string; name: string }
   } | null>(null)
-  const [hoveredTooltip, setHoveredTooltip] = useState<string | null>(null)
   const [showDropdown, setShowDropdown] = useState(false)
   const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set())
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [editingId, setEditingId] = useState<string | null>(null)
+  const [playingTrackId, setPlayingTrackId] = useState<string | null>('demo-track-2')
   const editInputRef = useRef<HTMLInputElement>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
@@ -59,9 +58,9 @@ export default function DesignSystemPage() {
   }, [editingId])
 
   const sampleTableData = [
-    { id: '1', name: 'Tavern Ambience', duration: '3:45', type: 'Ambience' },
-    { id: '2', name: 'Battle Theme', duration: '2:30', type: 'Music' },
-    { id: '3', name: 'Forest Sounds', duration: '5:12', type: 'Ambience' },
+    { id: 'demo-track-1', name: 'Tavern Ambience', duration: '3:45', type: 'Ambience' },
+    { id: 'demo-track-2', name: 'Battle Theme', duration: '2:30', type: 'Music' },
+    { id: 'demo-track-3', name: 'Forest Sounds', duration: '5:12', type: 'Ambience' },
   ]
 
   const sampleTags = ['ambient', 'battle', 'tavern', 'forest', 'epic']
@@ -150,6 +149,8 @@ export default function DesignSystemPage() {
               <li><a href="#tooltips" className="text-white/60 hover:text-white transition-colors">Tooltips</a></li>
               <li><a href="#empty-states" className="text-white/60 hover:text-white transition-colors">Empty States</a></li>
               <li><a href="#layouts" className="text-white/60 hover:text-white transition-colors">Layouts</a></li>
+              <li><a href="#playing-track-animation" className="text-white/60 hover:text-white transition-colors">Playing Track Animation</a></li>
+              <li><a href="#dark-fantasy-charm" className="text-white/60 hover:text-white transition-colors">Dark Fantasy Charm</a></li>
             </ul>
           </div>
         </nav>
@@ -1259,6 +1260,222 @@ useEffect(() => {
     </div>
   </div>
 </DashboardLayoutWithSidebar>`}
+              />
+            </div>
+          </Section>
+
+          {/* Playing Track Animation */}
+          <Section title="Playing Track Animation">
+            <div id="playing-track-animation" className="space-y-6">
+              <Example title="Interactive Demo" description="Click a row to see the playing track effects. Hover to see visualizer/pause button swap.">
+                <div className="space-y-0">
+                  {sampleTableData.map((track) => {
+                    const isPlaying = playingTrackId === track.id
+                    return (
+                      <div
+                        key={track.id}
+                        className={`group cursor-pointer border-b border-white/5 ${
+                          isPlaying
+                            ? 'playing-track-gradient active'
+                            : 'hover:bg-white/5'
+                        } transition-colors`}
+                        onClick={() => setPlayingTrackId(isPlaying ? null : track.id)}
+                      >
+                        <div className="flex items-center px-6 py-3">
+                          {/* Play/Pause Button with Visualizer */}
+                          <div className="flex items-center w-[24px] justify-center mr-4">
+                            {/* Visualizer Bars - visible when playing and NOT hovering */}
+                            {isPlaying && (
+                              <div className="flex items-center gap-0.5 h-4 group-hover:opacity-0 transition-opacity duration-200">
+                                <div className="visualizer-bar active" />
+                                <div className="visualizer-bar active" />
+                                <div className="visualizer-bar active" />
+                              </div>
+                            )}
+
+                            {/* Play/Pause Button - visible on hover or when not playing */}
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                setPlayingTrackId(isPlaying ? null : track.id)
+                              }}
+                              className={`absolute w-4 h-4 text-white/50 hover:text-white transition-all ${
+                                isPlaying
+                                  ? 'opacity-0 group-hover:opacity-100'
+                                  : 'opacity-100'
+                              }`}
+                            >
+                              {isPlaying ? (
+                                <Pause className="w-4 h-4 fill-current icon-playing-glow" />
+                              ) : (
+                                <Play className="w-4 h-4 fill-current" />
+                              )}
+                            </button>
+                          </div>
+
+                          <div className="flex-1">
+                            <div className="text-[14px] text-white">{track.name}</div>
+                          </div>
+                          <div className="text-[13px] text-white/60 w-16 text-right tabular-nums">{track.duration}</div>
+                          <div className="text-[13px] text-white/60 w-24 text-right">{track.type}</div>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              </Example>
+
+              <Example title="Visual Effects Breakdown">
+                <div className="space-y-3 text-[13px]">
+                  <div>
+                    <p className="text-white font-medium mb-1">1. Pulsing Gradient Background</p>
+                    <p className="text-white/60">Animated horizontal gradient sweep with multiple purple tones (5s duration, 400ms fade-in)</p>
+                  </div>
+                  <div>
+                    <p className="text-white font-medium mb-1">2. Left Edge Glow</p>
+                    <p className="text-white/60">3px vertical purple gradient bar that pulses (2.5s intervals)</p>
+                  </div>
+                  <div>
+                    <p className="text-white font-medium mb-1">3. Wave Pattern Overlay</p>
+                    <p className="text-white/60">Subtle horizontal wave animation (8s duration)</p>
+                  </div>
+                  <div>
+                    <p className="text-white font-medium mb-1">4. Audio Visualizer Bars</p>
+                    <p className="text-white/60">Three animated bars with staggered timing (0.6s, 0.8s, 0.7s)</p>
+                  </div>
+                  <div>
+                    <p className="text-white font-medium mb-1">5. Icon Glow</p>
+                    <p className="text-white/60">Subtle drop-shadow pulse on pause icon (2s animation)</p>
+                  </div>
+                </div>
+              </Example>
+
+              <CodeBlock
+                id="playing-track-code"
+                code={`<div
+  className={\`group \${
+    isCurrentlyPlaying
+      ? 'playing-track-gradient active'
+      : 'hover:bg-white/5'
+  }\`}
+>
+  {/* Visualizer Bars - visible when playing, hidden on hover */}
+  {isCurrentlyPlaying && (
+    <div className="flex items-center gap-0.5 h-4 group-hover:opacity-0 transition-opacity duration-200">
+      <div className="visualizer-bar active" />
+      <div className="visualizer-bar active" />
+      <div className="visualizer-bar active" />
+    </div>
+  )}
+
+  {/* Pause Button - hidden, visible on hover */}
+  <button
+    className={\`absolute w-4 h-4 \${
+      isCurrentlyPlaying
+        ? 'opacity-0 group-hover:opacity-100'
+        : 'opacity-0 group-hover:opacity-100'
+    }\`}
+  >
+    <Pause className="w-4 h-4 fill-current icon-playing-glow" />
+  </button>
+</div>
+
+/* All animation classes defined in globals.css */
+/* See DESIGN_SYSTEM.md for complete CSS implementation */`}
+              />
+            </div>
+          </Section>
+
+          {/* Dark Fantasy Charm */}
+          <Section title="Dark Fantasy Charm">
+            <div id="dark-fantasy-charm" className="space-y-6">
+              <Example title="Philosophy">
+                <div className="space-y-4 text-[13px]">
+                  <div>
+                    <p className="text-white/90 mb-2">Lorelight embraces its D&D identity through subtle thematic touches that add personality without being tacky or on-the-nose.</p>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <p className="text-green-400 font-medium">✅ DO:</p>
+                      <ul className="space-y-1 text-white/60 text-[12px]">
+                        <li>• Use subtle, sophisticated touches</li>
+                        <li>• Embrace D&D themes in copy, not visuals</li>
+                        <li>• Add interactive delights that feel magical</li>
+                        <li>• Use animation to create atmosphere</li>
+                        <li>• Let users discover easter eggs naturally</li>
+                      </ul>
+                    </div>
+                    <div className="space-y-2">
+                      <p className="text-red-400 font-medium">❌ DON&apos;T:</p>
+                      <ul className="space-y-1 text-white/60 text-[12px]">
+                        <li>• Use fantasy-themed icons (swords, shields)</li>
+                        <li>• Add medieval/gothic fonts</li>
+                        <li>• Use literal D&D imagery (dice, sheets)</li>
+                        <li>• Make the UI feel like a game interface</li>
+                        <li>• Force theme on users who want a clean tool</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </Example>
+
+              <Example title="Implemented Elements">
+                <div className="space-y-4 text-[13px]">
+                  <div>
+                    <p className="text-white font-medium mb-2">1. D&D Loading Messages</p>
+                    <div className="bg-black/20 rounded-[6px] p-3 space-y-1 text-white/60 text-[12px] font-mono">
+                      <p>&quot;Rolling for initiative...&quot;</p>
+                      <p>&quot;Consulting the ancient tomes...&quot;</p>
+                      <p>&quot;Gathering the party...&quot;</p>
+                      <p>&quot;Casting Detect Magic...&quot;</p>
+                      <p>&quot;The tavern grows quiet...&quot;</p>
+                    </div>
+                    <p className="text-white/60 mt-2">Random phrases during file uploads that reference D&D mechanics and flavor</p>
+                  </div>
+
+                  <div>
+                    <p className="text-white font-medium mb-2">2. Playing Track Visualizer</p>
+                    <p className="text-white/60">Animated purple gradient with pulsing visualizer bars. Makes the currently playing track feel alive and magical, like a spell being cast.</p>
+                  </div>
+
+                  <div>
+                    <p className="text-white font-medium mb-2">3. Gradient Hero Backgrounds</p>
+                    <p className="text-white/60">Pink and purple radial gradients with blur effects at the top of pages. Creates depth and atmosphere, like looking into a portal or magical mist.</p>
+                  </div>
+                </div>
+              </Example>
+
+              <Example title="Future Ideas">
+                <div className="space-y-3 text-[13px] text-white/60">
+                  <div>
+                    <p className="text-white font-medium mb-1">Copy & Microcopy:</p>
+                    <p>Empty states with thematic flavor, critical hit animations on random events</p>
+                  </div>
+                  <div>
+                    <p className="text-white font-medium mb-1">Subtle Visual Touches:</p>
+                    <p>Audio waveforms with purple glow, arcane circle drag-and-drop animations</p>
+                  </div>
+                  <div>
+                    <p className="text-white font-medium mb-1">Interactive Easter Eggs:</p>
+                    <p>Konami code unlocks DM screen mode, typing &quot;roll&quot; triggers d20 animation</p>
+                  </div>
+                  <div>
+                    <p className="text-white font-medium mb-1">Seasonal/Contextual:</p>
+                    <p>Special loading messages for late-night sessions, &quot;The party rests...&quot; after 2+ hours</p>
+                  </div>
+                </div>
+              </Example>
+
+              <CodeBlock
+                id="charm-guidelines"
+                code={`// Dark Fantasy Charm Guidelines
+
+1. Restraint is Key: One charm element per view maximum
+2. Make it Optional: Never block functionality with charm
+3. Performance First: Charm should never impact speed
+4. Accessibility: Ensure charm doesn't confuse screen readers
+5. Localization: Keep D&D references English-only or easily translatable
+6. User Control: Consider settings to disable "fun mode" for serious DMs`}
               />
             </div>
           </Section>

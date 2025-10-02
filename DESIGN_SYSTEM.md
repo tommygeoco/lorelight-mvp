@@ -532,27 +532,166 @@ className="hover:scale-105 transition-transform"
 ```
 
 ### Playing Track Animation
-Pulsing purple gradient for currently playing audio tracks.
+Multi-layered visual effects for currently playing audio tracks.
 
 ```tsx
 <div
-  className={`${
+  className={`group ${
     isCurrentlyPlaying
-      ? 'playing-track-gradient'
+      ? 'playing-track-gradient active'
       : 'hover:bg-white/5'
   }`}
 >
-  {/* Track content */}
+  {/* Visualizer Bars - visible when playing, hidden on hover */}
+  {isCurrentlyPlaying && (
+    <div className="flex items-center gap-0.5 h-4 group-hover:opacity-0 transition-opacity duration-200">
+      <div className="visualizer-bar active" />
+      <div className="visualizer-bar active" />
+      <div className="visualizer-bar active" />
+    </div>
+  )}
+
+  {/* Pause Button - hidden, visible on hover */}
+  <button
+    className={`absolute w-4 h-4 ${
+      isCurrentlyPlaying
+        ? 'opacity-0 group-hover:opacity-100'
+        : 'opacity-0 group-hover:opacity-100'
+    }`}
+  >
+    <Pause className="w-4 h-4 fill-current icon-playing-glow" />
+  </button>
 </div>
 ```
 
-**Effect**:
-- Animated horizontal gradient sweep with multiple purple tones
-- Color stops: purple-700 → purple-400 → purple-300 → purple-400 → purple-700 → purple-800
-- 4-second smooth continuous pulse (no harsh stops)
-- 250ms fade-in/fade-out when track starts/stops playing
-- 300% background size for smoother gradient movement
-- Sophisticated shimmer effect that feels premium, not tacky
+**Visual Effects** (defined in globals.css):
+
+1. **Pulsing Gradient Background** (`.playing-track-gradient`):
+   - Animated horizontal gradient sweep with multiple purple tones
+   - Color stops: `rgba(147, 51, 234, 0)` → `rgba(168, 85, 247, 0.12)` → `rgba(192, 132, 252, 0.1)` → fade out
+   - 5-second smooth continuous pulse
+   - 400ms smooth fade-in when track starts (using opacity transition, not animation)
+   - 300% background size for smoother gradient movement
+   - Uses `.active` class to trigger fade-in
+
+2. **Left Edge Glow** (`::before` pseudo-element):
+   - 3px wide vertical purple gradient bar
+   - Pulses at 2.5s intervals
+   - 400ms fade-in with 100ms stagger delay
+   - Color: `rgba(147, 51, 234, 0.6)` → `rgba(168, 85, 247, 0.8)`
+
+3. **Wave Pattern Overlay** (`::after` pseudo-element):
+   - Subtle horizontal wave animation (8s duration)
+   - 600ms fade-in with 200ms stagger delay
+   - Adds depth without being distracting
+
+4. **Audio Visualizer Bars** (`.visualizer-bar`):
+   - Three 2px wide animated bars
+   - Pulsing height animation at different speeds (0.6s, 0.8s, 0.7s)
+   - Staggered animation delays (0s, 0.1s, 0.2s)
+   - Purple gradient: `rgba(147, 51, 234, 0.8)` → `rgba(168, 85, 247, 0.6)`
+   - Hidden on row hover (swapped with pause button)
+
+5. **Icon Glow** (`.icon-playing-glow`):
+   - Subtle drop-shadow pulse on pause icon
+   - 2s smooth animation
+   - Only visible on hover
+
+**Interaction Pattern**:
+- Visualizer bars show by default when track is playing
+- On row hover, bars fade out and pause button fades in (200ms transition)
+- Creates clean, interactive experience without visual clutter
+- All effects use GPU-accelerated CSS animations (60fps performance)
+
+## Dark Fantasy Charm
+
+Lorelight is a tool for Dungeon Masters, and we embrace that identity through subtle thematic touches that add personality without being tacky or on-the-nose. These "Dark Fantasy Charm" elements create a sense of magic and adventure while maintaining a professional, premium aesthetic.
+
+### Philosophy
+
+**DO:**
+- ✅ Use subtle, sophisticated touches that reward attention
+- ✅ Embrace D&D/fantasy themes in copy, not visuals
+- ✅ Add interactive delights that feel magical
+- ✅ Use animation to create atmosphere
+- ✅ Let users discover easter eggs naturally
+
+**DON'T:**
+- ❌ Use fantasy-themed icons (swords, shields, dragons)
+- ❌ Add medieval/gothic fonts beyond our brand typeface
+- ❌ Use literal D&D imagery (dice, character sheets)
+- ❌ Make the UI feel like a game interface
+- ❌ Force theme on users who want a clean tool
+
+### Implemented Charm Elements
+
+#### 1. D&D Loading Messages
+**Location**: `/lib/constants/loadingMessages.ts`
+
+Random phrases during file uploads that reference D&D mechanics and flavor:
+
+```tsx
+"Rolling for initiative..."
+"Consulting the ancient tomes..."
+"Gathering the party..."
+"Casting Detect Magic..."
+"The dice are rolling..."
+"Preparing your spell slots..."
+"Checking for traps..."
+"Your DM is preparing something..."
+"The tavern grows quiet..."
+"A mysterious figure approaches..."
+```
+
+**Effect**: Makes waiting feel like part of the adventure. Users smile when they see references to their hobby.
+
+#### 2. Playing Track Visualizer
+**Location**: Audio Library table rows
+
+Animated purple gradient with pulsing visualizer bars that swap with pause button on hover.
+
+**Effect**: Makes the currently playing track feel alive and magical, like a spell being cast. The smooth animations and purple glow evoke arcane energy without being literal.
+
+#### 3. Gradient Hero Backgrounds
+**Location**: Dashboard and Audio Library headers
+
+Pink and purple radial gradients with blur effects at the top of pages.
+
+**Effect**: Creates depth and atmosphere, like looking into a portal or magical mist. The colors suggest twilight, magic hour, or ethereal energy.
+
+### Future Dark Fantasy Charm Ideas
+
+**Copy & Microcopy:**
+- Empty state for audio library: "Your arcane library awaits..."
+- Empty state for scenes: "No scenes set. The stage is dark and empty..."
+- Delete confirmation: "Banish this item to the void?" (or keep standard for clarity)
+- Error messages: "A wild magic surge occurred..." (technical error below)
+
+**Subtle Visual Touches:**
+- Audio waveforms could have subtle purple glow
+- Drag-and-drop could show "arcane circle" animation
+- Volume sliders could have subtle mist/glow effect
+- Scene transitions could have brief "fade through darkness" effect
+
+**Interactive Easter Eggs:**
+- Critical hit (20) or critical fail (1) in random dice rolls trigger special animations
+- Typing "roll" in search triggers a d20 animation
+- Konami code unlocks DM screen mode (fullscreen, minimal chrome)
+- Long-press on campaign card shows "quick notes" like a DM screen
+
+**Seasonal/Contextual:**
+- Spooky ambient effects during October
+- Special loading messages for late-night sessions (11pm-3am)
+- "The party rests..." after 2+ hours of continuous playback
+
+### Implementation Guidelines
+
+1. **Restraint is Key**: One charm element per view maximum
+2. **Make it Optional**: Never block functionality with charm
+3. **Performance First**: Charm should never impact speed
+4. **Accessibility**: Ensure charm doesn't confuse screen readers
+5. **Localization**: Keep D&D references English-only or easily translatable
+6. **User Control**: Consider settings to disable "fun mode" for serious DMs
 
 ## Best Practices
 
