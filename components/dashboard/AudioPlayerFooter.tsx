@@ -193,7 +193,20 @@ export function AudioPlayerFooter() {
     }
   }
 
-  const sourceDisplayName = sourceContext?.name || 'Audio Library'
+  const sourceDisplayName = useMemo(() => {
+    if (!sourceContext) return 'Audio Library'
+
+    switch (sourceContext.type) {
+      case 'scene':
+        return `Scene: ${sourceContext.name}`
+      case 'playlist':
+        return `Playlist: ${sourceContext.name}`
+      case 'library':
+      default:
+        return 'Audio Library'
+    }
+  }, [sourceContext])
+
   const isSourceClickable = sourceContext?.type === 'scene' || sourceContext?.type === 'playlist'
 
   return (
