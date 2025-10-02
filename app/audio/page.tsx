@@ -298,7 +298,7 @@ export default function AudioPage() {
         // Mark as complete
         setUploadQueue(prev => prev.map(q =>
           q.id === item.id
-            ? { ...q, status: 'complete' as const, progress: 100, message: 'Complete!' }
+            ? { ...q, status: 'complete' as const, progress: 100, message: getRandomLoadingMessage() }
             : q
         ))
 
@@ -1205,11 +1205,9 @@ export default function AudioPage() {
                     clearTimeout(closeMenuTimeoutRef.current)
                     closeMenuTimeoutRef.current = null
                   }
-                  // Delay hiding submenus
-                  closeMenuTimeoutRef.current = setTimeout(() => {
-                    setShowTagsSubmenu(false)
-                    setShowAddToSubmenu(false)
-                  }, 250)
+                  // Hide submenus immediately when hovering other menu items
+                  setShowTagsSubmenu(false)
+                  setShowAddToSubmenu(false)
                 }}
                 className="w-full px-4 py-2 text-left text-[13px] text-white hover:bg-white/5 flex items-center gap-2 transition-colors"
               >
@@ -1232,11 +1230,9 @@ export default function AudioPage() {
                     clearTimeout(closeMenuTimeoutRef.current)
                     closeMenuTimeoutRef.current = null
                   }
-                  // Delay hiding submenus
-                  closeMenuTimeoutRef.current = setTimeout(() => {
-                    setShowTagsSubmenu(false)
-                    setShowAddToSubmenu(false)
-                  }, 250)
+                  // Hide submenus immediately when hovering other menu items
+                  setShowTagsSubmenu(false)
+                  setShowAddToSubmenu(false)
                 }}
                 className="w-full px-4 py-2 text-left text-[13px] text-white hover:bg-white/5 flex items-center gap-2 transition-colors"
               >
