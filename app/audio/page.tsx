@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
-import { Upload, Trash2, Play, Pause, Search, Plus, SlidersHorizontal, Tag } from 'lucide-react'
+import { Upload, Trash2, Play, Pause, Search, Plus, SlidersHorizontal, Tag, Minus } from 'lucide-react'
 import { DashboardLayoutWithSidebar } from '@/components/layouts/DashboardLayoutWithSidebar'
 import { DashboardSidebar } from '@/components/layouts/DashboardSidebar'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
@@ -64,7 +64,7 @@ export default function AudioPage() {
     updateAudioFile,
   } = useAudioFileStore()
 
-  const { createPlaylist, addAudioToPlaylist } = useAudioPlaylistStore()
+  const { createPlaylist, addAudioToPlaylist, removeAudioFromPlaylist } = useAudioPlaylistStore()
   const { handlePlay, currentTrackId, isPlaying } = useAudioPlayback()
   const audioFileMap = useAudioFileMap()
   const playlistMap = useAudioPlaylistMap()
@@ -586,6 +586,23 @@ export default function AudioPage() {
     }
   }
 
+  const handleBulkRemoveFromPlaylist = async () => {
+    if (selectedFileIds.size === 0 || !selectedPlaylistId) return
+
+    try {
+      // Run all removals in parallel for performance
+      await Promise.all(
+        Array.from(selectedFileIds).map(fileId =>
+          removeAudioFromPlaylist(selectedPlaylistId, fileId)
+        )
+      )
+      // Don't deselect - let user continue working
+    } catch (error) {
+      logger.error('Bulk remove from playlist failed', error)
+      addToast('Failed to remove files from playlist', 'error')
+    }
+  }
+
   const handleSelectAll = () => {
     if (selectedFileIds.size === audioFiles.length) {
       setSelectedFileIds(new Set())
@@ -732,33 +749,43 @@ export default function AudioPage() {
                 )}
               </div>
 
-              {/* Add to Playlist Dropdown */}
-              <div className="relative">
+              {/* Add to Playlist Dropdown / Remove from Playlist */}
+              {selectedPlaylistId ? (
                 <button
-                  onClick={() => {
-                    setIsBulkPlaylistModalOpen(!isBulkPlaylistModalOpen)
-                    setIsBulkTagModalOpen(false)
-                  }}
+                  onClick={handleBulkRemoveFromPlaylist}
                   className="px-3 py-1.5 text-[13px] text-white/70 hover:text-white hover:bg-white/5 rounded-[6px] transition-colors flex items-center gap-1.5"
                 >
-                  <Plus className="w-3.5 h-3.5" />
-                  Add to Playlist
+                  <Minus className="w-3.5 h-3.5" />
+                  Remove from Playlist
                 </button>
+              ) : (
+                <div className="relative">
+                  <button
+                    onClick={() => {
+                      setIsBulkPlaylistModalOpen(!isBulkPlaylistModalOpen)
+                      setIsBulkTagModalOpen(false)
+                    }}
+                    className="px-3 py-1.5 text-[13px] text-white/70 hover:text-white hover:bg-white/5 rounded-[6px] transition-colors flex items-center gap-1.5"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    Add to Playlist
+                  </button>
 
-                {isBulkPlaylistModalOpen && playlists.length > 0 && (
-                  <div data-bulk-dropdown className="absolute top-full left-0 mt-1 bg-[#191919] border border-white/10 rounded-[8px] shadow-2xl min-w-[200px] max-h-[300px] overflow-y-auto scrollbar-custom z-50 py-1" onClick={(e) => e.stopPropagation()}>
-                    {playlists.map(playlist => (
-                      <button
-                        key={playlist.id}
-                        onClick={() => handleBulkAddToPlaylist(playlist.id)}
-                        className="w-full px-4 py-2 text-left text-[13px] text-white hover:bg-white/5 transition-colors"
-                      >
-                        {playlist.name}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
+                  {isBulkPlaylistModalOpen && playlists.length > 0 && (
+                    <div data-bulk-dropdown className="absolute top-full left-0 mt-1 bg-[#191919] border border-white/10 rounded-[8px] shadow-2xl min-w-[200px] max-h-[300px] overflow-y-auto scrollbar-custom z-50 py-1" onClick={(e) => e.stopPropagation()}>
+                      {playlists.map(playlist => (
+                        <button
+                          key={playlist.id}
+                          onClick={() => handleBulkAddToPlaylist(playlist.id)}
+                          className="w-full px-4 py-2 text-left text-[13px] text-white hover:bg-white/5 transition-colors"
+                        >
+                          {playlist.name}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
               <button
                 onClick={handleBulkDelete}
                 className="px-3 py-1.5 text-[13px] text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-[6px] transition-colors flex items-center gap-1.5"
