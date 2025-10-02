@@ -547,10 +547,12 @@ Pulsing purple gradient for currently playing audio tracks.
 ```
 
 **Effect**:
-- Animated horizontal gradient sweep
-- Purple tones (#9333ea to #a855f7)
-- 3-second smooth pulse
-- Subtle opacity variation (100% to 80%)
+- Animated horizontal gradient sweep with multiple purple tones
+- Color stops: purple-700 → purple-400 → purple-300 → purple-400 → purple-700 → purple-800
+- 4-second smooth continuous pulse (no harsh stops)
+- 250ms fade-in/fade-out when track starts/stops playing
+- 300% background size for smoother gradient movement
+- Sophisticated shimmer effect that feels premium, not tacky
 
 ## Best Practices
 
@@ -707,6 +709,50 @@ Pills with optional close/remove button.
 </div>
 ```
 
+#### Tag Management with Ellipsis Menu
+Tags in dropdowns with hover-revealed ellipsis menu for rename/delete.
+
+```tsx
+<div className="group flex items-center hover:bg-white/5 transition-colors relative">
+  <button className="flex-1 px-3 py-2 text-left text-[13px] text-white">
+    {tag}
+  </button>
+  <div className="relative mr-2">
+    <button
+      onClick={(e) => {
+        e.stopPropagation()
+        setTagMenuOpen(tag)
+      }}
+      className="opacity-0 group-hover:opacity-100 px-3 py-2.5 text-white/40 hover:text-white transition-all"
+      title="Tag options"
+    >
+      <MoreVertical className="w-3.5 h-3.5" />
+    </button>
+    {tagMenuOpen === tag && (
+      <div className="absolute right-0 top-full mt-1 bg-[#191919] border border-white/10 rounded-[8px] shadow-lg min-w-[120px] py-1 z-50">
+        <button className="w-full px-3 py-2 text-left text-[13px] text-white hover:bg-white/5 flex items-center gap-2">
+          <Edit2 className="w-3.5 h-3.5" />
+          Rename
+        </button>
+        <div className="h-px bg-white/10 my-1" />
+        <button className="w-full px-3 py-2 text-left text-[13px] text-red-400 hover:bg-red-500/10 flex items-center gap-2">
+          <Trash2 className="w-3.5 h-3.5" />
+          Delete
+        </button>
+      </div>
+    )}
+  </div>
+</div>
+```
+
+**Features**:
+- Ellipsis (⋮) appears on row hover
+- Larger hitbox for easier clicking (px-3 py-2.5)
+- Right margin spacing (mr-2) from edge
+- Dropdown positioned relative to button
+- Rename option switches to inline editing
+- Delete option shows confirmation dialog
+
 ### Checkboxes
 
 #### Custom Checkbox Styling
@@ -774,6 +820,12 @@ const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   className="w-3.5 h-3.5 cursor-pointer"
 />
 ```
+
+**UX Pattern**:
+- Bulk action dropdowns (tags, playlists) stay open after selection
+- Allows adding multiple items without reopening dropdown
+- Close manually by clicking outside or pressing Escape
+- Clear input filters after each selection for easy searching
 
 ### Inline Editing
 
