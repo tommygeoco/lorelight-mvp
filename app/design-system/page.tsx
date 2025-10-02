@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { Plus, Music, Trash2, Edit2, Play, Pause, AlertCircle, MoreVertical, Info, X, Tag, ChevronDown, SlidersHorizontal } from 'lucide-react'
+import { Plus, Music, Trash2, Edit2, Play, Pause, AlertCircle, MoreVertical, Info, X, Tag, ChevronDown, SlidersHorizontal, ChevronUp } from 'lucide-react'
 import { BaseModal } from '@/components/ui/BaseModal'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { InputModal } from '@/components/ui/InputModal'
@@ -26,6 +26,8 @@ export default function DesignSystemPage() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [editingId, setEditingId] = useState<string | null>(null)
   const [playingTrackId, setPlayingTrackId] = useState<string | null>('demo-track-2')
+  const [sortField, setSortField] = useState<'name' | 'duration'>('name')
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc')
   const editInputRef = useRef<HTMLInputElement>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
@@ -76,6 +78,27 @@ export default function DesignSystemPage() {
       return newSet
     })
   }
+
+  const handleSort = (field: 'name' | 'duration') => {
+    if (sortField === field) {
+      setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc')
+    } else {
+      setSortField(field)
+      setSortDirection('asc')
+    }
+  }
+
+  const sortedTableData = [...sampleTableData].sort((a, b) => {
+    let comparison = 0
+    if (sortField === 'name') {
+      comparison = a.name.localeCompare(b.name)
+    } else if (sortField === 'duration') {
+      const aDuration = parseInt(a.duration.replace(':', ''))
+      const bDuration = parseInt(b.duration.replace(':', ''))
+      comparison = aDuration - bDuration
+    }
+    return sortDirection === 'asc' ? comparison : -comparison
+  })
 
   const copyCode = (code: string, id: string) => {
     navigator.clipboard.writeText(code)
@@ -557,6 +580,78 @@ export default function DesignSystemPage() {
     </div>
   ))}
 </div>`}
+              />
+
+              <Example title="Sortable Table" description="Click column headers to sort ascending/descending">
+                <div className="flex flex-col">
+                  {/* Table Header */}
+                  <div className="flex items-center gap-4 px-6 py-3 border-b border-white/10">
+                    <button
+                      onClick={() => handleSort('name')}
+                      className="flex-1 flex items-center gap-1.5 hover:text-white/60 transition-colors text-left text-[11px] font-semibold text-white/40 uppercase tracking-wider"
+                    >
+                      Name
+                      {sortField === 'name' && (
+                        sortDirection === 'asc' ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />
+                      )}
+                    </button>
+                    <button
+                      onClick={() => handleSort('duration')}
+                      className="w-24 flex items-center justify-end gap-1.5 hover:text-white/60 transition-colors text-[11px] font-semibold text-white/40 uppercase tracking-wider"
+                    >
+                      <span className="flex items-center gap-1.5">
+                        Duration
+                        {sortField === 'duration' && (
+                          sortDirection === 'asc' ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />
+                        )}
+                      </span>
+                    </button>
+                    <div className="w-32 text-[11px] font-semibold text-white/40 uppercase tracking-wider">Type</div>
+                    <div className="w-12"></div>
+                  </div>
+
+                  {/* Table Rows */}
+                  {sortedTableData.map((item) => (
+                    <div
+                      key={item.id}
+                      className="group flex items-center gap-4 px-6 py-3 hover:bg-white/5 border-b border-white/5 cursor-pointer transition-colors"
+                    >
+                      <div className="flex-1 flex items-center gap-3">
+                        <Music className="w-4 h-4 text-white/40" />
+                        <span className="text-[14px] text-white truncate">{item.name}</span>
+                      </div>
+                      <div className="w-24 text-[13px] text-white/60">{item.duration}</div>
+                      <div className="w-32 text-[13px] text-white/60">{item.type}</div>
+                      <div className="w-12"></div>
+                    </div>
+                  ))}
+                </div>
+              </Example>
+
+              <CodeBlock
+                id="sortable-table"
+                code={`const [sortField, setSortField] = useState<'name' | 'duration'>('name')
+const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc')
+
+const handleSort = (field: 'name' | 'duration') => {
+  if (sortField === field) {
+    setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc')
+  } else {
+    setSortField(field)
+    setSortDirection('asc')
+  }
+}
+
+// Sortable header
+<button
+  onClick={() => handleSort('name')}
+  className="flex items-center gap-1.5 hover:text-white/60 transition-colors text-[11px] font-semibold text-white/40 uppercase tracking-wider"
+>
+  Name
+  {sortField === 'name' && (
+    sortDirection === 'asc' ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />
+  )}
+</button>`}
               />
             </div>
           </Section>

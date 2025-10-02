@@ -331,6 +331,56 @@ Standard table structure used in audio library and data views.
 </div>
 ```
 
+#### Sortable Table Headers
+Add sorting functionality to table columns with visual indicators.
+
+```tsx
+import { ChevronUp, ChevronDown } from 'lucide-react'
+
+const [sortField, setSortField] = useState<'name' | 'duration' | 'size'>('name')
+const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc')
+
+const handleSort = (field: 'name' | 'duration' | 'size') => {
+  if (sortField === field) {
+    setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc')
+  } else {
+    setSortField(field)
+    setSortDirection('asc')
+  }
+}
+
+// Sortable header buttons
+<button
+  onClick={() => handleSort('name')}
+  className="flex items-center gap-1.5 hover:text-white/60 transition-colors text-[11px] font-semibold text-white/40 uppercase tracking-wider"
+>
+  Name
+  {sortField === 'name' && (
+    sortDirection === 'asc' ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />
+  )}
+</button>
+
+// Apply sorting to data
+const sortedItems = [...items].sort((a, b) => {
+  let comparison = 0
+  if (sortField === 'name') {
+    comparison = a.name.localeCompare(b.name)
+  } else if (sortField === 'duration') {
+    comparison = (a.duration || 0) - (b.duration || 0)
+  } else if (sortField === 'size') {
+    comparison = (a.size || 0) - (b.size || 0)
+  }
+  return sortDirection === 'asc' ? comparison : -comparison
+})
+```
+
+**Features:**
+- Click header to sort by that column
+- Click again to toggle between ascending/descending
+- Chevron icon shows current sort direction
+- Fixed width headers (`w-16`, `w-20`) align with data columns
+- Use `<span>` wrapper for text + icon to keep them grouped
+
 ### Lists
 
 #### Sidebar List

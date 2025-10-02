@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
-import { Upload, Trash2, Play, Pause, Search, Plus, SlidersHorizontal, Tag, Minus, Edit2, MoreVertical } from 'lucide-react'
+import { Upload, Trash2, Play, Pause, Search, Plus, SlidersHorizontal, Tag, Minus, Edit2, MoreVertical, ChevronUp, ChevronDown } from 'lucide-react'
 import { DashboardLayoutWithSidebar } from '@/components/layouts/DashboardLayoutWithSidebar'
 import { DashboardSidebar } from '@/components/layouts/DashboardSidebar'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
@@ -31,6 +31,7 @@ export default function AudioPage() {
   const [uploadQueue, setUploadQueue] = useState<Array<{file: File, name: string, id: string, progress: number, status: 'pending' | 'uploading' | 'complete' | 'error', message: string}>>([])
   const [deleteConfirmFile, setDeleteConfirmFile] = useState<AudioFile | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
+  const [isBulkDeleteModalOpen, setIsBulkDeleteModalOpen] = useState(false)
   const [selectedPlaylistId, setSelectedPlaylistId] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [contextMenu, setContextMenu] = useState<{
@@ -60,6 +61,8 @@ export default function AudioPage() {
   const [focusedQueueItemId, setFocusedQueueItemId] = useState<string | null>(null)
   const [isDraggingOver, setIsDraggingOver] = useState(false)
   const dragCounterRef = useRef(0)
+  const [sortField, setSortField] = useState<'name' | 'duration' | 'size'>('name')
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc')
 
   const {
     isLoading,
@@ -178,10 +181,29 @@ export default function AudioPage() {
       })
     }
 
-    return files
-  }, [audioFilesToFilter, searchQuery, selectedTags])
+    // Apply sorting
+    const sorted = [...files].sort((a, b) => {
+      let comparison = 0
 
-  // Get all unique tags from all audio files with counts
+      if (sortField === 'name') {
+        comparison = a.name.localeCompare(b.name)
+      } else if (sortField === 'duration') {
+        const aDuration = a.duration || 0
+        const bDuration = b.duration || 0
+        comparison = aDuration - bDuration
+      } else if (sortField === 'size') {
+        const aSize = a.file_size || 0
+        const bSize = b.file_size || 0
+        comparison = aSize - bSize
+      }
+
+      return sortDirection === 'asc' ? comparison : -comparison
+    })
+
+    return sorted
+  }, [audioFilesToFilter, searchQuery, selectedTags, sortField, sortDirection])
+
+  // Get all unique tags from all audio files (for global tag management)
   const allTags = useMemo(() => {
     const tags = new Set<string>()
     allAudioFiles.forEach(file => {
@@ -197,16 +219,25 @@ export default function AudioPage() {
     return allTags.filter(tag => tag.toLowerCase().includes(query))
   }, [allTags, tagFilterInput])
 
-  // Get tag counts
+  // Get tag counts for current view (all files or specific playlist)
   const tagCounts = useMemo(() => {
     const counts = new Map<string, number>()
-    allAudioFiles.forEach(file => {
+    audioFilesToFilter.forEach(file => {
       file.tags?.forEach(tag => {
         counts.set(tag, (counts.get(tag) || 0) + 1)
       })
     })
     return counts
-  }, [allAudioFiles])
+  }, [audioFilesToFilter])
+
+  // Get tags that exist in current view
+  const tagsInCurrentView = useMemo(() => {
+    const tags = new Set<string>()
+    audioFilesToFilter.forEach(file => {
+      file.tags?.forEach(tag => tags.add(tag))
+    })
+    return Array.from(tags).sort()
+  }, [audioFilesToFilter])
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files
@@ -532,12 +563,15 @@ export default function AudioPage() {
     })
   }
 
-  const handleBulkDelete = async () => {
+  const handleBulkDeleteClick = () => {
+    if (selectedFileIds.size === 0) return
+    setIsBulkDeleteModalOpen(true)
+  }
+
+  const handleBulkDeleteConfirm = async () => {
     if (selectedFileIds.size === 0) return
 
-    const confirmed = window.confirm(`Remove these ${selectedFileIds.size} tracks from your collection? This action cannot be undone.`)
-    if (!confirmed) return
-
+    setIsDeleting(true)
     try {
       for (const fileId of selectedFileIds) {
         await deleteAudioFile(fileId)
@@ -545,9 +579,12 @@ export default function AudioPage() {
       addToast(`Deleted ${selectedFileIds.size} file(s)`, 'success')
       setSelectedFileIds(new Set())
       setShowBulkActions(false)
+      setIsBulkDeleteModalOpen(false)
     } catch (error) {
       logger.error('Bulk delete failed', error)
       addToast('Failed to delete files', 'error')
+    } finally {
+      setIsDeleting(false)
     }
   }
 
@@ -646,7 +683,15 @@ export default function AudioPage() {
         )
       )
 
-      // Don't close dropdown - let user add to multiple playlists
+      // Show success toast
+      const playlist = playlistMap.get(playlistId)
+      if (playlist) {
+        addToast(`Added ${selectedFileIds.size} file${selectedFileIds.size !== 1 ? 's' : ''} to "${playlist.name}"`, 'success')
+      }
+
+      // Close dropdown after selection
+      setIsBulkPlaylistModalOpen(false)
+
       // Don't deselect - let user continue working
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error)
@@ -710,6 +755,16 @@ export default function AudioPage() {
     setSelectedTags(new Set())
   }
 
+  const handleSort = (field: 'name' | 'duration' | 'size') => {
+    if (sortField === field) {
+      // Toggle direction if clicking the same field
+      setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc')
+    } else {
+      // Set new field with ascending as default
+      setSortField(field)
+      setSortDirection('asc')
+    }
+  }
 
   const sidebarButtons = getSidebarButtons({
     view: 'audio',
@@ -986,7 +1041,7 @@ export default function AudioPage() {
                 </div>
               )}
               <button
-                onClick={handleBulkDelete}
+                onClick={handleBulkDeleteClick}
                 className="px-3 py-1.5 text-[13px] text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-[6px] transition-colors flex items-center gap-1.5"
               >
                 <Trash2 className="w-3.5 h-3.5" />
@@ -1040,8 +1095,8 @@ export default function AudioPage() {
         {showFilters && !showBulkActions && (
           <div className={`px-6 pt-4 pb-4 ${uploadQueue.length === 0 ? 'border-b border-white/5' : ''}`}>
             <div className="bg-white/[0.02] rounded-[8px] p-4 space-y-4">
-              {/* Tags Filter - Only show if there are tags */}
-              {allTags.length > 0 && (
+              {/* Tags Filter - Only show if there are tags in current view */}
+              {tagsInCurrentView.length > 0 && (
                 <div>
                   <div className="flex items-center gap-2 mb-3">
                     <h3 className="text-[13px] font-semibold text-white/70 flex items-center gap-1.5">
@@ -1059,7 +1114,7 @@ export default function AudioPage() {
                   </div>
 
                   <div className="flex flex-wrap gap-2">
-                    {[...allTags].sort().map(tag => {
+                    {tagsInCurrentView.map(tag => {
                       const count = tagCounts.get(tag) || 0
                       return (
                         <button
@@ -1080,10 +1135,10 @@ export default function AudioPage() {
                 </div>
               )}
 
-              {/* Empty state - only show if no tags available */}
-              {allTags.length === 0 && (
+              {/* Empty state - only show if no tags available in current view */}
+              {tagsInCurrentView.length === 0 && (
                 <p className="text-[13px] text-white/40 italic text-center py-2">
-                  No tags yet. Add tags to audio files using the context menu.
+                  No tags found. Right-click tracks to enchant them with labels.
                 </p>
               )}
             </div>
@@ -1102,7 +1157,7 @@ export default function AudioPage() {
 
         {/* Table Header */}
         <div className="px-6 py-3 border-b border-white/5">
-          <div className="flex items-center px-3 text-[11px] font-semibold text-white/40 uppercase tracking-wider w-full">
+          <div className="flex items-center px-3 w-full">
             {/* Select All Checkbox */}
             <div className="w-3.5 flex items-center justify-center flex-shrink-0">
               <input
@@ -1114,10 +1169,44 @@ export default function AudioPage() {
               />
             </div>
             <div className="w-[24px] flex-shrink-0 ml-6" /> {/* Play button space - matches row w-[24px] */}
-            <div className="flex-1 ml-6 min-w-0">Name</div>
-            <div className="flex items-center gap-16 text-[12px] flex-shrink-0 font-mono">
-              <div className="w-16 text-right">Duration</div>
-              <div className="w-20 text-right">Size</div>
+
+            {/* Name Header - Sortable */}
+            <button
+              onClick={() => handleSort('name')}
+              className="flex-1 ml-6 min-w-0 flex items-center gap-1.5 hover:text-white/60 transition-colors text-left text-[11px] font-semibold text-white/40 uppercase tracking-wider"
+            >
+              Name
+              {sortField === 'name' && (
+                sortDirection === 'asc' ? <ChevronUp className="w-3 h-3 flex-shrink-0" /> : <ChevronDown className="w-3 h-3 flex-shrink-0" />
+              )}
+            </button>
+
+            <div className="flex items-center gap-16 flex-shrink-0">
+              {/* Duration Header - Sortable */}
+              <button
+                onClick={() => handleSort('duration')}
+                className="w-16 flex items-center justify-end gap-1.5 hover:text-white/60 transition-colors text-[11px] font-semibold text-white/40 uppercase tracking-wider font-mono"
+              >
+                <span className="flex items-center gap-1.5">
+                  Duration
+                  {sortField === 'duration' && (
+                    sortDirection === 'asc' ? <ChevronUp className="w-3 h-3 flex-shrink-0" /> : <ChevronDown className="w-3 h-3 flex-shrink-0" />
+                  )}
+                </span>
+              </button>
+
+              {/* Size Header - Sortable */}
+              <button
+                onClick={() => handleSort('size')}
+                className="w-20 flex items-center justify-end gap-1.5 hover:text-white/60 transition-colors text-[11px] font-semibold text-white/40 uppercase tracking-wider font-mono"
+              >
+                <span className="flex items-center gap-1.5">
+                  Size
+                  {sortField === 'size' && (
+                    sortDirection === 'asc' ? <ChevronUp className="w-3 h-3 flex-shrink-0" /> : <ChevronDown className="w-3 h-3 flex-shrink-0" />
+                  )}
+                </span>
+              </button>
             </div>
             <div className="w-5 flex-shrink-0" /> {/* Actions space */}
           </div>
@@ -1331,13 +1420,25 @@ export default function AudioPage() {
         selectedPlaylistId={selectedPlaylistId}
       />
 
-      {/* Delete Confirmation Dialog */}
+      {/* Delete Confirmation Dialog (Single File) */}
       <ConfirmDialog
         isOpen={!!deleteConfirmFile}
         onClose={() => setDeleteConfirmFile(null)}
         onConfirm={handleDeleteConfirm}
         title="Delete Audio File"
         description={`Are you sure you want to delete "${deleteConfirmFile?.name}"? This action cannot be undone.`}
+        confirmText="Delete"
+        variant="destructive"
+        isLoading={isDeleting}
+      />
+
+      {/* Delete Confirmation Dialog (Bulk) */}
+      <ConfirmDialog
+        isOpen={isBulkDeleteModalOpen}
+        onClose={() => setIsBulkDeleteModalOpen(false)}
+        onConfirm={handleBulkDeleteConfirm}
+        title="Delete Audio Files"
+        description={`Are you sure you want to delete ${selectedFileIds.size} file${selectedFileIds.size !== 1 ? 's' : ''}? This action cannot be undone.`}
         confirmText="Delete"
         variant="destructive"
         isLoading={isDeleting}

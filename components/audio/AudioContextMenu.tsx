@@ -153,9 +153,22 @@ export function AudioContextMenu({
   }
 
   const handleAddToPlaylist = async (audioFile: AudioFile, playlistId: string) => {
-    await addAudioToPlaylist(playlistId, audioFile.id)
-    setContextMenu(null)
-    setShowAddToSubmenu(false)
+    try {
+      await addAudioToPlaylist(playlistId, audioFile.id)
+      const playlist = playlists.find(p => p.id === playlistId)
+      if (playlist) {
+        addToast(`Added to "${playlist.name}"`, 'success')
+      }
+      setContextMenu(null)
+      setShowAddToSubmenu(false)
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error)
+      if (errorMessage.includes('duplicate key') || errorMessage.includes('unique constraint')) {
+        addToast('File already in playlist', 'error')
+      } else {
+        addToast('Failed to add to playlist', 'error')
+      }
+    }
   }
 
   const handleRemoveFromPlaylist = async (audioFile: AudioFile) => {
