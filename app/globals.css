@@ -384,54 +384,19 @@ input[type="checkbox"]:checked::after {
 /* Arcane drop zone pulsing glow */
 @keyframes arcane-pulse {
   0%, 100% {
-    border-color: rgba(147, 51, 234, 0.5);
-    box-shadow: 0 0 20px rgba(147, 51, 234, 0.2), inset 0 0 20px rgba(147, 51, 234, 0.1);
+    border-color: rgba(147, 51, 234, 0.6);
+    background-color: rgba(147, 51, 234, 0.05);
   }
   50% {
-    border-color: rgba(168, 85, 247, 0.7);
-    box-shadow: 0 0 30px rgba(168, 85, 247, 0.3), inset 0 0 30px rgba(168, 85, 247, 0.15);
+    border-color: rgba(168, 85, 247, 0.8);
+    background-color: rgba(168, 85, 247, 0.08);
   }
 }
 
 .arcane-drop-zone {
-  animation: arcane-pulse 2s ease-in-out infinite;
-  background-image:
-    radial-gradient(circle at 20% 50%, rgba(147, 51, 234, 0.03) 0%, transparent 50%),
-    radial-gradient(circle at 80% 50%, rgba(168, 85, 247, 0.03) 0%, transparent 50%);
+  animation: arcane-pulse 1.5s ease-in-out infinite;
 }
 
-/* Bulk selection shimmer - staggered checkbox glow */
-@keyframes checkbox-shimmer {
-  0% {
-    box-shadow: 0 0 0 rgba(147, 51, 234, 0);
-  }
-  50% {
-    box-shadow: 0 0 8px rgba(147, 51, 234, 0.6);
-  }
-  100% {
-    box-shadow: 0 0 0 rgba(147, 51, 234, 0);
-  }
-}
-
-input[type="checkbox"].shimmer-select {
-  animation: checkbox-shimmer 600ms ease-out;
-}
-
-/* Playlist hover candlelight flicker */
-@keyframes candle-flicker {
-  0%, 100% {
-    opacity: 1;
-    filter: brightness(1);
-  }
-  50% {
-    opacity: 0.95;
-    filter: brightness(1.05);
-  }
-}
-
-[data-playlist-item]:hover {
-  animation: candle-flicker 3s ease-in-out infinite;
-}
 
 /* Volume slider glow when adjusting */
 input[type="range"].slider:active::-webkit-slider-thumb {
@@ -442,25 +407,3 @@ input[type="range"].slider:active::-moz-range-thumb {
   box-shadow: 0 0 12px rgba(147, 51, 234, 0.6);
 }
 
-/* Progress bar playhead particle effect */
-@keyframes playhead-particle {
-  0% {
-    opacity: 0.8;
-    transform: translateY(0) scale(1);
-  }
-  100% {
-    opacity: 0;
-    transform: translateY(-10px) scale(0.5);
-  }
-}
-
-.playhead-active::after {
-  content: '';
-  position: absolute;
-  width: 4px;
-  height: 4px;
-  background: rgba(168, 85, 247, 0.8);
-  border-radius: 50%;
-  animation: playhead-particle 1s ease-out infinite;
-  pointer-events: none;
-}

@@ -60,7 +60,6 @@ export default function AudioPage() {
   const [focusedQueueItemId, setFocusedQueueItemId] = useState<string | null>(null)
   const [isDraggingOver, setIsDraggingOver] = useState(false)
   const dragCounterRef = useRef(0)
-  const [shimmerCheckboxes, setShimmerCheckboxes] = useState(false)
 
   const {
     isLoading,
@@ -681,18 +680,19 @@ export default function AudioPage() {
   const handleSelectAll = () => {
     if (selectedFileIds.size === audioFiles.length) {
       setSelectedFileIds(new Set())
-      setShimmerCheckboxes(false)
     } else {
       setSelectedFileIds(new Set(audioFiles.map(f => f.id)))
-      // Trigger shimmer animation
-      setShimmerCheckboxes(true)
-      setTimeout(() => setShimmerCheckboxes(false), 600)
     }
   }
 
   useEffect(() => {
     setShowBulkActions(selectedFileIds.size > 0)
   }, [selectedFileIds])
+
+  // Clear selections when switching playlists
+  useEffect(() => {
+    setSelectedFileIds(new Set())
+  }, [selectedPlaylistId])
 
   const handleToggleTagFilter = (tag: string) => {
     setSelectedTags(prev => {
@@ -1134,7 +1134,7 @@ export default function AudioPage() {
         >
           {/* Drag-and-drop overlay */}
           {isDraggingOver && (
-            <div className="absolute inset-0 z-50 flex items-center justify-center bg-purple-500/10 border-2 border-dashed border-purple-500/50 pointer-events-none arcane-drop-zone">
+            <div className="absolute inset-4 z-50 flex items-center justify-center border-2 border-dashed rounded-lg pointer-events-none arcane-drop-zone">
               <div className="text-center">
                 <Upload className="w-12 h-12 text-purple-400 mx-auto mb-2" />
                 <p className="text-lg text-white font-semibold">Release to add to your collection</p>
@@ -1162,8 +1162,8 @@ export default function AudioPage() {
                 {searchQuery
                   ? 'The archives yield no matching scrolls'
                   : selectedPlaylistId
-                  ? 'This tome is empty. Add tracks to fill its pages'
-                  : 'Your arcane library awaits... Upload audio to begin'}
+                  ? <>This tome is empty.<br />Add tracks to fill its pages</>
+                  : <>Your arcane library awaits...<br />Upload audio to begin</>}
               </p>
             </div>
           ) : (
@@ -1200,7 +1200,7 @@ export default function AudioPage() {
                           handleCheckboxChange(audioFile.id)
                         }}
                         onClick={(e) => e.stopPropagation()}
-                        className={`w-3.5 h-3.5 cursor-pointer ${shimmerCheckboxes && isSelected ? 'shimmer-select' : ''}`}
+                        className="w-3.5 h-3.5 cursor-pointer"
                       />
                     </div>
 
@@ -1221,13 +1221,7 @@ export default function AudioPage() {
                           e.stopPropagation()
                           handlePlay(audioFile)
                         }}
-                        className={`absolute w-4 h-4 text-white/50 hover:text-white transition-all flex-shrink-0 ${
-                          isCurrentlyPlaying
-                            ? 'opacity-0 group-hover:opacity-100'
-                            : isSelected || selectedFileIds.size > 0
-                            ? 'opacity-0'
-                            : 'opacity-0 group-hover:opacity-100'
-                        }`}
+                        className={`absolute w-4 h-4 text-white/50 hover:text-white transition-all flex-shrink-0 opacity-0 group-hover:opacity-100`}
                         title="Play/Pause"
                       >
                         {isCurrentlyPlaying ? (
@@ -1325,6 +1319,13 @@ export default function AudioPage() {
         onRename={handleRename}
         onDelete={handleDeleteClick}
         onAddToNewPlaylist={handleAddToNewPlaylistClick}
+        onRemoveFromPlaylist={(fileId) => {
+          setSelectedFileIds(prev => {
+            const next = new Set(prev)
+            next.delete(fileId)
+            return next
+          })
+        }}
         playlists={playlists}
         allTags={allTags}
         selectedPlaylistId={selectedPlaylistId}

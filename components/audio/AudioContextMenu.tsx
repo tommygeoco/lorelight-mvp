@@ -24,6 +24,7 @@ interface AudioContextMenuProps {
   onRename: (file: AudioFile) => void
   onDelete: (file: AudioFile) => void
   onAddToNewPlaylist: (file: AudioFile) => void
+  onRemoveFromPlaylist?: (fileId: string) => void
   playlists: AudioPlaylist[]
   allTags: string[]
   selectedPlaylistId: string | null
@@ -40,6 +41,7 @@ export function AudioContextMenu({
   onRename,
   onDelete,
   onAddToNewPlaylist,
+  onRemoveFromPlaylist,
   playlists,
   allTags,
   selectedPlaylistId,
@@ -159,6 +161,7 @@ export function AudioContextMenu({
   const handleRemoveFromPlaylist = async (audioFile: AudioFile) => {
     if (!selectedPlaylistId) return
     await removeAudioFromPlaylist(selectedPlaylistId, audioFile.id)
+    onRemoveFromPlaylist?.(audioFile.id)
     setContextMenu(null)
   }
 
