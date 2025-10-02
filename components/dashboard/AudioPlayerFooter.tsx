@@ -179,7 +179,7 @@ export function AudioPlayerFooter() {
       <div className="w-full max-w-full flex items-center gap-4 relative z-10">
 
         {/* Left: Track Info */}
-        <div className="flex items-center gap-3 min-w-0 w-64">
+        <div className="flex items-center gap-3 min-w-0 w-80">
           {/* Artwork */}
           <div className="relative">
             <div
@@ -201,13 +201,16 @@ export function AudioPlayerFooter() {
           </div>
 
           {/* Track Details */}
-          <div className="flex flex-col min-w-0 flex-1">
-            <div className="text-sm font-medium text-white truncate">
+          <div className="flex flex-col min-w-0 flex-1 gap-0.5">
+            <div
+              className="text-[15px] font-medium text-white truncate"
+              title={currentTrack?.name || 'No track loaded'}
+            >
               {currentTrack?.name || 'No track loaded'}
             </div>
-            <div className="text-xs text-white/40 truncate">
+            <div className="text-[13px] text-white/40 truncate">
               {currentTrack ? (
-                <span className="flex items-center gap-1">
+                <span className="flex items-center gap-1.5">
                   <span className="text-purple-400/60">♪</span>
                   Scene Audio
                 </span>
@@ -287,7 +290,7 @@ export function AudioPlayerFooter() {
                 }
               `}
               aria-label={isLooping ? "Loop enabled" : "Loop disabled"}
-              title={isLooping ? "Loop enabled" : "Loop disabled"}
+              title={!currentTrack ? "No track loaded" : isLooping ? "Loop enabled - Click to disable" : "Loop disabled - Click to enable"}
             >
               <Repeat className="w-4 h-4" />
             </button>
