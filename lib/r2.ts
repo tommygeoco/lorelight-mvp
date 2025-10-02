@@ -25,11 +25,16 @@ export function getR2Client(): S3Client {
         secretAccessKey,
       },
       requestHandler: {
-        requestTimeout: 600000, // 10 minutes for large files
+        requestTimeout: 900000, // 15 minutes for very large files
         httpsAgent: {
-          maxSockets: 25,
+          maxSockets: 10, // Reduce concurrent connections to avoid SSL issues
+          keepAlive: true,
+          keepAliveMsecs: 60000, // Keep connections alive for 1 minute
         },
       },
+      // SDK retry configuration
+      maxAttempts: 5, // SDK-level retries
+      retryMode: 'adaptive', // Adaptive retry mode for better handling
     })
   }
 
@@ -49,12 +54,15 @@ export async function uploadToR2(
   }
 
   // Retry logic for SSL/network errors
-  const maxRetries = 3
+  const maxRetries = 5 // Increased from 3 to 5
   let lastError: Error | null = null
 
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
-      await client.send(
+      // Recreate client on retry to get fresh connection
+      const freshClient = attempt > 1 ? getR2Client() : client
+
+      await freshClient.send(
         new PutObjectCommand({
           Bucket: bucketName,
           Key: key,
@@ -75,17 +83,30 @@ export async function uploadToR2(
       return `https://${bucketName}.r2.dev/${key}`
     } catch (error) {
       lastError = error as Error
-      console.error(`Upload attempt ${attempt} failed:`, error)
+      console.error(`[R2 Upload] Attempt ${attempt}/${maxRetries} failed:`, error)
 
-      // Don't retry on certain errors
-      if (error instanceof Error && !error.message.includes('SSL') && !error.message.includes('network')) {
+      // Don't retry on client errors (400-499)
+      const errorMessage = error instanceof Error ? error.message : String(error)
+      if (
+        errorMessage.includes('NoSuchBucket') ||
+        errorMessage.includes('InvalidAccessKeyId') ||
+        errorMessage.includes('SignatureDoesNotMatch') ||
+        errorMessage.includes('AccessDenied')
+      ) {
+        console.error('[R2 Upload] Non-retryable error detected, failing immediately')
         throw error
       }
 
-      // Wait before retry (exponential backoff)
+      // Wait before retry with exponential backoff + jitter
       if (attempt < maxRetries) {
-        const delay = Math.min(1000 * Math.pow(2, attempt - 1), 5000)
-        console.log(`Retrying in ${delay}ms...`)
+        const baseDelay = Math.min(2000 * Math.pow(2, attempt - 1), 10000) // 2s, 4s, 8s, 10s, 10s
+        const jitter = Math.random() * 1000 // Add up to 1s random jitter
+        const delay = baseDelay + jitter
+        console.log(`[R2 Upload] Retrying in ${Math.round(delay)}ms...`)
+
+        // Reset client to force new connection
+        r2Client = null
+
         await new Promise(resolve => setTimeout(resolve, delay))
       }
     }
