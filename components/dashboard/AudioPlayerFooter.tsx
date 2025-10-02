@@ -162,7 +162,7 @@ export function AudioPlayerFooter() {
 
   return (
     <div
-      className="relative bg-[#111111] flex items-center px-4 pt-5 pb-6 overflow-hidden"
+      className="relative bg-[#111111] flex items-center px-4 pt-5 pb-5 overflow-hidden"
       style={{
         background: 'linear-gradient(180deg, #111111 0%, #151515 50%, #111111 100%)'
       }}
@@ -226,24 +226,26 @@ export function AudioPlayerFooter() {
           {/* Control Buttons */}
           <div className="flex items-center gap-2">
             {/* Shuffle (disabled for now) */}
-            <button
-              disabled
-              className="w-8 h-8 flex items-center justify-center text-white/20 cursor-not-allowed transition-colors"
-              aria-label="Shuffle"
-              title="Shuffle (coming soon)"
-            >
-              <Shuffle className="w-4 h-4" />
-            </button>
+            <div title="Shuffle (coming soon)">
+              <button
+                disabled
+                className="w-8 h-8 flex items-center justify-center text-white/20 cursor-not-allowed transition-colors"
+                aria-label="Shuffle"
+              >
+                <Shuffle className="w-4 h-4" />
+              </button>
+            </div>
 
             {/* Skip Back (disabled for now) */}
-            <button
-              disabled
-              className="w-8 h-8 flex items-center justify-center text-white/20 cursor-not-allowed transition-colors"
-              aria-label="Previous track"
-              title="Previous track (coming soon)"
-            >
-              <SkipBack className="w-4 h-4" fill="currentColor" />
-            </button>
+            <div title="Previous track (coming soon)">
+              <button
+                disabled
+                className="w-8 h-8 flex items-center justify-center text-white/20 cursor-not-allowed transition-colors"
+                aria-label="Previous track"
+              >
+                <SkipBack className="w-4 h-4" fill="currentColor" />
+              </button>
+            </div>
 
             {/* Play/Pause */}
             <button
@@ -267,33 +269,35 @@ export function AudioPlayerFooter() {
             </button>
 
             {/* Skip Forward (disabled for now) */}
-            <button
-              disabled
-              className="w-8 h-8 flex items-center justify-center text-white/20 cursor-not-allowed transition-colors"
-              aria-label="Next track"
-              title="Next track (coming soon)"
-            >
-              <SkipForward className="w-4 h-4" fill="currentColor" />
-            </button>
+            <div title="Next track (coming soon)">
+              <button
+                disabled
+                className="w-8 h-8 flex items-center justify-center text-white/20 cursor-not-allowed transition-colors"
+                aria-label="Next track"
+              >
+                <SkipForward className="w-4 h-4" fill="currentColor" />
+              </button>
+            </div>
 
             {/* Loop */}
-            <button
-              onClick={toggleLoop}
-              disabled={!currentTrack}
-              className={`
-                w-8 h-8 flex items-center justify-center transition-colors
-                ${!currentTrack
-                  ? 'text-white/20 cursor-not-allowed'
-                  : isLooping
-                    ? 'text-purple-400 hover:text-purple-300'
-                    : 'text-white/60 hover:text-white'
-                }
-              `}
-              aria-label={isLooping ? "Loop enabled" : "Loop disabled"}
-              title={!currentTrack ? "No track loaded" : isLooping ? "Loop enabled - Click to disable" : "Loop disabled - Click to enable"}
-            >
-              <Repeat className="w-4 h-4" />
-            </button>
+            <div title={!currentTrack ? "No track loaded" : isLooping ? "Loop enabled - Click to disable" : "Loop disabled - Click to enable"}>
+              <button
+                onClick={toggleLoop}
+                disabled={!currentTrack}
+                className={`
+                  w-8 h-8 flex items-center justify-center transition-colors
+                  ${!currentTrack
+                    ? 'text-white/20 cursor-not-allowed'
+                    : isLooping
+                      ? 'text-purple-400 hover:text-purple-300'
+                      : 'text-white/60 hover:text-white'
+                  }
+                `}
+                aria-label={isLooping ? "Loop enabled" : "Loop disabled"}
+              >
+                <Repeat className="w-4 h-4" />
+              </button>
+            </div>
           </div>
 
           {/* Progress Bar with purple gradient */}
@@ -376,6 +380,9 @@ export function AudioPlayerFooter() {
 
         {/* Right: Volume Control */}
         <div className="flex items-center gap-2 w-80 justify-end">
+          {/* Empty spacer to push volume controls to the right */}
+          <div className="flex-1" />
+
           <button
             onClick={toggleMute}
             className="flex items-center justify-center text-white/70 hover:text-purple-400 transition-colors"
@@ -384,7 +391,7 @@ export function AudioPlayerFooter() {
             <VolumeIcon className="w-5 h-5" />
           </button>
 
-          <div className="flex-1 flex items-center">
+          <div className="w-32 flex items-center">
             <input
               type="range"
               min="0"
