@@ -1,21 +1,43 @@
 'use client'
 
-import { useRef } from 'react'
-import { Volume2, VolumeX, Pause, Play, Volume1, SkipBack, SkipForward } from 'lucide-react'
+import { useMemo } from 'react'
+import { Volume2, VolumeX, Pause, Play, Volume1, SkipBack, SkipForward, Repeat, Shuffle } from 'lucide-react'
 import { useAudioStore } from '@/store/audioStore'
 import { useAudioFileMap } from '@/hooks/useAudioFileMap'
 import { formatTime } from '@/lib/utils/time'
+
+// Scene-aware gradient constants (module-level for performance)
+const SCENE_GRADIENTS = [
+  'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+  'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+  'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+  'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
+  'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
+  'linear-gradient(135deg, #30cfd0 0%, #330867 100%)',
+] as const
+
+const PURPLE_PINK_GRADIENT = 'linear-gradient(90deg, #8b5cf6 0%, #ec4899 100%)'
+
+/**
+ * Generate consistent gradient for a track ID using hash
+ */
+function getSceneGradient(trackId: string): string {
+  const hash = trackId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0)
+  return SCENE_GRADIENTS[hash % SCENE_GRADIENTS.length]
+}
 
 export function AudioPlayerFooter() {
   const {
     isPlaying,
     isMuted,
+    isLooping,
     volume,
     currentTime,
     duration,
     currentTrackId,
     togglePlay,
     toggleMute,
+    toggleLoop,
     setVolume,
     seek
   } = useAudioStore()
@@ -23,24 +45,23 @@ export function AudioPlayerFooter() {
   const audioFileMap = useAudioFileMap()
   const currentTrack = currentTrackId ? audioFileMap.get(currentTrackId) : null
 
-  const progressRef = useRef<HTMLDivElement>(null)
+  // Memoize calculations
+  const progress = useMemo(
+    () => (duration > 0 ? (currentTime / duration) * 100 : 0),
+    [currentTime, duration]
+  )
 
-  // Calculate progress percentage
-  const progress = duration > 0 ? (currentTime / duration) * 100 : 0
+  const artworkGradient = useMemo(
+    () => currentTrack ? getSceneGradient(currentTrack.id) : 'linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%)',
+    [currentTrack]
+  )
 
-  // Generate scene-aware gradient for artwork
-  const getSceneGradient = (trackId: string) => {
-    const gradients = [
-      'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-      'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
-      'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
-      'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
-      'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
-      'linear-gradient(135deg, #30cfd0 0%, #330867 100%)',
-    ]
-    const hash = trackId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0)
-    return gradients[hash % gradients.length]
-  }
+  const volumePercentage = useMemo(
+    () => (isMuted ? 0 : volume) * 100,
+    [isMuted, volume]
+  )
+
+  const VolumeIcon = isMuted ? VolumeX : volume > 0.5 ? Volume2 : Volume1
 
   const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newVolume = parseFloat(e.target.value)
@@ -48,15 +69,13 @@ export function AudioPlayerFooter() {
   }
 
   const handleProgressClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!currentTrack) return
     const rect = e.currentTarget.getBoundingClientRect()
     const x = e.clientX - rect.left
     const percentage = x / rect.width
     const newTime = percentage * duration
     seek(newTime)
   }
-
-
-  const VolumeIcon = isMuted ? VolumeX : volume > 0.5 ? Volume2 : Volume1
 
   return (
     <div
@@ -82,15 +101,11 @@ export function AudioPlayerFooter() {
           <div className="relative">
             <div
               className="w-14 h-14 rounded-md flex-shrink-0 relative group overflow-hidden shadow-lg"
-              style={{
-                background: currentTrack
-                  ? getSceneGradient(currentTrack.id)
-                  : 'linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%)'
-              }}
+              style={{ background: artworkGradient }}
             >
             </div>
 
-            {/* Static background for equalizer */}
+            {/* Equalizer bars when playing */}
             {isPlaying && currentTrack && (
               <div className="absolute -bottom-1 -right-1 bg-black/80 backdrop-blur-sm rounded-md px-1 py-0.5">
                 <div className="flex items-end gap-0.5">
@@ -124,16 +139,27 @@ export function AudioPlayerFooter() {
         <div className="flex-1 flex flex-col items-center gap-2 max-w-2xl mx-auto">
           {/* Control Buttons */}
           <div className="flex items-center gap-2">
+            {/* Shuffle (disabled for now) */}
+            <button
+              disabled
+              className="w-8 h-8 flex items-center justify-center text-white/20 cursor-not-allowed transition-colors"
+              aria-label="Shuffle"
+              title="Shuffle (coming soon)"
+            >
+              <Shuffle className="w-4 h-4" />
+            </button>
+
             {/* Skip Back (disabled for now) */}
             <button
               disabled
-              className="w-8 h-8 flex items-center justify-center text-white/20 cursor-not-allowed transition-colors hover:text-purple-500/30"
+              className="w-8 h-8 flex items-center justify-center text-white/20 cursor-not-allowed transition-colors"
               aria-label="Previous track"
+              title="Previous track (coming soon)"
             >
               <SkipBack className="w-4 h-4" fill="currentColor" />
             </button>
 
-            {/* Play/Pause with purple glow when active */}
+            {/* Play/Pause */}
             <button
               onClick={togglePlay}
               disabled={!currentTrack}
@@ -157,10 +183,30 @@ export function AudioPlayerFooter() {
             {/* Skip Forward (disabled for now) */}
             <button
               disabled
-              className="w-8 h-8 flex items-center justify-center text-white/20 cursor-not-allowed transition-colors hover:text-purple-500/30"
+              className="w-8 h-8 flex items-center justify-center text-white/20 cursor-not-allowed transition-colors"
               aria-label="Next track"
+              title="Next track (coming soon)"
             >
               <SkipForward className="w-4 h-4" fill="currentColor" />
+            </button>
+
+            {/* Loop */}
+            <button
+              onClick={toggleLoop}
+              disabled={!currentTrack}
+              className={`
+                w-8 h-8 flex items-center justify-center transition-colors
+                ${!currentTrack
+                  ? 'text-white/20 cursor-not-allowed'
+                  : isLooping
+                    ? 'text-purple-400 hover:text-purple-300'
+                    : 'text-white/60 hover:text-white'
+                }
+              `}
+              aria-label={isLooping ? "Loop enabled" : "Loop disabled"}
+              title={isLooping ? "Loop enabled" : "Loop disabled"}
+            >
+              <Repeat className="w-4 h-4" />
             </button>
           </div>
 
@@ -171,7 +217,6 @@ export function AudioPlayerFooter() {
             </div>
 
             <div
-              ref={progressRef}
               className="relative flex-1 h-1 rounded-full bg-white/10 cursor-pointer group overflow-visible"
               onClick={handleProgressClick}
               role="slider"
@@ -186,7 +231,7 @@ export function AudioPlayerFooter() {
                   className="absolute inset-y-0 left-0 rounded-full blur-sm opacity-50 transition-all duration-150"
                   style={{
                     width: `${progress}%`,
-                    background: 'linear-gradient(90deg, #8b5cf6 0%, #ec4899 100%)',
+                    background: PURPLE_PINK_GRADIENT,
                   }}
                 />
               )}
@@ -196,9 +241,7 @@ export function AudioPlayerFooter() {
                 className="absolute inset-y-0 left-0 rounded-full transition-all duration-150"
                 style={{
                   width: `${progress}%`,
-                  background: currentTrack
-                    ? 'linear-gradient(90deg, #8b5cf6 0%, #ec4899 100%)'
-                    : 'white',
+                  background: currentTrack ? PURPLE_PINK_GRADIENT : 'white',
                 }}
               />
 
@@ -257,97 +300,20 @@ export function AudioPlayerFooter() {
               onChange={handleVolumeChange}
               className="volume-slider w-full h-1 rounded-full appearance-none cursor-pointer"
               aria-label="Volume"
+              style={{
+                background: `linear-gradient(
+                  to right,
+                  #8b5cf6 0%,
+                  #ec4899 ${volumePercentage * 0.5}%,
+                  #ec4899 ${volumePercentage}%,
+                  rgba(255, 255, 255, 0.2) ${volumePercentage}%,
+                  rgba(255, 255, 255, 0.2) 100%
+                )`
+              }}
             />
           </div>
         </div>
       </div>
-
-      <style jsx>{`
-        .volume-slider {
-          background: linear-gradient(
-            to right,
-            #8b5cf6 0%,
-            #ec4899 ${(isMuted ? 0 : volume) * 50}%,
-            #ec4899 ${(isMuted ? 0 : volume) * 100}%,
-            rgba(255, 255, 255, 0.2) ${(isMuted ? 0 : volume) * 100}%,
-            rgba(255, 255, 255, 0.2) 100%
-          );
-        }
-
-        .volume-slider::-webkit-slider-thumb {
-          appearance: none;
-          width: 12px;
-          height: 12px;
-          border-radius: 50%;
-          background: white;
-          cursor: pointer;
-          box-shadow: 0 0 0 0 rgba(139, 92, 246, 0),
-                      0 1px 3px rgba(0, 0, 0, 0.5);
-          transition: all 0.2s ease;
-        }
-
-        .volume-slider::-webkit-slider-thumb:hover {
-          transform: scale(1.2);
-          box-shadow: 0 0 8px 2px rgba(139, 92, 246, 0.5),
-                      0 1px 3px rgba(0, 0, 0, 0.5);
-        }
-
-        .volume-slider::-moz-range-thumb {
-          width: 12px;
-          height: 12px;
-          border-radius: 50%;
-          background: white;
-          cursor: pointer;
-          border: none;
-          box-shadow: 0 0 0 0 rgba(139, 92, 246, 0),
-                      0 1px 3px rgba(0, 0, 0, 0.5);
-          transition: all 0.2s ease;
-        }
-
-        .volume-slider::-moz-range-thumb:hover {
-          transform: scale(1.2);
-          box-shadow: 0 0 8px 2px rgba(139, 92, 246, 0.5),
-                      0 1px 3px rgba(0, 0, 0, 0.5);
-        }
-
-        @keyframes equalizer-1 {
-          0%, 100% { height: 8px; }
-          50% { height: 14px; }
-        }
-
-        @keyframes equalizer-2 {
-          0%, 100% { height: 12px; }
-          50% { height: 6px; }
-        }
-
-        @keyframes equalizer-3 {
-          0%, 100% { height: 6px; }
-          50% { height: 12px; }
-        }
-
-        @keyframes shimmer {
-          0% { transform: translateX(-100%); }
-          100% { transform: translateX(400%); }
-        }
-
-        .animate-equalizer-1 {
-          animation: equalizer-1 0.8s ease-in-out infinite;
-        }
-
-        .animate-equalizer-2 {
-          animation: equalizer-2 0.9s ease-in-out infinite;
-          animation-delay: 0.2s;
-        }
-
-        .animate-equalizer-3 {
-          animation: equalizer-3 0.7s ease-in-out infinite;
-          animation-delay: 0.4s;
-        }
-
-        .shimmer-effect {
-          animation: shimmer 3s linear infinite;
-        }
-      `}</style>
     </div>
   )
 }

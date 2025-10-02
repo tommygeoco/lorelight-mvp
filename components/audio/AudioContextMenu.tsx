@@ -267,7 +267,7 @@ export function AudioContextMenu({
               return (
                 <div
                   data-tags-submenu
-                  className="absolute left-full bg-[#191919] border border-white/10 rounded-[8px] py-2 shadow-lg min-w-[240px] flex flex-col"
+                  className="absolute left-full bg-[#191919] border border-white/10 rounded-[8px] shadow-lg min-w-[240px] flex flex-col overflow-visible"
                   style={{
                     marginLeft: '-2px',
                     ...(shouldPositionFromBottom ? {
@@ -280,181 +280,189 @@ export function AudioContextMenu({
                   }}
                   onClick={(e) => e.stopPropagation()}
                 >
-                  {/* Current tags */}
-                  {currentTags.length > 0 && (
-                    <div className="px-3 pb-2 flex flex-wrap gap-1.5">
-                      {[...currentTags].sort().map(tag => (
-                        <div
-                          key={tag}
-                          className="px-2 py-1 bg-purple-500/20 border border-purple-500/30 rounded-[6px] text-[12px] text-white flex items-center gap-1.5"
-                        >
-                          {tag}
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              handleRemoveTagFromFile(contextMenu.audioFile!, tag)
-                            }}
-                            className="text-white/50 hover:text-white transition-colors"
+                  {/* Scrollable content wrapper */}
+                  <div className="flex flex-col overflow-y-auto scrollbar-custom py-2">
+                    {/* Current tags */}
+                    {currentTags.length > 0 && (
+                      <div className="px-3 pb-2 flex flex-wrap gap-1.5">
+                        {[...currentTags].sort().map(tag => (
+                          <div
+                            key={tag}
+                            className="px-2 py-1 bg-purple-500/20 border border-purple-500/30 rounded-[6px] text-[12px] text-white flex items-center gap-1.5"
                           >
-                            <X className="w-3 h-3" />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                            {tag}
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                handleRemoveTagFromFile(contextMenu.audioFile!, tag)
+                              }}
+                              className="text-white/50 hover:text-white transition-colors"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
 
-                  {/* Input field */}
-                  <div className="px-3 pb-2">
-                    <input
-                      ref={tagInputRef}
-                      type="text"
-                      value={tagInput}
-                      onChange={(e) => setTagInput(e.target.value)}
-                      onFocus={(e) => {
-                        isInputFocusedRef.current = true
-                        e.stopPropagation()
-                      }}
-                      onBlur={() => {
-                        isInputFocusedRef.current = false
-                      }}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' && tagInput.trim()) {
-                          e.preventDefault()
-                          handleAddTagToFile(contextMenu.audioFile!, tagInput)
-                          setTagInput('')
-                          setTimeout(() => tagInputRef.current?.focus(), 0)
-                        }
-                      }}
-                      placeholder="Search or create tag..."
-                      className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-[6px] text-[13px] text-white placeholder:text-white/40 focus:outline-none focus:border-white/20 transition-colors"
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        e.preventDefault()
-                      }}
-                      onMouseDown={(e) => e.stopPropagation()}
-                    />
-                  </div>
-
-                  {/* Create new tag option */}
-                  {tagInput.trim() && !allTags.includes(tagInput.trim().toLowerCase()) && (
-                    <>
-                      <button
+                    {/* Input field */}
+                    <div className="px-3 pb-2">
+                      <input
+                        ref={tagInputRef}
+                        type="text"
+                        value={tagInput}
+                        onChange={(e) => setTagInput(e.target.value)}
+                        onFocus={(e) => {
+                          isInputFocusedRef.current = true
+                          e.stopPropagation()
+                        }}
+                        onBlur={() => {
+                          isInputFocusedRef.current = false
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' && tagInput.trim()) {
+                            e.preventDefault()
+                            handleAddTagToFile(contextMenu.audioFile!, tagInput)
+                            setTagInput('')
+                            setTimeout(() => tagInputRef.current?.focus(), 0)
+                          }
+                        }}
+                        placeholder="Search or create tag..."
+                        className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-[6px] text-[13px] text-white placeholder:text-white/40 focus:outline-none focus:border-white/20 transition-colors"
                         onClick={(e) => {
                           e.stopPropagation()
-                          handleAddTagToFile(contextMenu.audioFile!, tagInput)
-                          setTagInput('')
-                          setTimeout(() => tagInputRef.current?.focus(), 0)
+                          e.preventDefault()
                         }}
-                        className="w-full px-3 py-2 text-left text-[13px] text-white hover:bg-white/5 transition-colors flex items-center gap-2"
-                      >
-                        <span className="text-white/60">Create</span>
-                        <span className="px-2 py-0.5 bg-purple-500/20 border border-purple-500/30 rounded text-[12px]">
-                          {tagInput.trim().toLowerCase()}
-                        </span>
-                      </button>
-                      <div className="h-px bg-white/10 my-1" />
-                    </>
-                  )}
+                        onMouseDown={(e) => e.stopPropagation()}
+                      />
+                    </div>
 
-                  {/* Filtered tag list */}
-                  <div className="overflow-y-auto flex-1 scrollbar-custom">
-                    {allTags
-                      .filter(tag => {
-                        if (tagInput.trim()) {
-                          return tag.toLowerCase().includes(tagInput.toLowerCase())
-                        }
-                        return !currentTags.includes(tag)
-                      })
-                      .sort()
-                      .map(tag => (
-                        <div
-                          key={tag}
-                          className="group flex items-center hover:bg-white/5 transition-colors relative"
+                    {/* Create new tag option */}
+                    {tagInput.trim() && !allTags.includes(tagInput.trim().toLowerCase()) && (
+                      <>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleAddTagToFile(contextMenu.audioFile!, tagInput)
+                            setTagInput('')
+                            setTimeout(() => tagInputRef.current?.focus(), 0)
+                          }}
+                          className="w-full px-3 py-2 text-left text-[13px] text-white hover:bg-white/5 transition-colors flex items-center gap-2"
                         >
-                          {editingTagName === tag ? (
-                            <form
-                              onSubmit={(e) => {
-                                e.preventDefault()
-                                handleRenameTag(tag, editingTagValue)
-                              }}
-                              className="flex-1 px-3 py-2"
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              <input
-                                ref={tagEditInputRef}
-                                type="text"
-                                value={editingTagValue}
-                                onChange={(e) => setEditingTagValue(e.target.value)}
-                                onBlur={() => handleRenameTag(tag, editingTagValue)}
-                                onKeyDown={(e) => {
-                                  if (e.key === 'Escape') {
-                                    e.preventDefault()
-                                    setEditingTagName(null)
-                                    setEditingTagValue('')
-                                  }
+                          <span className="text-white/60">Create</span>
+                          <span className="px-2 py-0.5 bg-purple-500/20 border border-purple-500/30 rounded text-[12px]">
+                            {tagInput.trim().toLowerCase()}
+                          </span>
+                        </button>
+                        <div className="h-px bg-white/10 my-1" />
+                      </>
+                    )}
+
+                    {/* Filtered tag list */}
+                    <div className="flex-1">
+                      {allTags
+                        .filter(tag => {
+                          if (tagInput.trim()) {
+                            return tag.toLowerCase().includes(tagInput.toLowerCase())
+                          }
+                          return !currentTags.includes(tag)
+                        })
+                        .sort()
+                        .map(tag => (
+                          <div
+                            key={tag}
+                            className="group flex items-center hover:bg-white/5 transition-colors relative"
+                          >
+                            {editingTagName === tag ? (
+                              <form
+                                onSubmit={(e) => {
+                                  e.preventDefault()
+                                  handleRenameTag(tag, editingTagValue)
                                 }}
-                                className="w-full px-2 py-1 bg-white/10 border border-white/20 rounded text-[13px] text-white focus:outline-none focus:border-white/40"
-                              />
-                            </form>
-                          ) : (
-                            <>
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation()
-                                  handleAddTagToFile(contextMenu.audioFile!, tag)
-                                  setTagInput('')
-                                  setTimeout(() => tagInputRef.current?.focus(), 0)
-                                }}
-                                className="flex-1 px-3 py-2 text-left text-[13px] text-white"
+                                className="flex-1 px-3 py-2"
+                                onClick={(e) => e.stopPropagation()}
                               >
-                                {tag}
-                              </button>
-                              <div className="relative mr-2">
+                                <input
+                                  ref={tagEditInputRef}
+                                  type="text"
+                                  value={editingTagValue}
+                                  onChange={(e) => setEditingTagValue(e.target.value)}
+                                  onBlur={() => handleRenameTag(tag, editingTagValue)}
+                                  onKeyDown={(e) => {
+                                    if (e.key === 'Escape') {
+                                      e.preventDefault()
+                                      setEditingTagName(null)
+                                      setEditingTagValue('')
+                                    }
+                                  }}
+                                  className="w-full px-2 py-1 bg-white/10 border border-white/20 rounded text-[13px] text-white focus:outline-none focus:border-white/40"
+                                />
+                              </form>
+                            ) : (
+                              <>
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation()
-                                    setTagMenuOpen(tagMenuOpen === tag ? null : tag)
+                                    handleAddTagToFile(contextMenu.audioFile!, tag)
+                                    setTagInput('')
+                                    setTimeout(() => tagInputRef.current?.focus(), 0)
                                   }}
-                                  className="opacity-0 group-hover:opacity-100 px-3 py-2.5 text-white/40 hover:text-white transition-all"
-                                  title="Tag options"
+                                  className="flex-1 px-3 py-2 text-left text-[13px] text-white"
                                 >
-                                  <MoreVertical className="w-3.5 h-3.5" />
+                                  {tag}
                                 </button>
-                                {tagMenuOpen === tag && (
-                                  <div className="absolute right-0 top-full mt-1 bg-[#191919] border border-white/10 rounded-[8px] shadow-lg min-w-[120px] py-1 z-[70]">
-                                    <button
-                                      onClick={(e) => {
-                                        e.stopPropagation()
-                                        setEditingTagName(tag)
-                                        setEditingTagValue(tag)
-                                        setTagMenuOpen(null)
+                                <div className="relative mr-2">
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation()
+                                      setTagMenuOpen(tagMenuOpen === tag ? null : tag)
+                                    }}
+                                    className="opacity-0 group-hover:opacity-100 px-3 py-2.5 text-white/40 hover:text-white transition-all"
+                                    title="Tag options"
+                                  >
+                                    <MoreVertical className="w-3.5 h-3.5" />
+                                  </button>
+                                  {tagMenuOpen === tag && (
+                                    <div className="fixed bg-[#191919] border border-white/10 rounded-[8px] shadow-2xl min-w-[120px] py-1 z-[100]"
+                                      style={{
+                                        left: `${contextMenu.x + 420}px`,
+                                        top: `${contextMenu.y}px`,
                                       }}
-                                      className="w-full px-3 py-2 text-left text-[13px] text-white hover:bg-white/5 flex items-center gap-2"
                                     >
-                                      <Edit2 className="w-3.5 h-3.5" />
-                                      Rename
-                                    </button>
-                                    <div className="h-px bg-white/10 my-1" />
-                                    <button
-                                      onClick={(e) => {
-                                        e.stopPropagation()
-                                        if (confirm(`Delete tag "${tag}"? This will remove it from all files.`)) {
-                                          handleDeleteTag(tag)
-                                        }
-                                        setTagMenuOpen(null)
-                                      }}
-                                      className="w-full px-3 py-2 text-left text-[13px] text-red-400 hover:bg-red-500/10 flex items-center gap-2"
-                                    >
-                                      <Trash2 className="w-3.5 h-3.5" />
-                                      Delete
-                                    </button>
-                                  </div>
-                                )}
-                              </div>
-                            </>
-                          )}
-                        </div>
-                      ))}
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation()
+                                          setEditingTagName(tag)
+                                          setEditingTagValue(tag)
+                                          setTagMenuOpen(null)
+                                        }}
+                                        className="w-full px-3 py-2 text-left text-[13px] text-white hover:bg-white/5 flex items-center gap-2"
+                                      >
+                                        <Edit2 className="w-3.5 h-3.5" />
+                                        Rename
+                                      </button>
+                                      <div className="h-px bg-white/10 my-1" />
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation()
+                                          if (confirm(`Delete tag "${tag}"? This will remove it from all files.`)) {
+                                            handleDeleteTag(tag)
+                                          }
+                                          setTagMenuOpen(null)
+                                        }}
+                                        className="w-full px-3 py-2 text-left text-[13px] text-red-400 hover:bg-red-500/10 flex items-center gap-2"
+                                      >
+                                        <Trash2 className="w-3.5 h-3.5" />
+                                        Delete
+                                      </button>
+                                    </div>
+                                  )}
+                                </div>
+                              </>
+                            )}
+                          </div>
+                        ))}
+                    </div>
                   </div>
                 </div>
               )
