@@ -1,7 +1,7 @@
 'use client'
 
-import { useRef, useState } from 'react'
-import { Upload, Play, Pause, Edit2, Tag, ChevronRight, Trash2, Plus, X, Minus } from 'lucide-react'
+import { useRef, useState, useEffect } from 'react'
+import { Upload, Play, Pause, Edit2, Tag, ChevronRight, Trash2, Plus, X, Minus, MoreVertical } from 'lucide-react'
 import { useAudioPlayback } from '@/hooks/useAudioPlayback'
 import { useAudioFileStore } from '@/store/audioFileStore'
 import { useAudioPlaylistStore } from '@/store/audioPlaylistStore'
@@ -45,14 +45,26 @@ export function AudioContextMenu({
   selectedPlaylistId,
 }: AudioContextMenuProps) {
   const tagInputRef = useRef<HTMLInputElement>(null)
+  const tagEditInputRef = useRef<HTMLInputElement>(null)
   const isInputFocusedRef = useRef(false)
   const [tagInput, setTagInput] = useState('')
+  const [editingTagName, setEditingTagName] = useState<string | null>(null)
+  const [editingTagValue, setEditingTagValue] = useState('')
+  const [tagMenuOpen, setTagMenuOpen] = useState<string | null>(null)
 
   const { handlePlay, currentTrackId, isPlaying } = useAudioPlayback()
   const { updateAudioFile } = useAudioFileStore()
   const { addAudioToPlaylist, removeAudioFromPlaylist } = useAudioPlaylistStore()
   const audioFileMap = useAudioFileMap()
   const { addToast } = useToastStore()
+
+  // Auto-focus tag edit input when editing starts
+  useEffect(() => {
+    if (editingTagName && tagEditInputRef.current) {
+      tagEditInputRef.current.focus()
+      tagEditInputRef.current.select()
+    }
+  }, [editingTagName])
 
   if (!contextMenu) return null
 
@@ -76,6 +88,66 @@ export function AudioContextMenu({
     const currentFile = audioFileMap.get(audioFile.id)
     const tags = currentFile?.tags || []
     await updateAudioFile(audioFile.id, { tags: tags.filter(t => t !== tagToRemove) })
+  }
+
+  const handleRenameTag = async (oldTag: string, newTag: string) => {
+    if (!newTag.trim() || oldTag === newTag.trim()) {
+      setEditingTagName(null)
+      setEditingTagValue('')
+      return
+    }
+
+    const trimmedNewTag = newTag.trim().toLowerCase()
+
+    try {
+      // Get all audio files
+      const allAudioFiles = Array.from(audioFileMap.values())
+
+      // Update all files that have this tag
+      const filesToUpdate = allAudioFiles.filter(file =>
+        file.tags?.includes(oldTag)
+      )
+
+      await Promise.all(
+        filesToUpdate.map(async (file) => {
+          const updatedTags = file.tags!.map(tag =>
+            tag === oldTag ? trimmedNewTag : tag
+          )
+          await updateAudioFile(file.id, { tags: updatedTags })
+        })
+      )
+
+      setEditingTagName(null)
+      setEditingTagValue('')
+      addToast(`Renamed tag to "${trimmedNewTag}"`, 'success')
+    } catch (error) {
+      console.error('Rename tag failed:', error)
+      addToast('Failed to rename tag', 'error')
+    }
+  }
+
+  const handleDeleteTag = async (tag: string) => {
+    try {
+      // Get all audio files
+      const allAudioFiles = Array.from(audioFileMap.values())
+
+      // Remove tag from all files that have it
+      const filesToUpdate = allAudioFiles.filter(file =>
+        file.tags?.includes(tag)
+      )
+
+      await Promise.all(
+        filesToUpdate.map(async (file) => {
+          const updatedTags = file.tags!.filter(t => t !== tag)
+          await updateAudioFile(file.id, { tags: updatedTags })
+        })
+      )
+
+      addToast(`Deleted tag "${tag}"`, 'success')
+    } catch (error) {
+      console.error('Delete tag failed:', error)
+      addToast('Failed to delete tag', 'error')
+    }
   }
 
   const handleAddToPlaylist = async (audioFile: AudioFile, playlistId: string) => {
@@ -279,18 +351,93 @@ export function AudioContextMenu({
                       })
                       .sort()
                       .map(tag => (
-                        <button
+                        <div
                           key={tag}
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            handleAddTagToFile(contextMenu.audioFile!, tag)
-                            setTagInput('')
-                            setTimeout(() => tagInputRef.current?.focus(), 0)
-                          }}
-                          className="w-full px-3 py-2 text-left text-[13px] text-white hover:bg-white/5 transition-colors"
+                          className="group flex items-center hover:bg-white/5 transition-colors relative"
                         >
-                          {tag}
-                        </button>
+                          {editingTagName === tag ? (
+                            <form
+                              onSubmit={(e) => {
+                                e.preventDefault()
+                                handleRenameTag(tag, editingTagValue)
+                              }}
+                              className="flex-1 px-3 py-2"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <input
+                                ref={tagEditInputRef}
+                                type="text"
+                                value={editingTagValue}
+                                onChange={(e) => setEditingTagValue(e.target.value)}
+                                onBlur={() => handleRenameTag(tag, editingTagValue)}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Escape') {
+                                    e.preventDefault()
+                                    setEditingTagName(null)
+                                    setEditingTagValue('')
+                                  }
+                                }}
+                                className="w-full px-2 py-1 bg-white/10 border border-white/20 rounded text-[13px] text-white focus:outline-none focus:border-white/40"
+                              />
+                            </form>
+                          ) : (
+                            <>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  handleAddTagToFile(contextMenu.audioFile!, tag)
+                                  setTagInput('')
+                                  setTimeout(() => tagInputRef.current?.focus(), 0)
+                                }}
+                                className="flex-1 px-3 py-2 text-left text-[13px] text-white"
+                              >
+                                {tag}
+                              </button>
+                              <div className="relative mr-2">
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    setTagMenuOpen(tagMenuOpen === tag ? null : tag)
+                                  }}
+                                  className="opacity-0 group-hover:opacity-100 px-3 py-2.5 text-white/40 hover:text-white transition-all"
+                                  title="Tag options"
+                                >
+                                  <MoreVertical className="w-3.5 h-3.5" />
+                                </button>
+                                {tagMenuOpen === tag && (
+                                  <div className="absolute right-0 top-full mt-1 bg-[#191919] border border-white/10 rounded-[8px] shadow-lg min-w-[120px] py-1 z-[70]">
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation()
+                                        setEditingTagName(tag)
+                                        setEditingTagValue(tag)
+                                        setTagMenuOpen(null)
+                                      }}
+                                      className="w-full px-3 py-2 text-left text-[13px] text-white hover:bg-white/5 flex items-center gap-2"
+                                    >
+                                      <Edit2 className="w-3.5 h-3.5" />
+                                      Rename
+                                    </button>
+                                    <div className="h-px bg-white/10 my-1" />
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation()
+                                        if (confirm(`Delete tag "${tag}"? This will remove it from all files.`)) {
+                                          handleDeleteTag(tag)
+                                        }
+                                        setTagMenuOpen(null)
+                                      }}
+                                      className="w-full px-3 py-2 text-left text-[13px] text-red-400 hover:bg-red-500/10 flex items-center gap-2"
+                                    >
+                                      <Trash2 className="w-3.5 h-3.5" />
+                                      Delete
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
+                            </>
+                          )}
+                        </div>
                       ))}
                   </div>
                 </div>

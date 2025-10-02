@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
-import { Upload, Trash2, Play, Pause, Search, Plus, SlidersHorizontal, Tag, Minus } from 'lucide-react'
+import { Upload, Trash2, Play, Pause, Search, Plus, SlidersHorizontal, Tag, Minus, Edit2, MoreVertical } from 'lucide-react'
 import { DashboardLayoutWithSidebar } from '@/components/layouts/DashboardLayoutWithSidebar'
 import { DashboardSidebar } from '@/components/layouts/DashboardSidebar'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
@@ -51,6 +51,11 @@ export default function AudioPage() {
   const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set())
   const [isBulkTagModalOpen, setIsBulkTagModalOpen] = useState(false)
   const [isBulkPlaylistModalOpen, setIsBulkPlaylistModalOpen] = useState(false)
+  const [tagFilterInput, setTagFilterInput] = useState('')
+  const [editingTagName, setEditingTagName] = useState<string | null>(null)
+  const [editingTagValue, setEditingTagValue] = useState('')
+  const [tagMenuOpen, setTagMenuOpen] = useState<string | null>(null)
+  const tagEditInputRef = useRef<HTMLInputElement>(null)
   // Context menu state - managed locally in AudioContextMenu component
   const [focusedQueueItemId, setFocusedQueueItemId] = useState<string | null>(null)
   const [isDraggingOver, setIsDraggingOver] = useState(false)
@@ -103,6 +108,7 @@ export default function AudioPage() {
         setShowAddToSubmenu(false)
         setIsBulkTagModalOpen(false)
         setIsBulkPlaylistModalOpen(false)
+        setTagFilterInput('')
       }
     }
     if (contextMenu || isBulkTagModalOpen || isBulkPlaylistModalOpen) {
@@ -113,6 +119,14 @@ export default function AudioPage() {
       }
     }
   }, [contextMenu, isBulkTagModalOpen, isBulkPlaylistModalOpen])
+
+  // Auto-focus tag edit input when editing starts
+  useEffect(() => {
+    if (editingTagName && tagEditInputRef.current) {
+      tagEditInputRef.current.focus()
+      tagEditInputRef.current.select()
+    }
+  }, [editingTagName])
 
   // Get all audio files from the map
   const allAudioFiles = useMemo(() =>
@@ -175,6 +189,13 @@ export default function AudioPage() {
     })
     return Array.from(tags).sort()
   }, [allAudioFiles])
+
+  // Get filtered tags for bulk add dropdown
+  const filteredTags = useMemo(() => {
+    if (!tagFilterInput.trim()) return allTags
+    const query = tagFilterInput.toLowerCase()
+    return allTags.filter(tag => tag.toLowerCase().includes(query))
+  }, [allTags, tagFilterInput])
 
   // Get tag counts
   const tagCounts = useMemo(() => {
@@ -552,11 +573,65 @@ export default function AudioPage() {
         })
       )
 
-      setIsBulkTagModalOpen(false)
+      // Don't close dropdown - let user add multiple tags
       // Don't deselect - let user continue working
     } catch (error) {
       logger.error('Bulk tag failed', error)
       addToast('Failed to add tags', 'error')
+    }
+  }
+
+  const handleRenameTag = async (oldTag: string, newTag: string) => {
+    if (!newTag.trim() || oldTag === newTag.trim()) {
+      setEditingTagName(null)
+      setEditingTagValue('')
+      return
+    }
+
+    const trimmedNewTag = newTag.trim().toLowerCase()
+
+    try {
+      // Update all files that have this tag
+      const filesToUpdate = allAudioFiles.filter(file =>
+        file.tags?.includes(oldTag)
+      )
+
+      await Promise.all(
+        filesToUpdate.map(async (file) => {
+          const updatedTags = file.tags!.map(tag =>
+            tag === oldTag ? trimmedNewTag : tag
+          )
+          await updateAudioFile(file.id, { tags: updatedTags })
+        })
+      )
+
+      setEditingTagName(null)
+      setEditingTagValue('')
+      addToast(`Renamed tag to "${trimmedNewTag}"`, 'success')
+    } catch (error) {
+      logger.error('Rename tag failed', error)
+      addToast('Failed to rename tag', 'error')
+    }
+  }
+
+  const handleDeleteTag = async (tag: string) => {
+    try {
+      // Remove tag from all files that have it
+      const filesToUpdate = allAudioFiles.filter(file =>
+        file.tags?.includes(tag)
+      )
+
+      await Promise.all(
+        filesToUpdate.map(async (file) => {
+          const updatedTags = file.tags!.filter(t => t !== tag)
+          await updateAudioFile(file.id, { tags: updatedTags })
+        })
+      )
+
+      addToast(`Deleted tag "${tag}"`, 'success')
+    } catch (error) {
+      logger.error('Delete tag failed', error)
+      addToast('Failed to delete tag', 'error')
     }
   }
 
@@ -571,7 +646,7 @@ export default function AudioPage() {
         )
       )
 
-      setIsBulkPlaylistModalOpen(false)
+      // Don't close dropdown - let user add to multiple playlists
       // Don't deselect - let user continue working
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error)
@@ -700,8 +775,12 @@ export default function AudioPage() {
               <div className="relative">
                 <button
                   onClick={() => {
-                    setIsBulkTagModalOpen(!isBulkTagModalOpen)
+                    const newState = !isBulkTagModalOpen
+                    setIsBulkTagModalOpen(newState)
                     setIsBulkPlaylistModalOpen(false)
+                    if (!newState) {
+                      setTagFilterInput('')
+                    }
                   }}
                   className="px-3 py-1.5 text-[13px] text-white/70 hover:text-white hover:bg-white/5 rounded-[6px] transition-colors flex items-center gap-1.5"
                 >
@@ -714,13 +793,16 @@ export default function AudioPage() {
                     <div className="p-3">
                       <input
                         type="text"
-                        placeholder="Enter tag name..."
+                        placeholder="Search or create tag..."
+                        value={tagFilterInput}
+                        onChange={(e) => setTagFilterInput(e.target.value)}
                         autoFocus
                         onKeyDown={(e) => {
                           if (e.key === 'Enter') {
                             const target = e.target as HTMLInputElement
                             if (target.value.trim()) {
-                              handleBulkAddTag(target.value)
+                              handleBulkAddTag(target.value.trim())
+                              setTagFilterInput('')
                             }
                           }
                         }}
@@ -728,19 +810,129 @@ export default function AudioPage() {
                       />
                     </div>
 
-                    {allTags.length > 0 && (
+                    {/* Show "Create tag" option when typing a new tag */}
+                    {tagFilterInput.trim() && !filteredTags.includes(tagFilterInput.trim()) && (
+                      <>
+                        <div className="h-px bg-white/10" />
+                        <div className="py-1">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              handleBulkAddTag(tagFilterInput.trim())
+                              setTagFilterInput('')
+                            }}
+                            className="w-full px-3 py-2 text-left text-[13px] text-white hover:bg-white/5 transition-colors flex items-center gap-2"
+                          >
+                            <Plus className="w-3.5 h-3.5 text-purple-400" />
+                            <span>Create <span className="text-purple-400">&quot;{tagFilterInput.trim()}&quot;</span></span>
+                          </button>
+                        </div>
+                      </>
+                    )}
+
+                    {/* Show existing tags (filtered) */}
+                    {filteredTags.length > 0 && (
                       <>
                         <div className="h-px bg-white/10" />
                         <div className="py-1 max-h-[200px] overflow-y-auto scrollbar-custom">
-                          {allTags.map(tag => (
-                            <button
+                          {filteredTags.map(tag => (
+                            <div
                               key={tag}
-                              onClick={() => handleBulkAddTag(tag)}
-                              className="w-full px-3 py-2 text-left text-[13px] text-white hover:bg-white/5 transition-colors"
+                              className="group flex items-center hover:bg-white/5 transition-colors relative"
                             >
-                              {tag}
-                            </button>
+                              {editingTagName === tag ? (
+                                <form
+                                  onSubmit={(e) => {
+                                    e.preventDefault()
+                                    handleRenameTag(tag, editingTagValue)
+                                  }}
+                                  className="flex-1 px-3 py-2"
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  <input
+                                    ref={tagEditInputRef}
+                                    type="text"
+                                    value={editingTagValue}
+                                    onChange={(e) => setEditingTagValue(e.target.value)}
+                                    onBlur={() => handleRenameTag(tag, editingTagValue)}
+                                    onKeyDown={(e) => {
+                                      if (e.key === 'Escape') {
+                                        e.preventDefault()
+                                        setEditingTagName(null)
+                                        setEditingTagValue('')
+                                      }
+                                    }}
+                                    className="w-full px-2 py-1 bg-white/10 border border-white/20 rounded text-[13px] text-white focus:outline-none focus:border-white/40"
+                                  />
+                                </form>
+                              ) : (
+                                <>
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation()
+                                      handleBulkAddTag(tag)
+                                      setTagFilterInput('')
+                                    }}
+                                    className="flex-1 px-3 py-2 text-left text-[13px] text-white"
+                                  >
+                                    {tag}
+                                  </button>
+                                  <div className="relative mr-2">
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation()
+                                        setTagMenuOpen(tagMenuOpen === tag ? null : tag)
+                                      }}
+                                      className="opacity-0 group-hover:opacity-100 px-3 py-2.5 text-white/40 hover:text-white transition-all"
+                                      title="Tag options"
+                                    >
+                                      <MoreVertical className="w-3.5 h-3.5" />
+                                    </button>
+                                    {tagMenuOpen === tag && (
+                                      <div className="absolute right-0 top-full mt-1 bg-[#191919] border border-white/10 rounded-[8px] shadow-lg min-w-[120px] py-1 z-50">
+                                        <button
+                                          onClick={(e) => {
+                                            e.stopPropagation()
+                                            setEditingTagName(tag)
+                                            setEditingTagValue(tag)
+                                            setTagMenuOpen(null)
+                                          }}
+                                          className="w-full px-3 py-2 text-left text-[13px] text-white hover:bg-white/5 flex items-center gap-2"
+                                        >
+                                          <Edit2 className="w-3.5 h-3.5" />
+                                          Rename
+                                        </button>
+                                        <div className="h-px bg-white/10 my-1" />
+                                        <button
+                                          onClick={(e) => {
+                                            e.stopPropagation()
+                                            if (confirm(`Delete tag "${tag}"? This will remove it from all files.`)) {
+                                              handleDeleteTag(tag)
+                                            }
+                                            setTagMenuOpen(null)
+                                          }}
+                                          className="w-full px-3 py-2 text-left text-[13px] text-red-400 hover:bg-red-500/10 flex items-center gap-2"
+                                        >
+                                          <Trash2 className="w-3.5 h-3.5" />
+                                          Delete
+                                        </button>
+                                      </div>
+                                    )}
+                                  </div>
+                                </>
+                              )}
+                            </div>
                           ))}
+                        </div>
+                      </>
+                    )}
+
+                    {/* Show "No tags found" when filter has no matches */}
+                    {tagFilterInput.trim() && filteredTags.length === 0 && !tagFilterInput.trim() && (
+                      <>
+                        <div className="h-px bg-white/10" />
+                        <div className="py-8 text-center text-[13px] text-white/40">
+                          No tags found
                         </div>
                       </>
                     )}
@@ -775,7 +967,10 @@ export default function AudioPage() {
                       {playlists.map(playlist => (
                         <button
                           key={playlist.id}
-                          onClick={() => handleBulkAddToPlaylist(playlist.id)}
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleBulkAddToPlaylist(playlist.id)
+                          }}
                           className="w-full px-4 py-2 text-left text-[13px] text-white hover:bg-white/5 transition-colors"
                         >
                           {playlist.name}
