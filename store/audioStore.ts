@@ -216,6 +216,7 @@ export const useAudioStore = create<AudioPlayerState>()(
         volume: state.volume,
         isLooping: state.isLooping,
         currentTime: state.currentTime,
+        sourceContext: state.sourceContext,
       }),
     }
   )
