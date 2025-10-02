@@ -72,11 +72,6 @@ export default function AudioPage() {
   } = useAudioFileStore()
 
   const { addAudioToPlaylist, removeAudioFromPlaylist } = useAudioPlaylistStore()
-  const { handlePlay, currentTrackId, isPlaying } = useAudioPlayback({
-    type: 'library',
-    id: null,
-    name: 'Audio Library'
-  })
   const audioFileMap = useAudioFileMap()
   const playlistMap = useAudioPlaylistMap()
   const playlistAudioMap = useAudioPlaylistStore((state) => state.playlistAudio)
@@ -85,6 +80,25 @@ export default function AudioPage() {
   const playlists = useMemo(() =>
     Array.from(playlistMap.values()).sort((a, b) => a.name.localeCompare(b.name))
   , [playlistMap])
+
+  // Dynamic source context based on selected playlist
+  const sourceContext = useMemo(() => {
+    if (selectedPlaylistId) {
+      const playlist = playlistMap.get(selectedPlaylistId)
+      return {
+        type: 'playlist' as const,
+        id: selectedPlaylistId,
+        name: playlist?.name || 'Playlist'
+      }
+    }
+    return {
+      type: 'library' as const,
+      id: null,
+      name: 'Audio Library'
+    }
+  }, [selectedPlaylistId, playlistMap])
+
+  const { handlePlay, currentTrackId, isPlaying } = useAudioPlayback(sourceContext)
 
   useEffect(() => {
     if (!user) {
