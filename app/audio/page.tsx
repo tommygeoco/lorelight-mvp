@@ -1169,7 +1169,7 @@ export default function AudioPage() {
                     data-audio-row
                     className={`group transition-colors cursor-pointer border-b border-white/5 ${
                       isCurrentlyPlaying
-                        ? 'bg-white/10 hover:bg-white/[0.12]'
+                        ? 'playing-track-gradient hover:bg-white/[0.12]'
                         : isSelected
                         ? 'bg-white/5 hover:bg-white/[0.07]'
                         : 'hover:bg-white/5'

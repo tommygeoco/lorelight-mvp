@@ -166,3 +166,64 @@ input[type="range"].slider::-moz-range-thumb:hover {
   background: rgba(255, 255, 255, 0.9);
   border-color: rgba(255, 255, 255, 0.4);
 }
+
+/* Checkbox styling - Purple accent when checked */
+input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  border: 1.5px solid rgba(255, 255, 255, 0.3);
+  border-radius: 3px;
+  background: transparent;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+input[type="checkbox"]:hover {
+  border-color: rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+input[type="checkbox"]:checked {
+  background: linear-gradient(135deg, #9333ea 0%, #a855f7 100%);
+  border-color: #9333ea;
+}
+
+input[type="checkbox"]:checked::after {
+  content: '';
+  position: absolute;
+  left: 3.5px;
+  top: 1px;
+  width: 4px;
+  height: 7px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+/* Pulsing gradient animation for playing tracks */
+@keyframes pulse-gradient {
+  0%, 100% {
+    background-position: 0% 50%;
+    opacity: 1;
+  }
+  50% {
+    background-position: 100% 50%;
+    opacity: 0.8;
+  }
+}
+
+.playing-track-gradient {
+  background: linear-gradient(
+    90deg,
+    rgba(147, 51, 234, 0.15) 0%,
+    rgba(168, 85, 247, 0.15) 25%,
+    rgba(147, 51, 234, 0.15) 50%,
+    rgba(168, 85, 247, 0.15) 75%,
+    rgba(147, 51, 234, 0.15) 100%
+  );
+  background-size: 200% 100%;
+  animation: pulse-gradient 3s ease-in-out infinite;
+}

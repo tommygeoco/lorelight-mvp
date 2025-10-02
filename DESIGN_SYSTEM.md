@@ -531,6 +531,27 @@ className="hover:bg-white/5 transition-colors"
 className="hover:scale-105 transition-transform"
 ```
 
+### Playing Track Animation
+Pulsing purple gradient for currently playing audio tracks.
+
+```tsx
+<div
+  className={`${
+    isCurrentlyPlaying
+      ? 'playing-track-gradient'
+      : 'hover:bg-white/5'
+  }`}
+>
+  {/* Track content */}
+</div>
+```
+
+**Effect**:
+- Animated horizontal gradient sweep
+- Purple tones (#9333ea to #a855f7)
+- 3-second smooth pulse
+- Subtle opacity variation (100% to 80%)
+
 ## Best Practices
 
 1. **Consistent Spacing**: Use Tailwind's spacing scale (4px increments)
@@ -685,6 +706,26 @@ Pills with optional close/remove button.
   ))}
 </div>
 ```
+
+### Checkboxes
+
+#### Custom Checkbox Styling
+Checkboxes with purple gradient when checked.
+
+```tsx
+<input
+  type="checkbox"
+  checked={isChecked}
+  onChange={handleChange}
+  className="w-3.5 h-3.5 cursor-pointer"
+/>
+```
+
+**Styling** (in globals.css):
+- Unchecked: Transparent with white border
+- Hover: Subtle white background
+- Checked: Purple gradient background with white checkmark
+- Gradient: `linear-gradient(135deg, #9333ea 0%, #a855f7 100%)`
 
 ### Bulk Actions
 
