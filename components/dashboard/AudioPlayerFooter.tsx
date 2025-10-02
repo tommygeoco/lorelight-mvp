@@ -226,10 +226,10 @@ export function AudioPlayerFooter() {
           {/* Control Buttons */}
           <div className="flex items-center gap-2">
             {/* Shuffle (disabled for now) */}
-            <div title="Shuffle (coming soon)">
+            <div title="Shuffle (coming soon)" className="inline-flex">
               <button
                 disabled
-                className="w-8 h-8 flex items-center justify-center text-white/20 cursor-not-allowed transition-colors"
+                className="w-8 h-8 flex items-center justify-center text-white/20 cursor-not-allowed transition-colors pointer-events-none"
                 aria-label="Shuffle"
               >
                 <Shuffle className="w-4 h-4" />
@@ -237,10 +237,10 @@ export function AudioPlayerFooter() {
             </div>
 
             {/* Skip Back (disabled for now) */}
-            <div title="Previous track (coming soon)">
+            <div title="Previous track (coming soon)" className="inline-flex">
               <button
                 disabled
-                className="w-8 h-8 flex items-center justify-center text-white/20 cursor-not-allowed transition-colors"
+                className="w-8 h-8 flex items-center justify-center text-white/20 cursor-not-allowed transition-colors pointer-events-none"
                 aria-label="Previous track"
               >
                 <SkipBack className="w-4 h-4" fill="currentColor" />
@@ -269,10 +269,10 @@ export function AudioPlayerFooter() {
             </button>
 
             {/* Skip Forward (disabled for now) */}
-            <div title="Next track (coming soon)">
+            <div title="Next track (coming soon)" className="inline-flex">
               <button
                 disabled
-                className="w-8 h-8 flex items-center justify-center text-white/20 cursor-not-allowed transition-colors"
+                className="w-8 h-8 flex items-center justify-center text-white/20 cursor-not-allowed transition-colors pointer-events-none"
                 aria-label="Next track"
               >
                 <SkipForward className="w-4 h-4" fill="currentColor" />
@@ -280,14 +280,14 @@ export function AudioPlayerFooter() {
             </div>
 
             {/* Loop */}
-            <div title={!currentTrack ? "No track loaded" : isLooping ? "Loop enabled - Click to disable" : "Loop disabled - Click to enable"}>
+            <div title={!currentTrack ? "No track loaded" : isLooping ? "Loop enabled - Click to disable" : "Loop disabled - Click to enable"} className="inline-flex">
               <button
                 onClick={toggleLoop}
                 disabled={!currentTrack}
                 className={`
                   w-8 h-8 flex items-center justify-center transition-colors
                   ${!currentTrack
-                    ? 'text-white/20 cursor-not-allowed'
+                    ? 'text-white/20 cursor-not-allowed pointer-events-none'
                     : isLooping
                       ? 'text-purple-400 hover:text-purple-300'
                       : 'text-white/60 hover:text-white'
