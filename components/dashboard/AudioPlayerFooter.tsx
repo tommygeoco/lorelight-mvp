@@ -163,7 +163,7 @@ export function AudioPlayerFooter() {
 
   return (
     <div
-      className="relative bg-[#111111] flex items-center px-4 pt-5 pb-5 overflow-hidden"
+      className="relative bg-[#111111] flex items-center px-4 pt-5 pb-5"
       style={{
         background: 'linear-gradient(180deg, #111111 0%, #151515 50%, #111111 100%)'
       }}
@@ -203,7 +203,7 @@ export function AudioPlayerFooter() {
 
           {/* Track Details */}
           <div className="flex flex-col min-w-0 flex-1 gap-0.5">
-            <Tooltip content={currentTrack?.name || 'No track loaded'} position="top">
+            <Tooltip content={currentTrack?.name || 'No track loaded'} position="bottom">
               <div className="text-[15px] font-medium text-white truncate">
                 {currentTrack?.name || 'No track loaded'}
               </div>
@@ -226,7 +226,7 @@ export function AudioPlayerFooter() {
           {/* Control Buttons */}
           <div className="flex items-center gap-2">
             {/* Shuffle (disabled for now) */}
-            <Tooltip content="Shuffle (coming soon)" position="top">
+            <Tooltip content="Shuffle" position="top">
               <button
                 disabled
                 className="w-8 h-8 flex items-center justify-center text-white/20 cursor-not-allowed transition-colors"
@@ -237,15 +237,13 @@ export function AudioPlayerFooter() {
             </Tooltip>
 
             {/* Skip Back (disabled for now) */}
-            <Tooltip content="Previous track (coming soon)" position="top">
-              <button
-                disabled
-                className="w-8 h-8 flex items-center justify-center text-white/20 cursor-not-allowed transition-colors"
-                aria-label="Previous track"
-              >
-                <SkipBack className="w-4 h-4" fill="currentColor" />
-              </button>
-            </Tooltip>
+            <button
+              disabled
+              className="w-8 h-8 flex items-center justify-center text-white/20 cursor-not-allowed transition-colors"
+              aria-label="Previous track"
+            >
+              <SkipBack className="w-4 h-4" fill="currentColor" />
+            </button>
 
             {/* Play/Pause */}
             <button
@@ -269,21 +267,16 @@ export function AudioPlayerFooter() {
             </button>
 
             {/* Skip Forward (disabled for now) */}
-            <Tooltip content="Next track (coming soon)" position="top">
-              <button
-                disabled
-                className="w-8 h-8 flex items-center justify-center text-white/20 cursor-not-allowed transition-colors"
-                aria-label="Next track"
-              >
-                <SkipForward className="w-4 h-4" fill="currentColor" />
-              </button>
-            </Tooltip>
+            <button
+              disabled
+              className="w-8 h-8 flex items-center justify-center text-white/20 cursor-not-allowed transition-colors"
+              aria-label="Next track"
+            >
+              <SkipForward className="w-4 h-4" fill="currentColor" />
+            </button>
 
             {/* Loop */}
-            <Tooltip
-              content={!currentTrack ? "No track loaded" : isLooping ? "Loop enabled" : "Loop disabled"}
-              position="top"
-            >
+            <Tooltip content={isLooping ? "Loop" : "Loop"} position="top">
               <button
                 onClick={toggleLoop}
                 disabled={!currentTrack}
