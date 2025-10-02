@@ -1193,25 +1193,26 @@ export default function AudioPage() {
                       />
                     </div>
 
-                    {/* Play/Pause Button with Visualizer - visible on hover or when playing */}
-                    <div className="flex items-center gap-2 ml-6">
-                      {/* Visualizer Bars - only when playing */}
+                    {/* Play/Pause Button with Visualizer - show bars when playing, pause on hover */}
+                    <div className="flex items-center ml-6 w-[24px] justify-center">
+                      {/* Visualizer Bars - visible when playing and NOT hovering */}
                       {isCurrentlyPlaying && (
-                        <div className="flex items-center gap-0.5 h-4">
-                          <div className={`visualizer-bar ${isCurrentlyPlaying ? 'active' : ''}`} />
-                          <div className={`visualizer-bar ${isCurrentlyPlaying ? 'active' : ''}`} />
-                          <div className={`visualizer-bar ${isCurrentlyPlaying ? 'active' : ''}`} />
+                        <div className="flex items-center gap-0.5 h-4 group-hover:opacity-0 transition-opacity duration-200">
+                          <div className="visualizer-bar active" />
+                          <div className="visualizer-bar active" />
+                          <div className="visualizer-bar active" />
                         </div>
                       )}
 
+                      {/* Play/Pause Button - visible on hover or when not playing */}
                       <button
                         onClick={(e) => {
                           e.stopPropagation()
                           handlePlay(audioFile)
                         }}
-                        className={`w-4 h-4 text-white/50 hover:text-white transition-all flex-shrink-0 ${
+                        className={`absolute w-4 h-4 text-white/50 hover:text-white transition-all flex-shrink-0 ${
                           isCurrentlyPlaying
-                            ? 'opacity-100'
+                            ? 'opacity-0 group-hover:opacity-100'
                             : isSelected || selectedFileIds.size > 0
                             ? 'opacity-0'
                             : 'opacity-0 group-hover:opacity-100'
@@ -1219,7 +1220,7 @@ export default function AudioPage() {
                         title="Play/Pause"
                       >
                         {isCurrentlyPlaying ? (
-                          <Pause className={`w-4 h-4 fill-current ${isCurrentlyPlaying ? 'icon-playing-glow' : ''}`} />
+                          <Pause className="w-4 h-4 fill-current icon-playing-glow" />
                         ) : (
                           <Play className="w-4 h-4 fill-current" />
                         )}
