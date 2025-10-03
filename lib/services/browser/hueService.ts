@@ -18,8 +18,15 @@ export interface HueLight {
     sat?: number // 0-254
     ct?: number // Color temperature (153-500)
     xy?: [number, number] // CIE color space
+    colormode?: 'hs' | 'xy' | 'ct' // Current color mode
   }
   type: string
+  capabilities?: {
+    control?: {
+      colorgamut?: number[][]
+      ct?: { min: number; max: number }
+    }
+  }
 }
 
 export interface HueRoom {
@@ -187,6 +194,130 @@ class HueService {
     }
 
     await Promise.all(promises)
+  }
+
+  /**
+   * Create a new room/group
+   */
+  async createRoom(
+    bridgeIp: string,
+    username: string,
+    name: string,
+    lightIds: string[],
+    type: string = 'Room',
+    roomClass: string = 'Other'
+  ): Promise<string> {
+    const response = await fetch(`http://${bridgeIp}/api/${username}/groups`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name,
+        type,
+        class: roomClass,
+        lights: lightIds,
+      }),
+    })
+
+    const data = await response.json()
+    if (data[0]?.error) throw new Error(data[0].error.description)
+    if (data[0]?.success) return data[0].success.id
+
+    throw new Error('Failed to create room')
+  }
+
+  /**
+   * Rename a room/group
+   */
+  async renameRoom(
+    bridgeIp: string,
+    username: string,
+    groupId: string,
+    newName: string
+  ): Promise<void> {
+    const response = await fetch(
+      `http://${bridgeIp}/api/${username}/groups/${groupId}`,
+      {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: newName }),
+      }
+    )
+
+    if (!response.ok) throw new Error('Failed to rename room')
+  }
+
+  /**
+   * Delete a room/group
+   */
+  async deleteRoom(
+    bridgeIp: string,
+    username: string,
+    groupId: string
+  ): Promise<void> {
+    const response = await fetch(
+      `http://${bridgeIp}/api/${username}/groups/${groupId}`,
+      {
+        method: 'DELETE',
+      }
+    )
+
+    if (!response.ok) throw new Error('Failed to delete room')
+  }
+
+  /**
+   * Rename a light
+   */
+  async renameLight(
+    bridgeIp: string,
+    username: string,
+    lightId: string,
+    newName: string
+  ): Promise<void> {
+    const response = await fetch(
+      `http://${bridgeIp}/api/${username}/lights/${lightId}`,
+      {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: newName }),
+      }
+    )
+
+    if (!response.ok) throw new Error('Failed to rename light')
+  }
+
+  /**
+   * Add lights to a room/group
+   */
+  async addLightsToRoom(
+    bridgeIp: string,
+    username: string,
+    groupId: string,
+    lightIds: string[]
+  ): Promise<void> {
+    const response = await fetch(
+      `http://${bridgeIp}/api/${username}/groups/${groupId}`,
+      {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ lights: lightIds }),
+      }
+    )
+
+    if (!response.ok) throw new Error('Failed to add lights to room')
+  }
+
+  /**
+   * Check if a light supports RGB color
+   */
+  hasColorSupport(light: HueLight): boolean {
+    return !!(light.capabilities?.control?.colorgamut || light.state.xy || light.state.hue !== undefined)
+  }
+
+  /**
+   * Check if a light supports color temperature
+   */
+  hasColorTempSupport(light: HueLight): boolean {
+    return !!(light.capabilities?.control?.ct || light.state.ct !== undefined)
   }
 }
 

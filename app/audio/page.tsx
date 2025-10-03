@@ -113,10 +113,12 @@ export default function AudioPage() {
   // Set selected playlist from URL parameter
   useEffect(() => {
     const playlistId = searchParams.get('playlist')
-    if (playlistId && playlistId !== selectedPlaylistId) {
+    // Only update if URL parameter differs from current state
+    if (playlistId !== selectedPlaylistId) {
       setSelectedPlaylistId(playlistId)
     }
-  }, [searchParams, selectedPlaylistId])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams])
 
   // Scroll to track when track param is present
   useEffect(() => {

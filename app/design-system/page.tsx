@@ -171,6 +171,7 @@ export default function DesignSystemPage() {
               <li><a href="#context-menus" className="text-white/60 hover:text-white transition-colors">Context Menus</a></li>
               <li><a href="#tooltips" className="text-white/60 hover:text-white transition-colors">Tooltips</a></li>
               <li><a href="#empty-states" className="text-white/60 hover:text-white transition-colors">Empty States</a></li>
+              <li><a href="#sidebar-consistency" className="text-white/60 hover:text-white transition-colors">Sidebar Consistency</a></li>
               <li><a href="#layouts" className="text-white/60 hover:text-white transition-colors">Layouts</a></li>
               <li><a href="#playing-track-animation" className="text-white/60 hover:text-white transition-colors">Playing Track Animation</a></li>
               <li><a href="#audio-player-footer" className="text-white/60 hover:text-white transition-colors">Audio Player Footer</a></li>
@@ -1240,6 +1241,154 @@ useEffect(() => {
   description="Click + to create your first item"
   variant="simple"
 />`}
+              />
+            </div>
+          </Section>
+
+          {/* Sidebar Consistency */}
+          <Section title="Sidebar Consistency">
+            <div id="sidebar-consistency" className="space-y-6">
+              <Example title="Standardized Patterns" description="Critical consistency patterns for all sidebars (lights, playlists, scenes, sessions)">
+                <div className="space-y-4 text-[13px]">
+                  <div>
+                    <p className="text-white font-medium mb-2">List Item Typography (CRITICAL)</p>
+                    <ul className="space-y-1 text-white/60 text-[12px]">
+                      <li>• Primary text: <code className="text-purple-400">text-[13px] font-medium</code></li>
+                      <li>• Secondary text: <code className="text-purple-400">text-[11px] text-white/50</code></li>
+                      <li>• List item padding: <code className="text-purple-400">px-3 py-2</code></li>
+                      <li>• Selected state: <code className="text-purple-400">bg-white/10</code></li>
+                      <li>• Hover state: <code className="text-purple-400">hover:bg-white/5</code></li>
+                    </ul>
+                  </div>
+
+                  <div>
+                    <p className="text-white font-medium mb-2">Inline Edit Input (CRITICAL)</p>
+                    <p className="text-white/60 text-[12px] mb-1">Standard classes for all inline editing:</p>
+                    <code className="block bg-black/40 rounded px-2 py-1 text-[11px] text-purple-400">
+                      bg-white/[0.07] border border-white/10 rounded-[8px] px-3 py-1.5 text-[13px] text-white placeholder:text-white/40 focus:outline-none focus:border-white/20
+                    </code>
+                  </div>
+
+                  <div>
+                    <p className="text-white font-medium mb-2">Context Menu (CRITICAL)</p>
+                    <ul className="space-y-1 text-white/60 text-[12px]">
+                      <li>• Container: <code className="text-purple-400">bg-[#191919] border border-white/10 rounded-[8px] py-1</code></li>
+                      <li>• Item padding: <code className="text-purple-400">px-4 py-2</code> with <code className="text-purple-400">gap-2</code></li>
+                      <li>• Icon size: <code className="text-purple-400">w-3.5 h-3.5</code></li>
+                      <li>• Typography: <code className="text-purple-400">text-[13px]</code></li>
+                      <li>• Copy: Concise ("Rename", "Delete") - NO entity type suffixes</li>
+                      <li>• Divider: <code className="text-purple-400">h-px bg-white/10 my-1</code> before destructive actions</li>
+                      <li>• Delete hover: <code className="text-purple-400">hover:bg-red-500/10</code> with <code className="text-purple-400">text-red-400</code></li>
+                    </ul>
+                  </div>
+
+                  <div>
+                    <p className="text-white font-medium mb-2">Empty States</p>
+                    <ul className="space-y-1 text-white/60 text-[12px]">
+                      <li>• Pattern: "No [items] discovered..."</li>
+                      <li>• Typography: <code className="text-purple-400">text-[0.875rem] text-white/40</code></li>
+                      <li>• Examples: "No scenes discovered...\nCreate a scene to begin"</li>
+                    </ul>
+                  </div>
+
+                  <div>
+                    <p className="text-white font-medium mb-2">Action Button Tooltips</p>
+                    <ul className="space-y-1 text-white/60 text-[12px]">
+                      <li>• Plus button: <code className="text-purple-400">title="Create [entity]"</code> or with ellipsis for modals</li>
+                      <li>• Settings button: <code className="text-purple-400">title="Configure [system]"</code></li>
+                      <li>• Always include <code className="text-purple-400">aria-label</code> for accessibility</li>
+                    </ul>
+                  </div>
+                </div>
+              </Example>
+
+              <Example title="Visual Comparison" description="Context menu before and after standardization">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <p className="text-[12px] text-red-400 font-medium">❌ Before (Inconsistent)</p>
+                    <div className="bg-[#222222] border border-white/20 rounded-[12px] py-2 p-2">
+                      <div className="px-4 py-3 text-sm flex items-center gap-3">
+                        <Edit2 className="w-4 h-4" />
+                        <span>Rename room</span>
+                      </div>
+                      <div className="px-4 py-3 text-sm flex items-center gap-3 text-red-400">
+                        <Trash2 className="w-4 h-4" />
+                        <span>Delete room</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <p className="text-[12px] text-green-400 font-medium">✅ After (Standardized)</p>
+                    <div className="bg-[#191919] border border-white/10 rounded-[8px] py-1 p-2">
+                      <div className="px-4 py-2 text-[13px] flex items-center gap-2 hover:bg-white/5 transition-colors">
+                        <Edit2 className="w-3.5 h-3.5 text-white/70" />
+                        <span className="text-white">Rename</span>
+                      </div>
+                      <div className="h-px bg-white/10 my-1" />
+                      <div className="px-4 py-2 text-[13px] flex items-center gap-2 hover:bg-red-500/10 transition-colors">
+                        <Trash2 className="w-3.5 h-3.5 text-red-400" />
+                        <span className="text-red-400">Delete</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </Example>
+
+              <CodeBlock
+                id="sidebar-consistency"
+                code={`// HueContextMenu.tsx - Standardized Pattern
+interface HueContextMenuProps {
+  entityName: string
+  onDelete?: () => Promise<void>
+  triggerButton: React.ReactNode
+  onStartEdit?: () => void
+}
+
+{isOpen && (
+  <div className="absolute right-0 top-full mt-1 min-w-[140px] bg-[#191919] border border-white/10 rounded-[8px] py-1 shadow-lg z-50 overflow-hidden">
+    <button
+      onClick={handleStartRename}
+      className="w-full flex items-center gap-2 px-4 py-2 hover:bg-white/5 transition-colors text-left"
+    >
+      <Edit2 className="w-3.5 h-3.5 text-white/70" />
+      <span className="text-[13px] text-white">Rename</span>
+    </button>
+
+    {onDelete && (
+      <>
+        <div className="h-px bg-white/10 my-1" />
+        <button
+          onClick={handleDelete}
+          className="w-full flex items-center gap-2 px-4 py-2 hover:bg-red-500/10 transition-colors text-left"
+        >
+          <Trash2 className="w-3.5 h-3.5 text-red-400" />
+          <span className="text-[13px] text-red-400">Delete</span>
+        </button>
+      </>
+    )}
+  </div>
+)}
+
+// Inline edit input - Standardized
+<input
+  type="text"
+  value={editingName}
+  onChange={(e) => setEditingName(e.target.value)}
+  onKeyDown={(e) => {
+    if (e.key === 'Enter') handleSave()
+    if (e.key === 'Escape') handleCancel()
+  }}
+  onBlur={handleSave}
+  className="w-full px-3 py-1.5 bg-white/[0.07] border border-white/10 rounded-[8px] text-[13px] text-white focus:outline-none focus:border-white/20"
+  autoFocus
+/>
+
+// List item - Standardized
+<button className="w-full text-left px-3 py-2 rounded-[8px] transition-colors bg-white/10 text-white">
+  <div className="font-medium text-[13px]">{item.name}</div>
+  <div className="text-[11px] text-white/50 mt-0.5">{item.subtitle}</div>
+</button>`}
               />
             </div>
           </Section>

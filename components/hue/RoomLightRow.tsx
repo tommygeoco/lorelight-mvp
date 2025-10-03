@@ -2,19 +2,18 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { flushSync } from 'react-dom'
-import { Lightbulb, Power, Palette, MoreVertical } from 'lucide-react'
+import { Power, Palette } from 'lucide-react'
 import { useHueStore } from '@/store/hueStore'
 import { ColorPickerModal } from './ColorPickerModal'
-import { HueContextMenu } from './HueContextMenu'
 import { hueService } from '@/lib/services/browser/hueService'
 import type { HueLight } from '@/lib/services/browser/hueService'
 
-interface LightCardProps {
+interface RoomLightRowProps {
   light: HueLight
 }
 
-export function LightCard({ light }: LightCardProps) {
-  const { applyLightConfig, fetchLightsAndRooms, renameLight } = useHueStore()
+export function RoomLightRow({ light }: RoomLightRowProps) {
+  const { applyLightConfig, fetchLightsAndRooms } = useHueStore()
 
   // Optimistic local state
   const [localOn, setLocalOn] = useState(light.state.on)
@@ -53,7 +52,6 @@ export function LightCard({ light }: LightCardProps) {
       await promise
 
       // CRITICAL: Immediately fetch actual state after power toggle
-      // Hue lights restore to their saved state, which may differ from UI
       await fetchLightsAndRooms()
     } catch {
       // Revert on error
@@ -155,21 +153,14 @@ export function LightCard({ light }: LightCardProps) {
 
   return (
     <>
-      <div className="bg-[var(--card-surface)] border border-white/10 rounded-[8px] p-4 hover:border-white/20 transition-colors">
-        {/* Header */}
-        <div className="flex items-start justify-between mb-4">
-          <div className="flex items-center gap-3">
-            <div className={`w-10 h-10 rounded-[8px] flex items-center justify-center transition-colors ${
-              localOn ? 'bg-yellow-500/20' : 'bg-white/5'
-            }`}>
-              <Lightbulb className={`w-5 h-5 transition-colors ${
-                localOn ? 'text-yellow-400' : 'text-white/40'
-              }`} />
-            </div>
-            <div>
-              <h3 className="font-semibold text-white">{light.name}</h3>
-              <p className="text-xs text-white/50">{light.type}</p>
-            </div>
+      <div className="bg-white/[0.03] border border-white/5 rounded-[8px] p-3">
+        {/* Header with light name and controls */}
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-2">
+            <div className={`w-2 h-2 rounded-full ${
+              localOn ? 'bg-yellow-400' : 'bg-white/20'
+            }`} />
+            <span className="text-sm text-white/70">{light.name}</span>
           </div>
 
           <div className="flex items-center gap-2">
@@ -177,87 +168,74 @@ export function LightCard({ light }: LightCardProps) {
             {hueService.hasColorSupport(light) && (
               <button
                 onClick={() => setIsColorPickerOpen(true)}
-                className={`w-8 h-8 rounded-[8px] flex items-center justify-center transition-colors ${
+                className={`w-6 h-6 rounded-[6px] flex items-center justify-center transition-colors ${
                   localOn
                     ? 'bg-white/10 hover:bg-white/20 text-white'
                     : 'bg-white/5 hover:bg-white/10 text-white/40'
                 }`}
                 aria-label="Change color"
               >
-                <Palette className="w-4 h-4" />
+                <Palette className="w-3 h-3" />
               </button>
             )}
 
             <button
               onClick={handleTogglePower}
-              className={`w-8 h-8 rounded-[8px] flex items-center justify-center transition-colors ${
+              className={`w-6 h-6 rounded-[6px] flex items-center justify-center transition-colors ${
                 localOn
                   ? 'bg-white/10 hover:bg-white/20 text-white'
                   : 'bg-white/5 hover:bg-white/10 text-white/40'
               }`}
               aria-label={localOn ? 'Turn off' : 'Turn on'}
             >
-              <Power className="w-4 h-4" />
+              <Power className="w-3 h-3" />
             </button>
+          </div>
+        </div>
 
-            <HueContextMenu
-              entityName={light.name}
-              entityType="light"
-              onRename={async (newName) => {
-                await renameLight(light.id, newName)
+        {/* Brightness Slider */}
+        {localOn && (
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-white/40">Brightness</span>
+              <span className="text-white/60 font-medium">{brightnessPercent}%</span>
+            </div>
+            <input
+              ref={sliderRef}
+              type="range"
+              min="1"
+              max="254"
+              value={localBrightness}
+              onInput={handleBrightnessInput}
+              onMouseDown={handleMouseDown}
+              onMouseUp={handleMouseUp}
+              onTouchStart={handleMouseDown}
+              onTouchEnd={handleMouseUp}
+              className="w-full h-1.5 bg-white/10 rounded-full appearance-none cursor-pointer slider"
+              style={{
+                touchAction: 'none',
+                pointerEvents: 'auto'
               }}
-              triggerButton={
-                <button className="w-8 h-8 rounded-[8px] flex items-center justify-center hover:bg-white/10 transition-colors">
-                  <MoreVertical className="w-4 h-4 text-white/70" />
-                </button>
-              }
             />
           </div>
-        </div>
+        )}
 
-      {/* Brightness Slider */}
-      {localOn && (
-        <div className="space-y-2">
-          <div className="flex items-center justify-between text-xs">
-            <span className="text-white/50">Brightness</span>
-            <span className="text-white font-medium">{brightnessPercent}%</span>
+        {/* Status when off */}
+        {!localOn && (
+          <div className="text-xs text-white/30">
+            Off
           </div>
-          <input
-            ref={sliderRef}
-            type="range"
-            min="1"
-            max="254"
-            value={localBrightness}
-            onInput={handleBrightnessInput}
-            onMouseDown={handleMouseDown}
-            onMouseUp={handleMouseUp}
-            onTouchStart={handleMouseDown}
-            onTouchEnd={handleMouseUp}
-            className="w-full h-2 bg-white/10 rounded-full appearance-none cursor-pointer slider"
-            style={{
-              touchAction: 'none',
-              pointerEvents: 'auto'
-            }}
-          />
-        </div>
-      )}
+        )}
+      </div>
 
-      {/* Status */}
-      {!localOn && (
-        <div className="text-xs text-white/40">
-          Off
-        </div>
-      )}
-    </div>
-
-    <ColorPickerModal
-      open={isColorPickerOpen}
-      onOpenChange={setIsColorPickerOpen}
-      entityName={light.name}
-      initialBrightness={localBrightness}
-      hasColorSupport={hueService.hasColorSupport(light)}
-      onApply={handleColorApply}
-    />
+      <ColorPickerModal
+        open={isColorPickerOpen}
+        onOpenChange={setIsColorPickerOpen}
+        entityName={light.name}
+        initialBrightness={localBrightness}
+        hasColorSupport={hueService.hasColorSupport(light)}
+        onApply={handleColorApply}
+      />
     </>
   )
 }

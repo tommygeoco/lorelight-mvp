@@ -191,6 +191,7 @@ export function PlaylistsSidebar({
           onClick={() => setIsCreatingNew(true)}
           className="w-8 h-8 rounded-[8px] hover:bg-white/5 flex items-center justify-center transition-colors"
           aria-label="New Playlist"
+          title="Create playlist"
         >
           <Plus className="w-[18px] h-[18px] text-white/70" />
         </button>
@@ -206,17 +207,17 @@ export function PlaylistsSidebar({
       <ul role="list" className="space-y-2">
         {/* All Files */}
         <li>
-          <div
+          <button
             onClick={() => onSelectPlaylist(null)}
-            className={`flex items-center gap-2 px-3 py-2 rounded-[8px] text-sm transition-colors cursor-pointer ${
+            className={`w-full flex items-center gap-2 px-3 py-2 rounded-[8px] transition-colors text-left ${
               selectedPlaylistId === null
                 ? 'bg-white/10 text-white'
                 : 'text-white/60 hover:text-white hover:bg-white/5'
             }`}
           >
             <Music className="w-4 h-4 flex-shrink-0" />
-            <span className="truncate">All Files</span>
-          </div>
+            <span className="truncate text-[13px] font-medium">All Files</span>
+          </button>
         </li>
 
         {/* New Playlist Input */}
@@ -250,7 +251,7 @@ export function PlaylistsSidebar({
                     }
                   }}
                   placeholder="Playlist name..."
-                  className="flex-1 px-2 py-1 bg-white/10 border border-white/20 rounded text-[13px] text-white placeholder:text-white/40 focus:outline-none focus:border-white/40"
+                  className="flex-1 px-3 py-1.5 bg-white/[0.07] border border-white/10 rounded-[8px] text-[13px] text-white placeholder:text-white/40 focus:outline-none focus:border-white/20"
                 />
               </div>
             </form>
@@ -261,7 +262,7 @@ export function PlaylistsSidebar({
         {playlists.length === 0 && !isCreatingNew ? (
           <li>
             <div className="text-center py-8">
-              <p className="text-white/40 text-[0.875rem]">Your collection awaits...<br />Forge a playlist to begin</p>
+              <p className="text-white/40 text-[0.875rem]">No playlists discovered...<br />Create a playlist to begin</p>
             </div>
           </li>
         ) : (
@@ -304,7 +305,7 @@ export function PlaylistsSidebar({
                           }
                         }}
                         autoFocus
-                        className="flex-1 px-2 py-1 bg-white/10 border border-white/20 rounded text-[13px] text-white focus:outline-none focus:border-white/40"
+                        className="flex-1 px-3 py-1.5 bg-white/[0.07] border border-white/10 rounded-[8px] text-[13px] text-white focus:outline-none focus:border-white/20"
                       />
                     </form>
                   ) : (

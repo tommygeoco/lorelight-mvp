@@ -225,6 +225,44 @@ All tables have Row Level Security (RLS) enforcing user isolation.
 - Arcane drop zone for drag-and-drop uploads
 - Fixed tag menu overflow issues
 
+### Sidebar Consistency Overhaul ✅
+**Context Menu Standardization:**
+- All context menus now use identical styling: `bg-[#191919] border border-white/10 rounded-[8px]`
+- Item padding: `px-4 py-2` with `gap-2`
+- Icons: `w-3.5 h-3.5` (standardized across all menus)
+- Typography: `text-[13px]` for all menu items
+- Copy: Concise labels ("Rename", "Delete") - removed entity type suffixes
+- Dividers: `h-px bg-white/10 my-1` between destructive actions
+- Delete hover: `hover:bg-red-500/10` with `text-red-400`
+
+**List Item Typography:**
+- Primary text: `text-[13px] font-medium`
+- Secondary text: `text-[11px] text-white/50`
+- Item padding: `px-3 py-2` consistently
+- Selected state: `bg-white/10`
+- Hover state: `hover:bg-white/5`
+
+**Inline Edit Inputs:**
+- Standard classes: `bg-white/[0.07] border border-white/10 rounded-[8px] px-3 py-1.5 text-[13px]`
+- Focus state: `focus:outline-none focus:border-white/20`
+- Used for: Creating playlists, renaming rooms/lights, all inline editing
+
+**Empty States:**
+- Pattern: "No [items] discovered..." with contextual call-to-action
+- Typography: `text-[0.875rem] text-white/40`
+- Examples: "No scenes discovered...\nCreate a scene to begin"
+
+**Action Button Tooltips:**
+- Plus button: `title="Create [entity]"` or `title="Create [entity]..."` (ellipsis for modals)
+- Settings button: `title="Configure [system]"`
+- Consistent positioning with `aria-label` for accessibility
+
+**Components Updated:**
+- `HueContextMenu.tsx` - Complete overhaul to match playlists pattern
+- `PlaylistsSidebar.tsx` - Typography and input standardization
+- `SessionSceneView.tsx` - Empty state and tooltip fixes
+- `app/lights/page.tsx` - Typography consistency across room/light lists
+
 ## Migration Status
 
 ### Phase 3 Complete: Zustand Stores ✅

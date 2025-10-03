@@ -135,6 +135,11 @@ a,
 input[type="range"].slider {
   -webkit-appearance: none;
   appearance: none;
+  will-change: transform;
+  /* Enable hardware acceleration */
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
 }
 
 input[type="range"].slider::-webkit-slider-thumb {
@@ -146,6 +151,12 @@ input[type="range"].slider::-webkit-slider-thumb {
   background: white;
   cursor: pointer;
   border: 2px solid rgba(255, 255, 255, 0.2);
+  /* Optimize thumb movement */
+  will-change: transform;
+  transform: translateZ(0);
+  transition: transform 0.1s cubic-bezier(0.4, 0, 0.2, 1),
+              background 0.1s ease,
+              border-color 0.1s ease;
 }
 
 input[type="range"].slider::-moz-range-thumb {
@@ -155,16 +166,30 @@ input[type="range"].slider::-moz-range-thumb {
   background: white;
   cursor: pointer;
   border: 2px solid rgba(255, 255, 255, 0.2);
+  will-change: transform;
+  transition: transform 0.1s cubic-bezier(0.4, 0, 0.2, 1),
+              background 0.1s ease,
+              border-color 0.1s ease;
 }
 
 input[type="range"].slider::-webkit-slider-thumb:hover {
   background: rgba(255, 255, 255, 0.9);
   border-color: rgba(255, 255, 255, 0.4);
+  transform: scale(1.1) translateZ(0);
 }
 
 input[type="range"].slider::-moz-range-thumb:hover {
   background: rgba(255, 255, 255, 0.9);
   border-color: rgba(255, 255, 255, 0.4);
+  transform: scale(1.1);
+}
+
+input[type="range"].slider::-webkit-slider-thumb:active {
+  transform: scale(1.15) translateZ(0);
+}
+
+input[type="range"].slider::-moz-range-thumb:active {
+  transform: scale(1.15);
 }
 
 /* Checkbox styling - Purple accent when checked */

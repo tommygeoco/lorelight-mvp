@@ -263,6 +263,7 @@ export function SessionSceneView({ campaignId, sessionId }: SessionSceneViewProp
           }}
           className="w-8 h-8 rounded-[8px] hover:bg-white/5 flex items-center justify-center transition-colors"
           aria-label="Add new scene"
+          title="Create scene..."
         >
           <Plus className="w-[18px] h-[18px] text-white/70" />
         </button>
@@ -275,7 +276,7 @@ export function SessionSceneView({ campaignId, sessionId }: SessionSceneViewProp
       >
         {sortedScenes.length === 0 ? (
           <div className="text-center py-8">
-            <p className="text-white/40 text-[0.875rem]">The stage is dark and empty...<br />Create a scene to begin</p>
+            <p className="text-white/40 text-[0.875rem]">No scenes discovered...<br />Create a scene to begin</p>
           </div>
         ) : (
           <ul role="list" className="space-y-2">

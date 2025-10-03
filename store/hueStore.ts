@@ -20,9 +20,13 @@ interface HueState {
   disconnectBridge: () => void
   fetchLightsAndRooms: () => Promise<void>
   applyLightConfig: (config: {
-    lights?: Record<string, { on?: boolean; bri?: number; hue?: number; sat?: number; ct?: number; transitiontime?: number }>
-    groups?: Record<string, { on?: boolean; bri?: number; hue?: number; sat?: number; ct?: number; transitiontime?: number }>
+    lights?: Record<string, { on?: boolean; bri?: number; hue?: number; sat?: number; ct?: number; xy?: [number, number]; transitiontime?: number }>
+    groups?: Record<string, { on?: boolean; bri?: number; hue?: number; sat?: number; ct?: number; xy?: [number, number]; transitiontime?: number }>
   }) => Promise<void>
+  createRoom: (name: string, lightIds: string[], roomClass?: string) => Promise<string>
+  renameRoom: (groupId: string, newName: string) => Promise<void>
+  deleteRoom: (groupId: string) => Promise<void>
+  renameLight: (lightId: string, newName: string) => Promise<void>
 }
 
 /**
@@ -118,6 +122,67 @@ export const useHueStore = create<HueState>()(
           await hueService.applyLightConfig(bridgeIp, username, config)
         } catch (error) {
           logger.error('Failed to apply light config', error)
+          throw error
+        }
+      },
+
+      createRoom: async (name, lightIds, roomClass = 'Other') => {
+        const { bridgeIp, username } = get()
+        if (!bridgeIp || !username) {
+          throw new Error('Bridge not connected')
+        }
+
+        try {
+          const id = await hueService.createRoom(bridgeIp, username, name, lightIds, 'Room', roomClass)
+          await get().fetchLightsAndRooms()
+          return id
+        } catch (error) {
+          logger.error('Failed to create room', error)
+          throw error
+        }
+      },
+
+      renameRoom: async (groupId, newName) => {
+        const { bridgeIp, username } = get()
+        if (!bridgeIp || !username) {
+          throw new Error('Bridge not connected')
+        }
+
+        try {
+          await hueService.renameRoom(bridgeIp, username, groupId, newName)
+          await get().fetchLightsAndRooms()
+        } catch (error) {
+          logger.error('Failed to rename room', error)
+          throw error
+        }
+      },
+
+      deleteRoom: async (groupId) => {
+        const { bridgeIp, username } = get()
+        if (!bridgeIp || !username) {
+          throw new Error('Bridge not connected')
+        }
+
+        try {
+          await hueService.deleteRoom(bridgeIp, username, groupId)
+          await get().fetchLightsAndRooms()
+        } catch (error) {
+          logger.error('Failed to delete room', error)
+          throw error
+        }
+      },
+
+      renameLight: async (lightId, newName) => {
+        const { bridgeIp, username } = get()
+        if (!bridgeIp || !username) {
+          throw new Error('Bridge not connected')
+        }
+
+        try {
+          await hueService.renameLight(bridgeIp, username, lightId, newName)
+          await get().fetchLightsAndRooms()
+        } catch (error) {
+          logger.error('Failed to rename light', error)
           throw error
         }
       },

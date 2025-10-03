@@ -1266,6 +1266,31 @@ useEffect(() => {
 - Header: `px-6 py-4 border-b border-white/10` with h2 title + icon button
 - Scrollable area: `flex-1 overflow-y-auto scrollbar-custom px-6 py-4`
 
+**List Item Typography (CRITICAL - MUST MATCH):**
+- **Primary Text**: `text-[13px] font-medium text-white` (selected) / `text-white/70` (default)
+- **Secondary Text**: `text-[11px] text-white/50`
+- **List Item Padding**: `px-3 py-2`
+- **Selected State**: `bg-white/10`
+- **Hover State**: `hover:bg-white/5`
+
+**Inline Edit Input (CRITICAL - MUST MATCH):**
+- **Classes**: `bg-white/[0.07] border border-white/10 rounded-[8px] px-3 py-1.5 text-[13px] text-white placeholder:text-white/40 focus:outline-none focus:border-white/20`
+- Used for: Creating playlists, renaming rooms/lights, any inline text input
+- **Never use**: `bg-white/10` or `border-white/20` (too bright)
+
+**Context Menu (CRITICAL - MUST MATCH):**
+- **Container**: `bg-[#191919] border border-white/10 rounded-[8px] py-1 shadow-lg z-50 min-w-[140px]`
+- **Item**: `px-4 py-2 text-[13px] gap-2`
+- **Icon**: `w-3.5 h-3.5`
+- **Copy**: Concise ("Rename", "Delete") - NO entity type suffix
+- **Divider**: `<div className="h-px bg-white/10 my-1" />` between items
+- **Delete Hover**: `hover:bg-red-500/10` with `text-red-400`
+
+**Action Button Tooltips:**
+- Settings icon: `title="Configure [feature]"`
+- Plus (inline): `title="Create [item]"`
+- Plus (modal): `title="Create [item]..."` (ellipsis indicates complex form)
+
 **Creation Patterns:**
 - **Inline Creation** (for simple items like playlists): Click Plus → inline input appears in list → Enter to save, Escape to cancel
 - **Modal Creation** (for complex items like scenes): Click Plus → modal opens with full form
@@ -1274,7 +1299,8 @@ useEffect(() => {
 - Font size: `text-[0.875rem]` (14px) - compact for sidebar
 - Color: `text-white/40` - single color, no opacity variation
 - Line breaks: Use `<br />` not separate `<p>` tags
-- Example: `<p className="text-white/40 text-[0.875rem]">The stage is dark and empty...<br />Create a scene to begin</p>`
+- Pattern: "No [items] discovered..." for consistency
+- Example: `<p className="text-white/40 text-[0.875rem]">No playlists discovered...<br />Create a playlist to begin</p>`
 
 ```tsx
 <div className="w-[320px] h-full bg-[#191919] rounded-[8px] flex flex-col">
