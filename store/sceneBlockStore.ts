@@ -70,10 +70,15 @@ export const useSceneBlockStore = create<SceneBlockState>()(
             })
             return newBlock
           } catch (error) {
-            set({
-              error: error instanceof Error ? error.message : 'Failed to create block',
-            })
-            throw error
+            const errorMessage = error instanceof Error
+              ? error.message
+              : typeof error === 'object' && error !== null && 'message' in error
+              ? String((error as { message: unknown }).message)
+              : 'Failed to create block'
+
+            console.error('Failed to create block:', errorMessage, error)
+            set({ error: errorMessage })
+            throw new Error(errorMessage)
           }
         },
 

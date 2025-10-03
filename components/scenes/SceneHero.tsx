@@ -6,7 +6,6 @@ import type { Scene } from '@/types'
 import { InlineEditor } from '@/components/ui/InlineEditor'
 import { useSceneStore } from '@/store/sceneStore'
 import { useSessionSceneStore } from '@/store/sessionSceneStore'
-import { useToastStore } from '@/store/toastStore'
 
 interface SceneHeroProps {
   scene: Scene
@@ -20,11 +19,9 @@ interface SceneHeroProps {
 export function SceneHero({ scene, sessionId }: SceneHeroProps) {
   const [isEditingTitle, setIsEditingTitle] = useState(false)
   const [isEditingDesc, setIsEditingDesc] = useState(false)
-  const [isActivating, setIsActivating] = useState(false)
   const updateScene = useSceneStore((state) => state.updateScene)
   const activateScene = useSceneStore((state) => state.activateScene)
   const deactivateScene = useSceneStore((state) => state.deactivateScene)
-  const { addToast } = useToastStore()
 
   const updateSessionScene = (updates: Partial<Scene>) => {
     if (!sessionId) return
@@ -65,59 +62,45 @@ export function SceneHero({ scene, sessionId }: SceneHeroProps) {
     }
   }
 
-  const handlePlayPause = async () => {
-    if (isActivating) return
+  const handlePlayPause = () => {
+    if (scene.is_active) {
+      // Optimistic UI update - deactivate
+      if (sessionId) {
+        const state = useSessionSceneStore.getState()
+        const currentScenes = state.sessionScenes.get(sessionId) || []
+        const updatedScenes = currentScenes.map(s => ({
+          ...s,
+          is_active: s.id === scene.id ? false : s.is_active,
+          updated_at: new Date().toISOString()
+        }))
 
-    setIsActivating(true)
-    try {
-      if (scene.is_active) {
-        // Deactivate scene
-        await deactivateScene(scene.id)
-
-        // Update sessionSceneStore: set this scene as inactive
-        if (sessionId) {
-          const state = useSessionSceneStore.getState()
-          const currentScenes = state.sessionScenes.get(sessionId) || []
-          const updatedScenes = currentScenes.map(s => ({
-            ...s,
-            is_active: s.id === scene.id ? false : s.is_active,
-            updated_at: new Date().toISOString()
-          }))
-
-          useSessionSceneStore.setState((state) => ({
-            ...state,
-            sessionScenes: new Map(state.sessionScenes).set(sessionId, updatedScenes)
-          }))
-        }
-
-        addToast(`Deactivated "${scene.name}"`, 'success')
-      } else {
-        // Activate scene
-        await activateScene(scene.id)
-
-        // Update sessionSceneStore: deactivate all scenes, then activate this one
-        if (sessionId) {
-          const state = useSessionSceneStore.getState()
-          const currentScenes = state.sessionScenes.get(sessionId) || []
-          const updatedScenes = currentScenes.map(s => ({
-            ...s,
-            is_active: s.id === scene.id,
-            updated_at: new Date().toISOString()
-          }))
-
-          useSessionSceneStore.setState((state) => ({
-            ...state,
-            sessionScenes: new Map(state.sessionScenes).set(sessionId, updatedScenes)
-          }))
-        }
-
-        addToast(`Activated "${scene.name}"`, 'success')
+        useSessionSceneStore.setState((state) => ({
+          ...state,
+          sessionScenes: new Map(state.sessionScenes).set(sessionId, updatedScenes)
+        }))
       }
-    } catch (error) {
-      console.error('Failed to toggle scene:', error)
-      addToast(`Failed to ${scene.is_active ? 'deactivate' : 'activate'} scene`, 'error')
-    } finally {
-      setIsActivating(false)
+
+      // Fire and forget - don't await
+      deactivateScene(scene.id).catch(console.error)
+    } else {
+      // Optimistic UI update - activate this, deactivate all others
+      if (sessionId) {
+        const state = useSessionSceneStore.getState()
+        const currentScenes = state.sessionScenes.get(sessionId) || []
+        const updatedScenes = currentScenes.map(s => ({
+          ...s,
+          is_active: s.id === scene.id,
+          updated_at: new Date().toISOString()
+        }))
+
+        useSessionSceneStore.setState((state) => ({
+          ...state,
+          sessionScenes: new Map(state.sessionScenes).set(sessionId, updatedScenes)
+        }))
+      }
+
+      // Fire and forget - don't await
+      activateScene(scene.id).catch(console.error)
     }
   }
 
@@ -200,12 +183,11 @@ export function SceneHero({ scene, sessionId }: SceneHeroProps) {
         <div className="mt-[24px]">
           <button
             onClick={handlePlayPause}
-            disabled={isActivating}
             className={`flex items-center gap-2 px-[16px] py-[10px] rounded-[8px] font-['Inter'] text-[14px] font-medium transition-colors ${
               scene.is_active
                 ? 'bg-white/10 text-white hover:bg-white/15'
                 : 'bg-white/5 text-white/70 hover:bg-white/10 hover:text-white'
-            } disabled:opacity-50 disabled:cursor-not-allowed`}
+            }`}
           >
             {scene.is_active ? (
               <>

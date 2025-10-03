@@ -27,12 +27,17 @@ export function SceneNotesSection({ scene }: SceneNotesSectionProps) {
   }, [blocksMap, scene.id])
 
   const handleAddBlock = async () => {
-    await addBlock({
-      scene_id: scene.id,
-      type: 'text',
-      content: { text: { text: '', formatting: [] } },
-      order_index: blocks.length,
-    })
+    try {
+      await addBlock({
+        scene_id: scene.id,
+        type: 'text',
+        content: { text: { text: '', formatting: [] } },
+        order_index: blocks.length,
+      })
+    } catch (error) {
+      console.error('Failed to add block:', error)
+      // Silently fail - migration 015 may not be applied yet
+    }
   }
 
   return (
