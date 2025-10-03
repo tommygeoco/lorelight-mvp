@@ -16,9 +16,9 @@ interface SceneBlockState {
 
   actions: {
     fetchBlocksForScene: (sceneId: string) => Promise<void>
-    create: (block: Omit<SceneBlockInsert, 'user_id'>) => Promise<SceneBlock>
-    update: (id: string, updates: SceneBlockUpdate) => Promise<void>
-    delete: (id: string) => Promise<void>
+    addBlock: (block: Omit<SceneBlockInsert, 'user_id'>) => Promise<SceneBlock>
+    updateBlock: (id: string, updates: SceneBlockUpdate) => Promise<void>
+    deleteBlock: (id: string) => Promise<void>
     reorder: (sceneId: string, blockIds: string[]) => Promise<void>
     setBlocks: (sceneId: string, blocks: SceneBlock[]) => void
     clearError: () => void
@@ -62,7 +62,7 @@ export const useSceneBlockStore = create<SceneBlockState>()(
           }
         },
 
-        create: async (blockData: Omit<SceneBlockInsert, 'user_id'>) => {
+        addBlock: async (blockData: Omit<SceneBlockInsert, 'user_id'>) => {
           try {
             const newBlock = await sceneBlockService.create(blockData as SceneBlockInsert)
             set(state => {
@@ -77,7 +77,7 @@ export const useSceneBlockStore = create<SceneBlockState>()(
           }
         },
 
-        update: async (id, updates) => {
+        updateBlock: async (id, updates) => {
           // Optimistic update
           const original = get().blocks.get(id)
           if (original) {
@@ -108,7 +108,7 @@ export const useSceneBlockStore = create<SceneBlockState>()(
           }
         },
 
-        delete: async (id) => {
+        deleteBlock: async (id) => {
           // Optimistic delete
           const original = get().blocks.get(id)
           set(state => {

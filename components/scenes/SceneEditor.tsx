@@ -4,6 +4,7 @@ import { useEffect, useMemo } from 'react'
 import type { Scene } from '@/types'
 import { SceneHero } from './SceneHero'
 import { SceneAmbienceSection } from './SceneAmbienceSection'
+import { SceneNotesSection } from './SceneNotesSection'
 import { useSceneBlockStore } from '@/store/sceneBlockStore'
 import { useSceneNPCStore } from '@/store/sceneNPCStore'
 import { useAudioFileStore } from '@/store/audioFileStore'
@@ -22,15 +23,6 @@ export function SceneEditor({ scene, campaignId, sessionId }: SceneEditorProps) 
   const fetchBlocks = useSceneBlockStore((state) => state.actions.fetchBlocksForScene)
   const fetchNPCs = useSceneNPCStore((state) => state.actions.fetchNPCsForScene)
   const fetchAudioFiles = useAudioFileStore((state) => state.fetchAudioFiles)
-
-  const blocksMap = useSceneBlockStore((state) => state.blocks)
-  const blocks = useMemo(() => {
-    // Defensive check: ensure blocksMap is a Map
-    const map = blocksMap instanceof Map ? blocksMap : new Map()
-    return Array.from(map.values())
-      .filter(b => b.scene_id === scene.id)
-      .sort((a, b) => a.order_index - b.order_index)
-  }, [blocksMap, scene.id])
 
   const npcsMap = useSceneNPCStore((state) => state.npcs)
   const npcs = useMemo(() => {
@@ -63,22 +55,8 @@ export function SceneEditor({ scene, campaignId, sessionId }: SceneEditorProps) 
         {/* Ambience section (audio + lights) */}
         <SceneAmbienceSection scene={scene} campaignId={campaignId} sessionId={sessionId} />
 
-        {/* Notes section - Coming in Phase 4 */}
-        <div className="w-full">
-          <div className="pb-0 pt-[24px]">
-            <h2 className="font-['Inter'] text-[16px] font-semibold leading-[24px] text-white">
-              Notes
-            </h2>
-          </div>
-          <div className="px-0 py-[24px]">
-            <div className="text-center py-8">
-              <p className="text-white/40 text-[14px]">
-                Rich text editing coming soon...<br />
-                {blocks.length} block{blocks.length !== 1 ? 's' : ''} loaded
-              </p>
-            </div>
-          </div>
-        </div>
+        {/* Notes section */}
+        <SceneNotesSection scene={scene} />
 
         {/* NPCs section - Coming in Phase 6 */}
         <div className="w-full">
