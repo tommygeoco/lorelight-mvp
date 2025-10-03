@@ -124,11 +124,42 @@ export const useAudioStore = create<AudioPlayerState>()(
       },
 
       pause: () => {
-        const { audioElement } = get()
+        const { audioElement, sourceContext } = get()
         if (audioElement) {
           audioElement.pause()
         }
         set({ isPlaying: false })
+
+        // Deactivate scene if audio was from a scene
+        if (sourceContext?.type === 'scene' && sourceContext.id) {
+          const sceneId = sourceContext.id
+
+          // Update database - fire and forget
+          import('@/store/sceneStore').then(({ useSceneStore }) => {
+            useSceneStore.getState().deactivateScene(sceneId).catch(console.error)
+          })
+
+          // Update sessionSceneStore UI - all sessions with this scene
+          import('@/store/sessionSceneStore').then(({ useSessionSceneStore }) => {
+            const state = useSessionSceneStore.getState()
+            const updatedSessionScenes = new Map(state.sessionScenes)
+
+            // Find all sessions containing this scene and deactivate it
+            updatedSessionScenes.forEach((scenes, sessionId) => {
+              const sceneIndex = scenes.findIndex(s => s.id === sceneId)
+              if (sceneIndex !== -1) {
+                const updatedScenes = scenes.map(s =>
+                  s.id === sceneId
+                    ? { ...s, is_active: false, updated_at: new Date().toISOString() }
+                    : s
+                )
+                updatedSessionScenes.set(sessionId, updatedScenes)
+              }
+            })
+
+            useSessionSceneStore.setState({ sessionScenes: updatedSessionScenes })
+          })
+        }
       },
 
       togglePlay: () => {
@@ -141,7 +172,7 @@ export const useAudioStore = create<AudioPlayerState>()(
       },
 
       stop: () => {
-        const { audioElement } = get()
+        const { audioElement, sourceContext } = get()
         if (audioElement) {
           audioElement.pause()
           audioElement.currentTime = 0
@@ -150,6 +181,37 @@ export const useAudioStore = create<AudioPlayerState>()(
           isPlaying: false,
           currentTime: 0,
         })
+
+        // Deactivate scene if audio was from a scene
+        if (sourceContext?.type === 'scene' && sourceContext.id) {
+          const sceneId = sourceContext.id
+
+          // Update database - fire and forget
+          import('@/store/sceneStore').then(({ useSceneStore }) => {
+            useSceneStore.getState().deactivateScene(sceneId).catch(console.error)
+          })
+
+          // Update sessionSceneStore UI - all sessions with this scene
+          import('@/store/sessionSceneStore').then(({ useSessionSceneStore }) => {
+            const state = useSessionSceneStore.getState()
+            const updatedSessionScenes = new Map(state.sessionScenes)
+
+            // Find all sessions containing this scene and deactivate it
+            updatedSessionScenes.forEach((scenes, sessionId) => {
+              const sceneIndex = scenes.findIndex(s => s.id === sceneId)
+              if (sceneIndex !== -1) {
+                const updatedScenes = scenes.map(s =>
+                  s.id === sceneId
+                    ? { ...s, is_active: false, updated_at: new Date().toISOString() }
+                    : s
+                )
+                updatedSessionScenes.set(sessionId, updatedScenes)
+              }
+            })
+
+            useSessionSceneStore.setState({ sessionScenes: updatedSessionScenes })
+          })
+        }
       },
 
       setVolume: (volume) => {
