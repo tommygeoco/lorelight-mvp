@@ -74,8 +74,23 @@ export function SceneHero({ scene, sessionId }: SceneHeroProps) {
         addToast('Pause functionality coming soon', 'info')
       } else {
         await activateScene(scene.id)
-        // Update local state to show active immediately
-        updateSessionScene({ is_active: true })
+
+        // Update sessionSceneStore: deactivate all scenes, then activate this one
+        if (sessionId) {
+          const state = useSessionSceneStore.getState()
+          const currentScenes = state.sessionScenes.get(sessionId) || []
+          const updatedScenes = currentScenes.map(s => ({
+            ...s,
+            is_active: s.id === scene.id,
+            updated_at: new Date().toISOString()
+          }))
+
+          useSessionSceneStore.setState((state) => ({
+            ...state,
+            sessionScenes: new Map(state.sessionScenes).set(sessionId, updatedScenes)
+          }))
+        }
+
         addToast(`Activated "${scene.name}"`, 'success')
       }
     } catch (error) {

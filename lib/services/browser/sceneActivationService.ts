@@ -32,7 +32,7 @@ class SceneActivationService {
 
     // Parallel activation of audio + lights
     await Promise.all([
-      this.activateAudio(scene.audio_config as SceneAudioConfig | null),
+      this.activateAudio(scene.audio_config as SceneAudioConfig | null, scene.id, scene.name),
       this.activateLights(scene.light_config as SceneLightConfig | null),
     ])
 
@@ -50,7 +50,7 @@ class SceneActivationService {
   /**
    * Activate audio for scene
    */
-  private async activateAudio(audioConfig: SceneAudioConfig | null): Promise<void> {
+  private async activateAudio(audioConfig: SceneAudioConfig | null, sceneId: string, sceneName: string): Promise<void> {
     if (!audioConfig) return
 
     const { audio_id, volume, loop, start_time } = audioConfig
@@ -61,17 +61,36 @@ class SceneActivationService {
       return
     }
 
-    // Integration with audio playback system
-    // Note: This will be connected to useAudioPlayback hook
-    const event = new CustomEvent('scene-audio-activate', {
-      detail: {
-        audioFile,
-        volume,
-        loop,
-        startTime: start_time,
-      },
+    // Load track into audio player with scene context
+    const { useAudioStore } = await import('@/store/audioStore')
+    const audioStore = useAudioStore.getState()
+
+    // Load the track
+    audioStore.loadTrack(audioFile.id, audioFile.file_url, {
+      type: 'scene',
+      id: sceneId,
+      name: sceneName
     })
-    window.dispatchEvent(event)
+
+    // Apply scene audio config
+    if (volume !== undefined) {
+      audioStore.setVolume(volume)
+    }
+
+    // Set loop state
+    if (loop !== undefined && loop !== audioStore.isLooping) {
+      audioStore.toggleLoop()
+    }
+
+    // Start playback
+    audioStore.play()
+
+    // Seek to start time if specified
+    if (start_time && start_time > 0) {
+      setTimeout(() => {
+        audioStore.seek(start_time)
+      }, 100)
+    }
   }
 
   /**
