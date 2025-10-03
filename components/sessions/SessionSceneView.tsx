@@ -4,8 +4,6 @@ import { useEffect, useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { useSessionSceneStore } from '@/store/sessionSceneStore'
 import { useSceneStore } from '@/store/sceneStore'
-import { useAudioStore } from '@/store/audioStore'
-import { useAudioFileMap } from '@/hooks/useAudioFileMap'
 import { useToastStore } from '@/store/toastStore'
 import { Plus, Edit2, Copy, Trash2 } from 'lucide-react'
 import { DashboardLayoutWithSidebar } from '@/components/layouts/DashboardLayoutWithSidebar'
@@ -40,8 +38,6 @@ export function SessionSceneView({ campaignId, sessionId }: SessionSceneViewProp
     deleteScene
   } = useSceneStore()
 
-  const { loadTrack } = useAudioStore()
-  const audioFileMap = useAudioFileMap()
   const { addToast } = useToastStore()
 
   const [selectedSceneId, setSelectedSceneId] = useState<string | null>(null)
@@ -107,24 +103,7 @@ export function SessionSceneView({ campaignId, sessionId }: SessionSceneViewProp
     }
   }, [selectedSceneId, sceneArray])
 
-  // Load audio when selected scene changes
-  useEffect(() => {
-    if (selectedScene && selectedScene.audio_config) {
-      const audioConfig = selectedScene.audio_config as { audio_id?: string } | null
-      const audioId = audioConfig?.audio_id
-
-      if (audioId) {
-        const audioFile = audioFileMap.get(audioId)
-        if (audioFile) {
-          loadTrack(audioFile.id, audioFile.file_url, {
-            type: 'scene',
-            id: selectedScene.id,
-            name: selectedScene.name
-          })
-        }
-      }
-    }
-  }, [selectedScene, audioFileMap, loadTrack])
+  // Note: Audio loading removed - scenes now require explicit activation via play button
 
   const handleSceneClick = async (scene: Scene) => {
     setSelectedSceneId(scene.id)

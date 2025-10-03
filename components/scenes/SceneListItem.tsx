@@ -1,6 +1,6 @@
 'use client'
 
-import { Play } from 'lucide-react'
+import { Play, Pause } from 'lucide-react'
 import type { Scene } from '@/types'
 import { getSceneGradientColors } from '@/lib/utils/gradients'
 
@@ -110,7 +110,7 @@ export function SceneListItem({
         </div>
       )}
 
-      {/* Play Button */}
+      {/* Play/Pause Button */}
       {!isEditing && (
         <div
           role="button"
@@ -122,7 +122,7 @@ export function SceneListItem({
           className={`hover:scale-110 transition-transform ${
             isActive ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
           }`}
-          aria-label={`Play ${scene.name}`}
+          aria-label={isActive ? `Pause ${scene.name}` : `Play ${scene.name}`}
           onKeyDown={(e) => {
             if (e.key === 'Enter' || e.key === ' ') {
               e.preventDefault()
@@ -131,7 +131,11 @@ export function SceneListItem({
             }
           }}
         >
-          <Play className="w-4 h-4 text-white/70 flex-shrink-0" fill="currentColor" />
+          {isActive ? (
+            <Pause className="w-4 h-4 text-white/70 flex-shrink-0" />
+          ) : (
+            <Play className="w-4 h-4 text-white/70 flex-shrink-0" fill="currentColor" />
+          )}
         </div>
       )}
     </div>
