@@ -61,7 +61,7 @@ export function SceneEditor({ scene, campaignId, sessionId }: SceneEditorProps) 
       {/* Main content area */}
       <div className="max-w-[760px] mx-auto px-[32px] py-[40px] space-y-[16px]">
         {/* Ambience section (audio + lights) */}
-        <SceneAmbienceSection scene={scene} campaignId={campaignId} />
+        <SceneAmbienceSection scene={scene} campaignId={campaignId} sessionId={sessionId} />
 
         {/* Notes section - Coming in Phase 4 */}
         <div className="w-full">

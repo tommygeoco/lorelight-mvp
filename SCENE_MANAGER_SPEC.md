@@ -855,35 +855,40 @@ useEffect(() => {
 
 ---
 
-### ⬜ Phase 3: Ambience Section - Interactive (Week 3-4)
+### ✅ Phase 3: Ambience Section - Interactive (COMPLETED - 2025-10-03)
 
 **Components**:
-- [ ] Update `SceneAmbienceSection.tsx` to be interactive (click to edit)
-- [ ] Reuse existing `AudioLibrary.tsx` as audio picker modal
-- [ ] Reuse existing `LightConfigModal.tsx` for light configuration
-- [ ] Add "Configure Audio" button on ambience audio card
-- [ ] Add "Configure Lights" button on ambience light card
+- [x] Update `SceneAmbienceSection.tsx` to be interactive (click to edit)
+- [x] Reuse existing `AudioLibrary.tsx` as audio picker modal
+- [x] Reuse existing `LightConfigModal.tsx` for light configuration
+- [x] Made both ambience cards clickable buttons with hover states
+- [x] Added modal rendering for AudioLibrary and LightConfigModal
 
 **Features**:
-- [ ] Click "Configure Audio" → Opens AudioLibrary in selection mode
-- [ ] Select audio file → Save to scene.audio_config JSONB
-- [ ] Click "Configure Lights" → Opens LightConfigModal
-- [ ] Configure lights → Save to scene.light_config JSONB
-- [ ] Display selected audio/light info in cards
-- [ ] Update sessionSceneStore after config changes
+- [x] Click audio card → Opens AudioLibrary with onSelect handler
+- [x] Select audio file → Save to scene.audio_config JSONB
+- [x] Click light card → Opens LightConfigModal
+- [x] Configure lights → Save to scene.light_config JSONB
+- [x] Display selected audio/light info in cards
+- [x] Update sessionSceneStore after config changes with two-store pattern
 
-**Technical Notes**:
-- AudioLibrary already exists - add selection mode prop
-- LightConfigModal already exists - wire up to scene save
-- Store light config directly in JSONB (defer presets table to Phase 9)
-- Use two-store update pattern (no refetch)
+**Implementation Details**:
+- AudioLibrary onSelect receives full AudioFile object
+- LightConfigModal onSave receives config and saves to scene
+- Both cards are now `<button>` elements with `hover:bg-[#252525]` states
+- Audio card shows file name and duration when configured
+- Light card shows "Custom preset" when lights configured
+- Type casting to Json for Supabase compatibility (`as unknown as Json`)
+- sessionId prop passed from SceneEditor to SceneAmbienceSection
 
 **Success Criteria**:
 - ✅ Audio selection works and persists to scene.audio_config
 - ✅ Light configuration UI functional with live preview
-- ✅ Cards update immediately after save
+- ✅ Cards update immediately after save (no refetch)
 - ✅ Cards match Figma design (bg-[#222222])
 - ✅ Real-time sync with sessionSceneStore
+- ✅ ESLint: 0 errors, 0 warnings
+- ✅ TypeScript: 3 expected warnings (Immer depth - runtime OK)
 
 ---
 
