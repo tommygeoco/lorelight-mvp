@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, cloneElement, isValidElement } from 'react'
 import { Edit2, Trash2 } from 'lucide-react'
 
 interface HueContextMenuProps {
@@ -56,17 +56,22 @@ export function HueContextMenu({
     }
   }
 
+  const handleToggleMenu = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsOpen(!isOpen)
+  }
+
+  // Clone the trigger button and add click handler if it's an ellipsis button
+  const enhancedTrigger = isValidElement(triggerButton)
+    ? cloneElement(triggerButton as React.ReactElement<{ onClick?: (e: React.MouseEvent) => void }>, {
+        onClick: handleToggleMenu
+      })
+    : triggerButton
+
   return (
     <div className="relative" ref={menuRef}>
-      <div
-        onContextMenu={(e) => {
-          e.preventDefault()
-          e.stopPropagation()
-          setIsOpen(true)
-        }}
-      >
-        {triggerButton}
-      </div>
+      {enhancedTrigger}
 
       {isOpen && (
         <div className="absolute right-0 top-full mt-1 min-w-[140px] bg-[#191919] border border-white/10 rounded-[8px] py-1 shadow-lg z-50 overflow-hidden">

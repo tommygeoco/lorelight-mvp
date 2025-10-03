@@ -43,6 +43,7 @@ export interface LightState {
   sat?: number // saturation 0-254
   ct?: number // color temp 153-500
   xy?: [number, number]
+  effect?: 'none' | 'colorloop' // light effects
   transitiontime?: number // in 100ms increments (e.g., 10 = 1 second)
 }
 

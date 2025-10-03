@@ -38,7 +38,7 @@ export function SidebarShell({
   return (
     <div className={`w-[320px] h-full bg-[#191919] rounded-[8px] flex flex-col ${className}`}>
       {/* Header */}
-      <div className="px-6 py-4 border-b border-white/10 flex items-center justify-between">
+      <div className="px-6 py-4 flex items-center justify-between">
         <h2 className="text-base font-semibold text-white">{title}</h2>
         {action && (
           <button

@@ -1263,7 +1263,7 @@ useEffect(() => {
 **Structure:**
 - `w-[320px] h-full bg-[#191919] rounded-[8px]` - Consistent with nav sidebar and main content
 - No `border-r` - 2px gap in layout provides visual separation
-- Header: `px-6 py-4 border-b border-white/10` with h2 title + icon button
+- Header: `px-6 py-4` with h2 title + icon button (NO border)
 - Scrollable area: `flex-1 overflow-y-auto scrollbar-custom px-6 py-4`
 
 **List Item Typography (CRITICAL - MUST MATCH):**
@@ -1279,12 +1279,15 @@ useEffect(() => {
 - **Never use**: `bg-white/10` or `border-white/20` (too bright)
 
 **Context Menu (CRITICAL - MUST MATCH):**
+- **Trigger**: Right-click on sidebar items (NOT left-click)
 - **Container**: `bg-[#191919] border border-white/10 rounded-[8px] py-1 shadow-lg z-50 min-w-[140px]`
+- **Positioning**: `fixed` with `style={{ left: x, top: y }}` from click coordinates
 - **Item**: `px-4 py-2 text-[13px] gap-2`
 - **Icon**: `w-3.5 h-3.5`
 - **Copy**: Concise ("Rename", "Delete") - NO entity type suffix
 - **Divider**: `<div className="h-px bg-white/10 my-1" />` between items
 - **Delete Hover**: `hover:bg-red-500/10` with `text-red-400`
+- **Click Outside**: Close menu when clicking anywhere outside
 
 **Action Button Tooltips:**
 - Settings icon: `title="Configure [feature]"`
@@ -1294,6 +1297,14 @@ useEffect(() => {
 **Creation Patterns:**
 - **Inline Creation** (for simple items like playlists): Click Plus → inline input appears in list → Enter to save, Escape to cancel
 - **Modal Creation** (for complex items like scenes): Click Plus → modal opens with full form
+
+**Ellipsis Menu Pattern (Main Content Cards):**
+- **Location**: Top-right corner of RoomCard/LightCard/etc.
+- **Trigger**: Left-click the MoreVertical (⋮) icon button
+- **Component**: Use `HueContextMenu` wrapper with `triggerButton` prop
+- **Button Style**: `w-8 h-8 rounded-[8px] hover:bg-white/10`
+- **Menu Actions**: Rename (with `onStartEdit`), Delete (with `onDelete`)
+- **Important**: Left-click opens menu; do NOT use right-click/onContextMenu for card menus
 
 **Empty State Typography:**
 - Font size: `text-[0.875rem]` (14px) - compact for sidebar
@@ -1305,7 +1316,7 @@ useEffect(() => {
 ```tsx
 <div className="w-[320px] h-full bg-[#191919] rounded-[8px] flex flex-col">
   {/* Header - No SectionHeader component */}
-  <div className="px-6 py-4 border-b border-white/10 flex items-center justify-between">
+  <div className="px-6 py-4 flex items-center justify-between">
     <h2 className="text-base font-semibold text-white">Playlists</h2>
     <button
       onClick={handleCreate}

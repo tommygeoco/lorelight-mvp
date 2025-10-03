@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { flushSync } from 'react-dom'
-import { Home as HomeIcon, Power, ChevronRight, Palette, MoreVertical } from 'lucide-react'
+import { Home as HomeIcon, Power, Palette, MoreVertical } from 'lucide-react'
 import { useHueStore } from '@/store/hueStore'
 import { ColorPickerModal } from './ColorPickerModal'
 import { HueContextMenu } from './HueContextMenu'
@@ -16,8 +16,7 @@ interface RoomCardProps {
 }
 
 export function RoomCard({ room, lights }: RoomCardProps) {
-  const { applyLightConfig, fetchLightsAndRooms, renameRoom, deleteRoom } = useHueStore()
-  const [isExpanded, setIsExpanded] = useState(false)
+  const { applyLightConfig, fetchLightsAndRooms, deleteRoom } = useHueStore()
   const [isColorPickerOpen, setIsColorPickerOpen] = useState(false)
 
   // Get lights in this room
@@ -37,6 +36,13 @@ export function RoomCard({ room, lights }: RoomCardProps) {
       )
     : 0
 
+  // Check if lights have mixed brightness (different values)
+  const lightsOnBrightness = roomLights
+    .filter(l => l.state.on)
+    .map(l => l.state.bri)
+  const hasMixedBrightness = lightsOnCount > 1 &&
+    Math.max(...lightsOnBrightness) - Math.min(...lightsOnBrightness) > 10
+
   // Optimistic local state
   const [localAnyOn, setLocalAnyOn] = useState(anyLightOn)
   const [localBrightness, setLocalBrightness] = useState(actualAvgBrightness)
@@ -47,14 +53,23 @@ export function RoomCard({ room, lights }: RoomCardProps) {
   const debounceTimer = useRef<NodeJS.Timeout | null>(null)
   const lastApiCall = useRef<Promise<void> | null>(null)
   const isUpdating = useRef(false)
+  const hasUserSetBrightness = useRef(false) // Track if user has manually set brightness
 
-  // Sync local state with prop changes ONLY when not actively updating
+  // Sync on/off state but DON'T sync brightness from props after initial mount
+  // This prevents individual light changes from affecting the room slider
   useEffect(() => {
     if (!isDragging && !isUpdating.current) {
       setLocalAnyOn(anyLightOn)
+    }
+  }, [anyLightOn, isDragging])
+
+  // Only sync brightness on initial mount or when explicitly toggled
+  useEffect(() => {
+    if (!hasUserSetBrightness.current && !isDragging) {
       setLocalBrightness(actualAvgBrightness)
     }
-  }, [anyLightOn, actualAvgBrightness, isDragging])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []) // Empty dependency - only run on mount
 
   const handleTogglePower = async () => {
     const newOnState = !localAnyOn
@@ -86,6 +101,7 @@ export function RoomCard({ room, lights }: RoomCardProps) {
 
     // Mark as updating to prevent prop sync
     isUpdating.current = true
+    hasUserSetBrightness.current = true
 
     // CRITICAL: Use flushSync to bypass React batching for instant UI update
     flushSync(() => {
@@ -100,6 +116,7 @@ export function RoomCard({ room, lights }: RoomCardProps) {
     // Debounce API call
     debounceTimer.current = setTimeout(async () => {
       try {
+        // When user adjusts room brightness, set ALL lights to this value (resets mixed state)
         const promise = applyLightConfig({
           groups: {
             [room.id]: { bri: brightness, on: true, transitiontime: 1 },
@@ -107,6 +124,9 @@ export function RoomCard({ room, lights }: RoomCardProps) {
         })
         lastApiCall.current = promise
         await promise
+
+        // Fetch to get updated light states
+        await fetchLightsAndRooms()
 
         // Allow prop sync again after a delay
         setTimeout(() => {
@@ -118,7 +138,7 @@ export function RoomCard({ room, lights }: RoomCardProps) {
         isUpdating.current = false
       }
     }, 300) // 300ms debounce
-  }, [room.id, actualAvgBrightness, applyLightConfig])
+  }, [room.id, actualAvgBrightness, applyLightConfig, fetchLightsAndRooms])
 
   const handleMouseDown = () => {
     setIsDragging(true)
@@ -199,7 +219,7 @@ export function RoomCard({ room, lights }: RoomCardProps) {
             <div className="flex-1 min-w-0">
               <h3 className="font-semibold text-white truncate">{room.name}</h3>
               <p className="text-xs text-white/50">
-                {lightsOnCount} of {roomLights.length} lights on • {room.type}
+                {lightsOnCount} of {roomLights.length} lights on
               </p>
             </div>
           </div>
@@ -209,12 +229,14 @@ export function RoomCard({ room, lights }: RoomCardProps) {
             {hasAnyRgbLight && (
               <button
                 onClick={() => setIsColorPickerOpen(true)}
+                disabled={!localAnyOn}
                 className={`w-8 h-8 rounded-[8px] flex items-center justify-center transition-colors ${
                   localAnyOn
                     ? 'bg-white/10 hover:bg-white/20 text-white'
-                    : 'bg-white/5 hover:bg-white/10 text-white/40'
+                    : 'bg-white/5 text-white/30 cursor-not-allowed'
                 }`}
                 aria-label="Change color"
+                title={localAnyOn ? 'Change color' : 'Turn on lights to change color'}
               >
                 <Palette className="w-4 h-4" />
               </button>
@@ -224,35 +246,27 @@ export function RoomCard({ room, lights }: RoomCardProps) {
               onClick={handleTogglePower}
               className={`w-8 h-8 rounded-[8px] flex items-center justify-center transition-colors ${
                 localAnyOn
-                  ? 'bg-white/10 hover:bg-white/20 text-white'
-                  : 'bg-white/5 hover:bg-white/10 text-white/40'
+                  ? 'bg-purple-500/20 hover:bg-purple-500/30 text-purple-400'
+                  : 'bg-white/10 hover:bg-white/20 text-white'
               }`}
               aria-label={localAnyOn ? 'Turn off all' : 'Turn on all'}
             >
               <Power className="w-4 h-4" />
             </button>
 
-            <button
-              onClick={() => setIsExpanded(!isExpanded)}
-              className="w-8 h-8 rounded-[8px] flex items-center justify-center hover:bg-white/10 transition-colors"
-              aria-label={isExpanded ? 'Collapse' : 'Expand'}
-            >
-              <ChevronRight className={`w-4 h-4 text-white/70 transition-transform ${
-                isExpanded ? 'rotate-90' : ''
-              }`} />
-            </button>
-
             <HueContextMenu
               entityName={room.name}
-              entityType="room"
-              onRename={async (newName) => {
-                await renameRoom(room.id, newName)
+              onStartEdit={() => {
+                // TODO: Implement inline rename
               }}
               onDelete={async () => {
                 await deleteRoom(room.id)
               }}
               triggerButton={
-                <button className="w-8 h-8 rounded-[8px] flex items-center justify-center hover:bg-white/10 transition-colors">
+                <button
+                  className="w-8 h-8 rounded-[8px] flex items-center justify-center hover:bg-white/10 transition-colors"
+                  aria-label="Room options"
+                >
                   <MoreVertical className="w-4 h-4 text-white/70" />
                 </button>
               }
@@ -260,46 +274,53 @@ export function RoomCard({ room, lights }: RoomCardProps) {
           </div>
         </div>
 
-      {/* Room Brightness Slider */}
-      {localAnyOn && (
-        <div className="space-y-2 mb-4">
-          <div className="flex items-center justify-between text-xs">
-            <span className="text-white/50">Room Brightness</span>
-            <span className="text-white font-medium">{brightnessPercent}%</span>
+      {/* Brightness Slider */}
+      <div className="space-y-2 mb-4">
+        <div className="flex items-center justify-between text-xs">
+          <div className="flex items-center gap-2">
+            <span className={localAnyOn ? 'text-white/50' : 'text-white/30'}>Brightness</span>
+            {hasMixedBrightness && hasUserSetBrightness.current && (
+              <span className="text-[10px] px-1.5 py-0.5 rounded bg-white/5 text-white/40 border border-white/10">
+                Mixed
+              </span>
+            )}
           </div>
-          <input
-            ref={sliderRef}
-            type="range"
-            min="1"
-            max="254"
-            value={localBrightness}
-            onInput={handleRoomBrightnessInput}
-            onMouseDown={handleMouseDown}
-            onMouseUp={handleMouseUp}
-            onTouchStart={handleMouseDown}
-            onTouchEnd={handleMouseUp}
-            className="w-full h-2 bg-white/10 rounded-full appearance-none cursor-pointer slider"
-            style={{
-              touchAction: 'none',
-              pointerEvents: 'auto'
-            }}
-          />
+          <span className={localAnyOn ? 'text-white font-medium' : 'text-white/40 font-medium'}>{brightnessPercent}%</span>
         </div>
-      )}
+        <input
+          ref={sliderRef}
+          type="range"
+          min="1"
+          max="254"
+          value={localBrightness}
+          onInput={handleRoomBrightnessInput}
+          onMouseDown={handleMouseDown}
+          onMouseUp={handleMouseUp}
+          onTouchStart={handleMouseDown}
+          onTouchEnd={handleMouseUp}
+          disabled={!localAnyOn}
+          className={`w-full h-2 rounded-full appearance-none slider ${
+            !localAnyOn
+              ? 'cursor-not-allowed opacity-40'
+              : hasMixedBrightness && hasUserSetBrightness.current
+              ? 'cursor-pointer opacity-60'
+              : 'cursor-pointer'
+          }`}
+          style={{
+            touchAction: 'none',
+            pointerEvents: 'auto',
+            // @ts-expect-error CSS custom property
+            '--slider-progress': `${brightnessPercent}%`
+          }}
+        />
+      </div>
 
-      {/* Expanded Individual Light Controls */}
-      {isExpanded && roomLights.length > 0 && (
-        <div className="mt-4 pt-4 border-t border-white/10 space-y-2">
+      {/* Individual Light Controls */}
+      {roomLights.length > 0 && (
+        <div className="mt-4 space-y-2">
           {roomLights.map((light) => (
             <RoomLightRow key={light.id} light={light} />
           ))}
-        </div>
-      )}
-
-      {/* Status when all off */}
-      {!localAnyOn && (
-        <div className="text-xs text-white/40">
-          All lights off
         </div>
       )}
     </div>

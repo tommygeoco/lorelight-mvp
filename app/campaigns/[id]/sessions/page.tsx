@@ -109,8 +109,19 @@ export default function SessionsPage({
           description={campaign.description || 'Select a session to begin playing'}
         />
 
+        {/* Quick Links */}
+        <div className="pt-[24px]">
+          <button
+            onClick={() => router.push(`/campaigns/${resolvedParams.id}/scenes`)}
+            className="px-4 py-2 text-[14px] font-medium text-white/70 hover:text-white hover:bg-white/5 rounded-[8px] transition-colors inline-flex items-center gap-2"
+          >
+            <Play className="w-4 h-4" />
+            Scene Library
+          </button>
+        </div>
+
         {/* Sessions Content */}
-        <div className="pt-[40px] pb-[40px]">
+        <div className="pt-[24px] pb-[40px]">
           <section aria-labelledby="sessions-heading">
             <SectionHeader
               title="Sessions"

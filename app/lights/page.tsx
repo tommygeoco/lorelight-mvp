@@ -2,14 +2,13 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { RefreshCw, Settings } from 'lucide-react'
+import { RefreshCw, Settings, Power, Edit2, Trash2 } from 'lucide-react'
 import { DashboardLayoutWithSidebar } from '@/components/layouts/DashboardLayoutWithSidebar'
 import { DashboardSidebar } from '@/components/layouts/DashboardSidebar'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { SectionHeader } from '@/components/ui/SectionHeader'
 import { HueSetup } from '@/components/hue/HueSetup'
-import { HueContextMenu } from '@/components/hue/HueContextMenu'
 import { AudioLibrary } from '@/components/audio/AudioLibrary'
 import { LightCard } from '@/components/hue/LightCard'
 import { RoomCard } from '@/components/hue/RoomCard'
@@ -20,7 +19,7 @@ import { getSidebarButtons } from '@/lib/navigation/sidebarNavigation'
 export default function LightsPage() {
   const router = useRouter()
   const { user } = useAuthStore()
-  const { isConnected, lights, rooms, fetchLightsAndRooms, renameRoom, deleteRoom, renameLight } = useHueStore()
+  const { isConnected, lights, rooms, fetchLightsAndRooms, renameRoom, deleteRoom, renameLight, applyLightConfig } = useHueStore()
 
   const [isHueSetupOpen, setIsHueSetupOpen] = useState(false)
   const [isAudioLibraryOpen, setIsAudioLibraryOpen] = useState(false)
@@ -29,6 +28,13 @@ export default function LightsPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editingName, setEditingName] = useState('')
+  const [contextMenu, setContextMenu] = useState<{
+    x: number
+    y: number
+    type: 'room' | 'light'
+    id: string
+    name: string
+  } | null>(null)
 
   useEffect(() => {
     if (!user) {
@@ -81,6 +87,38 @@ export default function LightsPage() {
     }
   }
 
+  const handleContextMenu = (e: React.MouseEvent, type: 'room' | 'light', id: string, name: string) => {
+    e.preventDefault()
+    setContextMenu({
+      x: e.clientX,
+      y: e.clientY,
+      type,
+      id,
+      name,
+    })
+  }
+
+  const handleDeleteFromContextMenu = async () => {
+    if (!contextMenu) return
+
+    if (contextMenu.type === 'room') {
+      await deleteRoom(contextMenu.id)
+      if (selectedId === contextMenu.id) {
+        setSelectedId(null)
+      }
+    }
+    setContextMenu(null)
+  }
+
+  // Close context menu when clicking outside
+  useEffect(() => {
+    const handleClick = () => setContextMenu(null)
+    if (contextMenu) {
+      document.addEventListener('click', handleClick)
+      return () => document.removeEventListener('click', handleClick)
+    }
+  }, [contextMenu])
+
   const sidebarButtons = getSidebarButtons({
     view: 'lights',
     router,
@@ -113,7 +151,7 @@ export default function LightsPage() {
   const lightsSidebar = (
     <div className="w-[320px] h-full bg-[#191919] rounded-[8px] flex flex-col" aria-label="Lights list">
       {/* Header */}
-      <div className="px-6 py-4 border-b border-white/10 flex items-center justify-between">
+      <div className="px-6 py-4 flex items-center justify-between">
         <h2 className="text-base font-semibold text-white">Lights</h2>
         <button
           onClick={() => setIsHueSetupOpen(true)}
@@ -176,6 +214,11 @@ export default function LightsPage() {
                   <ul role="list" className="space-y-2">
                     {roomsArray.map((room) => {
                       const isEditing = editingId === room.id
+                      const roomLightsArray = room.lights
+                        .map(lightId => lights.get(lightId))
+                        .filter((light): light is NonNullable<typeof light> => !!light)
+                      const anyLightOn = roomLightsArray.some(light => light.state.on)
+                      const lightsOnCount = roomLightsArray.filter(light => light.state.on).length
 
                       return (
                         <li key={room.id}>
@@ -198,35 +241,50 @@ export default function LightsPage() {
                               />
                             </div>
                           ) : (
-                            <HueContextMenu
-                              entityName={room.name}
-                              entityType="room"
-                              onRename={async (newName) => {
-                                await renameRoom(room.id, newName)
-                              }}
-                              onDelete={async () => {
-                                await deleteRoom(room.id)
-                                if (selectedId === room.id) {
-                                  setSelectedId(null)
-                                }
-                              }}
-                              onStartEdit={() => handleStartEdit(room.id, room.name)}
-                              triggerButton={
-                                <button
-                                  onClick={() => setSelectedId(room.id)}
-                                  className={`w-full text-left px-3 py-2 rounded-[8px] transition-colors ${
-                                    selectedId === room.id
-                                      ? 'bg-white/10 text-white'
-                                      : 'text-white/70 hover:text-white hover:bg-white/5'
-                                  }`}
-                                >
+                            <div
+                              onClick={() => setSelectedId(room.id)}
+                              onContextMenu={(e) => handleContextMenu(e, 'room', room.id, room.name)}
+                              className={`w-full text-left px-3 py-2 rounded-[8px] transition-colors cursor-pointer ${
+                                selectedId === room.id
+                                  ? 'bg-white/10 text-white'
+                                  : 'text-white/70 hover:text-white hover:bg-white/5'
+                              }`}
+                            >
+                              <div className="flex items-start gap-2">
+                                {/* Color indicator */}
+                                <div className={`w-2 h-2 rounded-full flex-shrink-0 mt-[5px] ${
+                                  anyLightOn ? 'bg-purple-400' : 'bg-white/20'
+                                }`} />
+                                <div className="flex-1 min-w-0">
                                   <div className="font-medium text-[13px]">{room.name}</div>
                                   <div className="text-[11px] text-white/50 mt-0.5">
-                                    {room.lights.length} {room.lights.length === 1 ? 'light' : 'lights'}
+                                    {lightsOnCount} of {room.lights.length} on
                                   </div>
+                                </div>
+                                {/* On/Off toggle */}
+                                <button
+                                  onClick={async (e) => {
+                                    e.stopPropagation()
+                                    const newOnState = !anyLightOn
+                                    await applyLightConfig({
+                                      groups: {
+                                        [room.id]: { on: newOnState, transitiontime: 2 },
+                                      },
+                                    })
+                                    setTimeout(() => fetchLightsAndRooms(), 500)
+                                  }}
+                                  className={`w-6 h-6 flex-shrink-0 rounded flex items-center justify-center transition-colors ${
+                                    anyLightOn
+                                      ? 'bg-purple-500/20 text-purple-400 hover:bg-purple-500/30'
+                                      : 'bg-white/10 text-white/50 hover:bg-white/20'
+                                  }`}
+                                  aria-label={anyLightOn ? 'Turn off' : 'Turn on'}
+                                  title={anyLightOn ? 'Turn off' : 'Turn on'}
+                                >
+                                  <Power className="w-3 h-3" />
                                 </button>
-                              }
-                            />
+                              </div>
+                            </div>
                           )}
                         </li>
                       )
@@ -269,29 +327,50 @@ export default function LightsPage() {
                               />
                             </div>
                           ) : (
-                            <HueContextMenu
-                              entityName={light.name}
-                              entityType="light"
-                              onRename={async (newName) => {
-                                await renameLight(light.id, newName)
-                              }}
-                              onStartEdit={() => handleStartEdit(light.id, light.name)}
-                              triggerButton={
-                                <button
-                                  onClick={() => setSelectedId(light.id)}
-                                  className={`w-full text-left px-3 py-2 rounded-[8px] transition-colors ${
-                                    selectedId === light.id
-                                      ? 'bg-white/10 text-white'
-                                      : 'text-white/70 hover:text-white hover:bg-white/5'
-                                  }`}
-                                >
+                            <div
+                              onClick={() => setSelectedId(light.id)}
+                              onContextMenu={(e) => handleContextMenu(e, 'light', light.id, light.name)}
+                              className={`w-full text-left px-3 py-2 rounded-[8px] transition-colors cursor-pointer ${
+                                selectedId === light.id
+                                  ? 'bg-white/10 text-white'
+                                  : 'text-white/70 hover:text-white hover:bg-white/5'
+                              }`}
+                            >
+                              <div className="flex items-start gap-2">
+                                {/* Color indicator */}
+                                <div className={`w-2 h-2 rounded-full flex-shrink-0 mt-[5px] ${
+                                  light.state.on ? 'bg-yellow-400' : 'bg-white/20'
+                                }`} />
+                                <div className="flex-1 min-w-0">
                                   <div className="font-medium text-[13px]">{light.name}</div>
                                   <div className="text-[11px] text-white/50 mt-0.5">
                                     {light.state.on ? 'On' : 'Off'} · {Math.round((light.state.bri / 254) * 100)}%
                                   </div>
+                                </div>
+                                {/* On/Off toggle */}
+                                <button
+                                  onClick={async (e) => {
+                                    e.stopPropagation()
+                                    const newOnState = !light.state.on
+                                    await applyLightConfig({
+                                      lights: {
+                                        [light.id]: { on: newOnState, transitiontime: 2 },
+                                      },
+                                    })
+                                    setTimeout(() => fetchLightsAndRooms(), 500)
+                                  }}
+                                  className={`w-6 h-6 flex-shrink-0 rounded flex items-center justify-center transition-colors ${
+                                    light.state.on
+                                      ? 'bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/30'
+                                      : 'bg-white/10 text-white/50 hover:bg-white/20'
+                                  }`}
+                                  aria-label={light.state.on ? 'Turn off' : 'Turn on'}
+                                  title={light.state.on ? 'Turn off' : 'Turn on'}
+                                >
+                                  <Power className="w-3 h-3" />
                                 </button>
-                              }
-                            />
+                              </div>
+                            </div>
                           )}
                         </li>
                       )
@@ -389,6 +468,41 @@ export default function LightsPage() {
 
       <HueSetup isOpen={isHueSetupOpen} onClose={() => setIsHueSetupOpen(false)} />
       <AudioLibrary isOpen={isAudioLibraryOpen} onClose={() => setIsAudioLibraryOpen(false)} />
+
+      {/* Context Menu */}
+      {contextMenu && (
+        <div
+          className="fixed bg-[#191919] border border-white/10 rounded-[8px] py-1 shadow-lg z-50 min-w-[140px]"
+          style={{
+            left: `${contextMenu.x}px`,
+            top: `${contextMenu.y}px`,
+          }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <button
+            onClick={() => {
+              handleStartEdit(contextMenu.id, contextMenu.name)
+              setContextMenu(null)
+            }}
+            className="w-full px-4 py-2 text-left text-[13px] text-white hover:bg-white/5 flex items-center gap-2 transition-colors"
+          >
+            <Edit2 className="w-3.5 h-3.5" />
+            Rename
+          </button>
+          {contextMenu.type === 'room' && (
+            <>
+              <div className="h-px bg-white/10 my-1" />
+              <button
+                onClick={handleDeleteFromContextMenu}
+                className="w-full px-4 py-2 text-left text-[13px] text-red-400 hover:bg-red-500/10 flex items-center gap-2 transition-colors"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                Delete
+              </button>
+            </>
+          )}
+        </div>
+      )}
     </DashboardLayoutWithSidebar>
   )
 }

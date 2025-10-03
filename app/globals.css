@@ -140,6 +140,22 @@ input[type="range"].slider {
   transform: translateZ(0);
   backface-visibility: hidden;
   perspective: 1000px;
+  background: linear-gradient(to right,
+    #8b5cf6 0%,
+    #ec4899 var(--slider-progress, 50%),
+    rgba(255, 255, 255, 0.1) var(--slider-progress, 50%)
+  );
+  border-radius: 9999px;
+}
+
+input[type="range"].slider::-webkit-slider-runnable-track {
+  background: transparent;
+  height: 8px;
+}
+
+input[type="range"].slider::-moz-range-track {
+  background: transparent;
+  height: 8px;
 }
 
 input[type="range"].slider::-webkit-slider-thumb {

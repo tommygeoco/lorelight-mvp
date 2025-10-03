@@ -23,14 +23,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     // Get initial session
-    supabase.auth.getUser().then(({ data: { user }, error }) => {
-      if (error) {
-        console.error('Error fetching user:', error)
+    const initAuth = async () => {
+      try {
+        const { data: { user }, error } = await supabase.auth.getUser()
+        if (error) {
+          // Auth session missing is expected for logged out users
+          if (error.message !== 'Auth session missing!') {
+            console.error('Error fetching user:', error)
+          }
+          clearUser()
+        } else {
+          setUser(user)
+        }
+      } catch {
+        // Silently handle auth session errors for logged out state
         clearUser()
-      } else {
-        setUser(user)
       }
-    })
+    }
+
+    initAuth()
 
     // Listen for auth changes
     const {

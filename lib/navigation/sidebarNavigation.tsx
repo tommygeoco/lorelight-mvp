@@ -2,7 +2,7 @@ import { ChevronLeft, CirclePlay, Settings, Music, Flame } from 'lucide-react'
 import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime'
 import type { SidebarButton } from '@/types'
 
-export type NavigationView = 'dashboard' | 'campaigns' | 'sessions' | 'sessionScene' | 'lights' | 'audio'
+export type NavigationView = 'dashboard' | 'campaigns' | 'sessions' | 'scenes' | 'sessionScene' | 'lights' | 'audio'
 
 interface NavigationContext {
   view: NavigationView
@@ -35,6 +35,11 @@ export function getSidebarButtons(context: NavigationContext): SidebarButton[] {
       // Scene -> Sessions list
       backLabel = 'Back to sessions'
       backAction = campaignId ? () => router.push(`/campaigns/${campaignId}/sessions`) : () => router.back()
+      break
+    case 'scenes':
+      // Scenes library -> Sessions list
+      backLabel = 'Back to sessions'
+      backAction = campaignId ? () => router.push(`/campaigns/${campaignId}/sessions`) : () => router.push('/campaigns')
       break
     case 'sessions':
       // Sessions list -> Campaigns list
@@ -71,7 +76,7 @@ export function getSidebarButtons(context: NavigationContext): SidebarButton[] {
       icon: <CirclePlay className="w-[18px] h-[18px] text-white/70" />,
       label: 'Campaigns',
       onClick: () => router.push('/campaigns'),
-      isActive: view === 'dashboard' || view === 'campaigns' || view === 'sessions' || view === 'sessionScene',
+      isActive: view === 'dashboard' || view === 'campaigns' || view === 'sessions' || view === 'scenes' || view === 'sessionScene',
     },
     // Position 3: Lights
     {

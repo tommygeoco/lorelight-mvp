@@ -24,6 +24,35 @@ export type AudioFolder = Tables<'audio_folders'>
 export type AudioPlaylist = Tables<'audio_playlists'>
 export type PlaylistAudio = Tables<'playlist_audio'>
 
+// TODO: Regenerate database types after migration 015 is applied
+// export type SceneBlock = Tables<'scene_blocks'>
+// export type SceneNPC = Tables<'scene_npcs'>
+
+// Temporary placeholder types until database types are regenerated
+export interface SceneBlock {
+  id: string
+  scene_id: string
+  type: BlockType
+  content: BlockContent
+  order_index: number
+  created_at: string
+  updated_at: string
+  user_id: string
+}
+
+export interface SceneNPC {
+  id: string
+  scene_id: string
+  name: string
+  description?: string | null
+  stats?: Record<string, unknown> | null
+  image_url?: string | null
+  order_index: number
+  created_at: string
+  updated_at: string
+  user_id: string
+}
+
 // Insert types
 export type CampaignInsert = Inserts<'campaigns'>
 export type SessionInsert = Inserts<'sessions'>
@@ -35,6 +64,10 @@ export type SessionSceneInsert = Inserts<'session_scenes'>
 export type AudioFolderInsert = Inserts<'audio_folders'>
 export type AudioPlaylistInsert = Inserts<'audio_playlists'>
 export type PlaylistAudioInsert = Inserts<'playlist_audio'>
+
+// Temporary placeholder insert types
+export type SceneBlockInsert = Omit<SceneBlock, 'id' | 'created_at' | 'updated_at'>
+export type SceneNPCInsert = Omit<SceneNPC, 'id' | 'created_at' | 'updated_at'>
 
 // Update types
 export type CampaignUpdate = Updates<'campaigns'>
@@ -48,8 +81,46 @@ export type AudioFolderUpdate = Updates<'audio_folders'>
 export type AudioPlaylistUpdate = Updates<'audio_playlists'>
 export type PlaylistAudioUpdate = Updates<'playlist_audio'>
 
+// Temporary placeholder update types
+export type SceneBlockUpdate = Partial<Omit<SceneBlock, 'id' | 'created_at' | 'user_id'>>
+export type SceneNPCUpdate = Partial<Omit<SceneNPC, 'id' | 'created_at' | 'user_id'>>
+
 // Session status enum
 export type SessionStatus = 'planning' | 'active' | 'completed'
+
+// Scene block types (must be defined before SceneBlock interface)
+export type BlockType =
+  | 'text'
+  | 'heading_1'
+  | 'heading_2'
+  | 'heading_3'
+  | 'image'
+  | 'bulleted_list'
+  | 'numbered_list'
+  | 'checkbox_list'
+
+export interface TextFormatting {
+  start: number
+  end: number
+  bold?: boolean
+  italic?: boolean
+  underline?: boolean
+  strikethrough?: boolean
+  link?: string
+}
+
+export interface TextContent {
+  text: string
+  formatting: TextFormatting[]
+}
+
+export interface BlockContent {
+  text?: TextContent
+  items?: string[]
+  checked?: boolean[]
+  url?: string
+  alt?: string
+}
 
 // RGB Color type
 export interface RGBColor {
@@ -110,6 +181,29 @@ export interface AudioConfig {
 export interface LightingConfig {
   brightnessOverride?: number // 0-100
   transitionDuration?: number // milliseconds
+}
+
+// Hue light state for scene light_config
+export interface HueLightState {
+  on: boolean
+  bri: number
+  hue?: number
+  sat?: number
+  ct?: number
+  transitiontime: number
+}
+
+export interface SceneLightConfig {
+  groups?: Record<string, HueLightState>
+  lights?: Record<string, HueLightState>
+}
+
+// Scene audio config (stored in scenes.audio_config JSONB)
+export interface SceneAudioConfig {
+  audio_id: string
+  volume: number
+  loop: boolean
+  start_time?: number
 }
 
 // UI Component types

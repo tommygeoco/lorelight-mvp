@@ -743,7 +743,7 @@ useEffect(() => {
                 <div className="w-full h-[400px] bg-[#111111] rounded-[8px] overflow-hidden flex">
                   <div className="w-[320px] h-full bg-[#191919] border-r border-white/10 flex flex-col">
                     {/* Header */}
-                    <div className="px-6 py-4 border-b border-white/10 flex items-center justify-between">
+                    <div className="px-6 py-4 flex items-center justify-between">
                       <h3 className="text-[16px] font-semibold text-white">Playlists</h3>
                       <button className="w-8 h-8 flex items-center justify-center hover:bg-white/5 rounded transition-colors">
                         <Plus className="w-[18px] h-[18px] text-white/70" />
@@ -775,7 +775,7 @@ useEffect(() => {
                 id="sidebar-pattern"
                 code={`<div className="w-[320px] h-full bg-[#191919] border-r border-white/10 flex flex-col">
   {/* Header */}
-  <div className="px-6 py-4 border-b border-white/10">
+  <div className="px-6 py-4">
     <SectionHeader
       title="Playlists"
       variant="sidebar"
@@ -1276,7 +1276,7 @@ useEffect(() => {
                       <li>• Item padding: <code className="text-purple-400">px-4 py-2</code> with <code className="text-purple-400">gap-2</code></li>
                       <li>• Icon size: <code className="text-purple-400">w-3.5 h-3.5</code></li>
                       <li>• Typography: <code className="text-purple-400">text-[13px]</code></li>
-                      <li>• Copy: Concise ("Rename", "Delete") - NO entity type suffixes</li>
+                      <li>• Copy: Concise (&quot;Rename&quot;, &quot;Delete&quot;) - NO entity type suffixes</li>
                       <li>• Divider: <code className="text-purple-400">h-px bg-white/10 my-1</code> before destructive actions</li>
                       <li>• Delete hover: <code className="text-purple-400">hover:bg-red-500/10</code> with <code className="text-purple-400">text-red-400</code></li>
                     </ul>
@@ -1285,17 +1285,17 @@ useEffect(() => {
                   <div>
                     <p className="text-white font-medium mb-2">Empty States</p>
                     <ul className="space-y-1 text-white/60 text-[12px]">
-                      <li>• Pattern: "No [items] discovered..."</li>
+                      <li>• Pattern: &quot;No [items] discovered...&quot;</li>
                       <li>• Typography: <code className="text-purple-400">text-[0.875rem] text-white/40</code></li>
-                      <li>• Examples: "No scenes discovered...\nCreate a scene to begin"</li>
+                      <li>• Examples: &quot;No scenes discovered...\nCreate a scene to begin&quot;</li>
                     </ul>
                   </div>
 
                   <div>
                     <p className="text-white font-medium mb-2">Action Button Tooltips</p>
                     <ul className="space-y-1 text-white/60 text-[12px]">
-                      <li>• Plus button: <code className="text-purple-400">title="Create [entity]"</code> or with ellipsis for modals</li>
-                      <li>• Settings button: <code className="text-purple-400">title="Configure [system]"</code></li>
+                      <li>• Plus button: <code className="text-purple-400">title=&quot;Create [entity]&quot;</code> or with ellipsis for modals</li>
+                      <li>• Settings button: <code className="text-purple-400">title=&quot;Configure [system]&quot;</code></li>
                       <li>• Always include <code className="text-purple-400">aria-label</code> for accessibility</li>
                     </ul>
                   </div>

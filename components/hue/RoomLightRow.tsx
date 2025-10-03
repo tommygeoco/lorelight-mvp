@@ -168,12 +168,14 @@ export function RoomLightRow({ light }: RoomLightRowProps) {
             {hueService.hasColorSupport(light) && (
               <button
                 onClick={() => setIsColorPickerOpen(true)}
+                disabled={!localOn}
                 className={`w-6 h-6 rounded-[6px] flex items-center justify-center transition-colors ${
                   localOn
                     ? 'bg-white/10 hover:bg-white/20 text-white'
-                    : 'bg-white/5 hover:bg-white/10 text-white/40'
+                    : 'bg-white/5 text-white/30 cursor-not-allowed'
                 }`}
                 aria-label="Change color"
+                title={localOn ? 'Change color' : 'Turn on light to change color'}
               >
                 <Palette className="w-3 h-3" />
               </button>
@@ -183,8 +185,8 @@ export function RoomLightRow({ light }: RoomLightRowProps) {
               onClick={handleTogglePower}
               className={`w-6 h-6 rounded-[6px] flex items-center justify-center transition-colors ${
                 localOn
-                  ? 'bg-white/10 hover:bg-white/20 text-white'
-                  : 'bg-white/5 hover:bg-white/10 text-white/40'
+                  ? 'bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-400'
+                  : 'bg-white/10 hover:bg-white/20 text-white'
               }`}
               aria-label={localOn ? 'Turn off' : 'Turn on'}
             >
@@ -194,38 +196,34 @@ export function RoomLightRow({ light }: RoomLightRowProps) {
         </div>
 
         {/* Brightness Slider */}
-        {localOn && (
-          <div className="space-y-1.5">
-            <div className="flex items-center justify-between text-xs">
-              <span className="text-white/40">Brightness</span>
-              <span className="text-white/60 font-medium">{brightnessPercent}%</span>
-            </div>
-            <input
-              ref={sliderRef}
-              type="range"
-              min="1"
-              max="254"
-              value={localBrightness}
-              onInput={handleBrightnessInput}
-              onMouseDown={handleMouseDown}
-              onMouseUp={handleMouseUp}
-              onTouchStart={handleMouseDown}
-              onTouchEnd={handleMouseUp}
-              className="w-full h-1.5 bg-white/10 rounded-full appearance-none cursor-pointer slider"
-              style={{
-                touchAction: 'none',
-                pointerEvents: 'auto'
-              }}
-            />
+        <div className="space-y-1.5">
+          <div className="flex items-center justify-between text-xs">
+            <span className={localOn ? 'text-white/40' : 'text-white/30'}>Brightness</span>
+            <span className={localOn ? 'text-white/60 font-medium' : 'text-white/40 font-medium'}>{brightnessPercent}%</span>
           </div>
-        )}
-
-        {/* Status when off */}
-        {!localOn && (
-          <div className="text-xs text-white/30">
-            Off
-          </div>
-        )}
+          <input
+            ref={sliderRef}
+            type="range"
+            min="1"
+            max="254"
+            value={localBrightness}
+            onInput={handleBrightnessInput}
+            onMouseDown={handleMouseDown}
+            onMouseUp={handleMouseUp}
+            onTouchStart={handleMouseDown}
+            onTouchEnd={handleMouseUp}
+            disabled={!localOn}
+            className={`w-full h-1.5 rounded-full appearance-none slider ${
+              localOn ? 'cursor-pointer' : 'cursor-not-allowed opacity-40'
+            }`}
+            style={{
+              touchAction: 'none',
+              pointerEvents: 'auto',
+              // @ts-expect-error CSS custom property
+              '--slider-progress': `${brightnessPercent}%`
+            }}
+          />
+        </div>
       </div>
 
       <ColorPickerModal

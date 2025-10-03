@@ -14,7 +14,7 @@ interface LightCardProps {
 }
 
 export function LightCard({ light }: LightCardProps) {
-  const { applyLightConfig, fetchLightsAndRooms, renameLight } = useHueStore()
+  const { applyLightConfig, fetchLightsAndRooms } = useHueStore()
 
   // Optimistic local state
   const [localOn, setLocalOn] = useState(light.state.on)
@@ -177,12 +177,14 @@ export function LightCard({ light }: LightCardProps) {
             {hueService.hasColorSupport(light) && (
               <button
                 onClick={() => setIsColorPickerOpen(true)}
+                disabled={!localOn}
                 className={`w-8 h-8 rounded-[8px] flex items-center justify-center transition-colors ${
                   localOn
                     ? 'bg-white/10 hover:bg-white/20 text-white'
-                    : 'bg-white/5 hover:bg-white/10 text-white/40'
+                    : 'bg-white/5 text-white/30 cursor-not-allowed'
                 }`}
                 aria-label="Change color"
+                title={localOn ? 'Change color' : 'Turn on light to change color'}
               >
                 <Palette className="w-4 h-4" />
               </button>
@@ -192,8 +194,8 @@ export function LightCard({ light }: LightCardProps) {
               onClick={handleTogglePower}
               className={`w-8 h-8 rounded-[8px] flex items-center justify-center transition-colors ${
                 localOn
-                  ? 'bg-white/10 hover:bg-white/20 text-white'
-                  : 'bg-white/5 hover:bg-white/10 text-white/40'
+                  ? 'bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-400'
+                  : 'bg-white/10 hover:bg-white/20 text-white'
               }`}
               aria-label={localOn ? 'Turn off' : 'Turn on'}
             >
@@ -202,12 +204,14 @@ export function LightCard({ light }: LightCardProps) {
 
             <HueContextMenu
               entityName={light.name}
-              entityType="light"
-              onRename={async (newName) => {
-                await renameLight(light.id, newName)
+              onStartEdit={() => {
+                // TODO: Implement inline rename
               }}
               triggerButton={
-                <button className="w-8 h-8 rounded-[8px] flex items-center justify-center hover:bg-white/10 transition-colors">
+                <button
+                  className="w-8 h-8 rounded-[8px] flex items-center justify-center hover:bg-white/10 transition-colors"
+                  aria-label="Light options"
+                >
                   <MoreVertical className="w-4 h-4 text-white/70" />
                 </button>
               }
@@ -216,38 +220,34 @@ export function LightCard({ light }: LightCardProps) {
         </div>
 
       {/* Brightness Slider */}
-      {localOn && (
-        <div className="space-y-2">
-          <div className="flex items-center justify-between text-xs">
-            <span className="text-white/50">Brightness</span>
-            <span className="text-white font-medium">{brightnessPercent}%</span>
-          </div>
-          <input
-            ref={sliderRef}
-            type="range"
-            min="1"
-            max="254"
-            value={localBrightness}
-            onInput={handleBrightnessInput}
-            onMouseDown={handleMouseDown}
-            onMouseUp={handleMouseUp}
-            onTouchStart={handleMouseDown}
-            onTouchEnd={handleMouseUp}
-            className="w-full h-2 bg-white/10 rounded-full appearance-none cursor-pointer slider"
-            style={{
-              touchAction: 'none',
-              pointerEvents: 'auto'
-            }}
-          />
+      <div className="space-y-2">
+        <div className="flex items-center justify-between text-xs">
+          <span className={localOn ? 'text-white/50' : 'text-white/30'}>Brightness</span>
+          <span className={localOn ? 'text-white font-medium' : 'text-white/40 font-medium'}>{brightnessPercent}%</span>
         </div>
-      )}
-
-      {/* Status */}
-      {!localOn && (
-        <div className="text-xs text-white/40">
-          Off
-        </div>
-      )}
+        <input
+          ref={sliderRef}
+          type="range"
+          min="1"
+          max="254"
+          value={localBrightness}
+          onInput={handleBrightnessInput}
+          onMouseDown={handleMouseDown}
+          onMouseUp={handleMouseUp}
+          onTouchStart={handleMouseDown}
+          onTouchEnd={handleMouseUp}
+          disabled={!localOn}
+          className={`w-full h-2 rounded-full appearance-none slider ${
+            localOn ? 'cursor-pointer' : 'cursor-not-allowed opacity-40'
+          }`}
+          style={{
+            touchAction: 'none',
+            pointerEvents: 'auto',
+            // @ts-expect-error CSS custom property
+            '--slider-progress': `${brightnessPercent}%`
+          }}
+        />
+      </div>
     </div>
 
     <ColorPickerModal
