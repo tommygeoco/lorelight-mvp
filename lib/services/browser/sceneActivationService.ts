@@ -142,6 +142,28 @@ class SceneActivationService {
   }
 
   /**
+   * Deactivate a specific scene
+   * Stops audio playback and deactivates lights
+   */
+  async deactivateScene(sceneId: string): Promise<void> {
+    const startTime = performance.now()
+
+    // Stop audio playback
+    const { useAudioStore } = await import('@/store/audioStore')
+    const audioStore = useAudioStore.getState()
+    audioStore.pause()
+
+    // Update database - set scene as inactive
+    await this.supabase
+      .from('scenes')
+      .update({ is_active: false })
+      .eq('id', sceneId)
+
+    const duration = performance.now() - startTime
+    console.log(`✅ Scene deactivated in ${duration.toFixed(2)}ms`)
+  }
+
+  /**
    * Deactivate all scenes in a campaign
    */
   async deactivateAll(campaignId: string): Promise<void> {

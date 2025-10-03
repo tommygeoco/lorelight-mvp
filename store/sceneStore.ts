@@ -21,7 +21,8 @@ interface SceneState {
   updateScene: (id: string, updates: Partial<Scene>) => Promise<void>
   deleteScene: (id: string) => Promise<void>
   setActiveScene: (id: string, campaignId: string) => Promise<void>
-  activateScene: (id: string) => Promise<void> // NEW: Trigger audio + lights
+  activateScene: (id: string) => Promise<void>
+  deactivateScene: (id: string) => Promise<void>
   reorderScenes: (campaignId: string, sceneIds: string[]) => Promise<void>
   setCurrentScene: (id: string | null) => void
   clearError: () => void
@@ -161,6 +162,18 @@ export const useSceneStore = create<SceneState>()(
           await sceneActivationService.activateScene(id)
         } catch (error) {
           const message = error instanceof Error ? error.message : 'Failed to activate scene'
+          set({ error: message })
+          throw error
+        }
+      },
+
+      deactivateScene: async (id) => {
+        set({ error: null })
+        try {
+          const { sceneActivationService } = await import('@/lib/services/browser/sceneActivationService')
+          await sceneActivationService.deactivateScene(id)
+        } catch (error) {
+          const message = error instanceof Error ? error.message : 'Failed to deactivate scene'
           set({ error: message })
           throw error
         }

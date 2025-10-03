@@ -23,6 +23,7 @@ export function SceneHero({ scene, sessionId }: SceneHeroProps) {
   const [isActivating, setIsActivating] = useState(false)
   const updateScene = useSceneStore((state) => state.updateScene)
   const activateScene = useSceneStore((state) => state.activateScene)
+  const deactivateScene = useSceneStore((state) => state.deactivateScene)
   const { addToast } = useToastStore()
 
   const updateSessionScene = (updates: Partial<Scene>) => {
@@ -70,9 +71,28 @@ export function SceneHero({ scene, sessionId }: SceneHeroProps) {
     setIsActivating(true)
     try {
       if (scene.is_active) {
-        // TODO: Implement scene deactivation
-        addToast('Pause functionality coming soon', 'info')
+        // Deactivate scene
+        await deactivateScene(scene.id)
+
+        // Update sessionSceneStore: set this scene as inactive
+        if (sessionId) {
+          const state = useSessionSceneStore.getState()
+          const currentScenes = state.sessionScenes.get(sessionId) || []
+          const updatedScenes = currentScenes.map(s => ({
+            ...s,
+            is_active: s.id === scene.id ? false : s.is_active,
+            updated_at: new Date().toISOString()
+          }))
+
+          useSessionSceneStore.setState((state) => ({
+            ...state,
+            sessionScenes: new Map(state.sessionScenes).set(sessionId, updatedScenes)
+          }))
+        }
+
+        addToast(`Deactivated "${scene.name}"`, 'success')
       } else {
+        // Activate scene
         await activateScene(scene.id)
 
         // Update sessionSceneStore: deactivate all scenes, then activate this one
@@ -94,8 +114,8 @@ export function SceneHero({ scene, sessionId }: SceneHeroProps) {
         addToast(`Activated "${scene.name}"`, 'success')
       }
     } catch (error) {
-      console.error('Failed to activate scene:', error)
-      addToast('Failed to activate scene', 'error')
+      console.error('Failed to toggle scene:', error)
+      addToast(`Failed to ${scene.is_active ? 'deactivate' : 'activate'} scene`, 'error')
     } finally {
       setIsActivating(false)
     }
@@ -190,7 +210,7 @@ export function SceneHero({ scene, sessionId }: SceneHeroProps) {
             {scene.is_active ? (
               <>
                 <Pause className="w-4 h-4" />
-                <span>Scene Active</span>
+                <span>Deactivate Scene</span>
               </>
             ) : (
               <>

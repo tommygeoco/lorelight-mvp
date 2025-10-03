@@ -111,26 +111,47 @@ export function SessionSceneView({ campaignId, sessionId }: SessionSceneViewProp
 
   const handlePlayScene = async (scene: Scene) => {
     try {
-      await useSceneStore.getState().activateScene(scene.id)
+      if (scene.is_active) {
+        // Deactivate the scene
+        await useSceneStore.getState().deactivateScene(scene.id)
 
-      // Update sessionSceneStore: deactivate all scenes, then activate this one
-      const currentScenes = sessionScenes.get(sessionId) || []
-      const updatedScenes = currentScenes.map(s => ({
-        ...s,
-        is_active: s.id === scene.id,
-        updated_at: new Date().toISOString()
-      }))
+        // Update sessionSceneStore: set this scene as inactive
+        const currentScenes = sessionScenes.get(sessionId) || []
+        const updatedScenes = currentScenes.map(s => ({
+          ...s,
+          is_active: s.id === scene.id ? false : s.is_active,
+          updated_at: new Date().toISOString()
+        }))
 
-      useSessionSceneStore.setState((state) => ({
-        ...state,
-        sessionScenes: new Map(state.sessionScenes).set(sessionId, updatedScenes)
-      }))
+        useSessionSceneStore.setState((state) => ({
+          ...state,
+          sessionScenes: new Map(state.sessionScenes).set(sessionId, updatedScenes)
+        }))
 
-      setSelectedSceneId(scene.id)
-      addToast(`Activated "${scene.name}"`, 'success')
+        addToast(`Deactivated "${scene.name}"`, 'success')
+      } else {
+        // Activate the scene
+        await useSceneStore.getState().activateScene(scene.id)
+
+        // Update sessionSceneStore: deactivate all scenes, then activate this one
+        const currentScenes = sessionScenes.get(sessionId) || []
+        const updatedScenes = currentScenes.map(s => ({
+          ...s,
+          is_active: s.id === scene.id,
+          updated_at: new Date().toISOString()
+        }))
+
+        useSessionSceneStore.setState((state) => ({
+          ...state,
+          sessionScenes: new Map(state.sessionScenes).set(sessionId, updatedScenes)
+        }))
+
+        setSelectedSceneId(scene.id)
+        addToast(`Activated "${scene.name}"`, 'success')
+      }
     } catch (error) {
-      console.error('Failed to activate scene:', error)
-      addToast('Failed to activate scene', 'error')
+      console.error('Failed to toggle scene:', error)
+      addToast(`Failed to ${scene.is_active ? 'deactivate' : 'activate'} scene`, 'error')
     }
   }
 
