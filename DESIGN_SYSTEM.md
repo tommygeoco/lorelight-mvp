@@ -1812,10 +1812,14 @@ import { SceneBlockEditor } from '@/components/scenes/SceneBlockEditor'
 **Performance Optimizations:**
 - **Optimistic updates**: All operations (add, update, delete) update UI immediately
 - **Background sync**: Database writes happen asynchronously without blocking
-- **Instant cursor movement**: `setTimeout(..., 0)` for immediate focus after React render
+- **Reliable cursor focus**: Double `requestAnimationFrame()` ensures DOM is ready
 - **No awaits**: All DB operations fire-and-forget with error handling
 - **Temporary IDs**: New blocks get `temp-${uuid}` IDs immediately, replaced when DB responds
 - **Result**: Blazing fast, zero-lag editing experience
+
+**Typography:**
+- **Text blocks**: 16px font size, 24px line height, 3px vertical padding
+- **All blocks**: Consistent 3px top/bottom padding for uniform spacing
 
 ---
 

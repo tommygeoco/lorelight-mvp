@@ -135,20 +135,22 @@ export function SceneBlockEditor({ block, sceneId }: SceneBlockEditorProps) {
         content: { text: { text: '', formatting: [] } },
         order_index: newOrderIndex,
       }).then(newBlock => {
-        // Focus immediately on next frame (after React renders new block)
-        setTimeout(() => {
-          const newBlockElement = document.querySelector(`[data-block-id="${newBlock.id}"]`) as HTMLDivElement
-          if (newBlockElement) {
-            newBlockElement.focus()
-            // Place cursor at start
-            const range = document.createRange()
-            const sel = window.getSelection()
-            range.setStart(newBlockElement, 0)
-            range.collapse(true)
-            sel?.removeAllRanges()
-            sel?.addRange(range)
-          }
-        }, 0)
+        // Focus after React render using double RAF for reliability
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            const newBlockElement = document.querySelector(`[data-block-id="${newBlock.id}"]`) as HTMLDivElement
+            if (newBlockElement) {
+              newBlockElement.focus()
+              // Place cursor at start
+              const range = document.createRange()
+              const sel = window.getSelection()
+              range.setStart(newBlockElement, 0)
+              range.collapse(true)
+              sel?.removeAllRanges()
+              sel?.addRange(range)
+            }
+          })
+        })
       }).catch(() => {}) // Ignore errors, already handled in store
 
       // Update order of blocks after this one IN BACKGROUND (fire and forget)
@@ -184,19 +186,21 @@ export function SceneBlockEditor({ block, sceneId }: SceneBlockEditorProps) {
 
       // Focus previous block immediately
       if (previousBlock) {
-        setTimeout(() => {
-          const prevBlockElement = document.querySelector(`[data-block-id="${previousBlock.id}"]`) as HTMLDivElement
-          if (prevBlockElement) {
-            prevBlockElement.focus()
-            // Place cursor at end
-            const range = document.createRange()
-            const sel = window.getSelection()
-            range.selectNodeContents(prevBlockElement)
-            range.collapse(false)
-            sel?.removeAllRanges()
-            sel?.addRange(range)
-          }
-        }, 0)
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            const prevBlockElement = document.querySelector(`[data-block-id="${previousBlock.id}"]`) as HTMLDivElement
+            if (prevBlockElement) {
+              prevBlockElement.focus()
+              // Place cursor at end
+              const range = document.createRange()
+              const sel = window.getSelection()
+              range.selectNodeContents(prevBlockElement)
+              range.collapse(false)
+              sel?.removeAllRanges()
+              sel?.addRange(range)
+            }
+          })
+        })
       }
     }
 
@@ -220,23 +224,25 @@ export function SceneBlockEditor({ block, sceneId }: SceneBlockEditorProps) {
       deleteBlock(block.id).catch(() => {}) // Ignore errors
 
       if (targetBlock) {
-        setTimeout(() => {
-          const elem = document.querySelector(`[data-block-id="${targetBlock.id}"]`) as HTMLDivElement
-          if (elem) {
-            elem.focus()
-            const range = document.createRange()
-            const sel = window.getSelection()
-            if (nextBlock) {
-              range.setStart(elem, 0)
-              range.collapse(true)
-            } else {
-              range.selectNodeContents(elem)
-              range.collapse(false)
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            const elem = document.querySelector(`[data-block-id="${targetBlock.id}"]`) as HTMLDivElement
+            if (elem) {
+              elem.focus()
+              const range = document.createRange()
+              const sel = window.getSelection()
+              if (nextBlock) {
+                range.setStart(elem, 0)
+                range.collapse(true)
+              } else {
+                range.selectNodeContents(elem)
+                range.collapse(false)
+              }
+              sel?.removeAllRanges()
+              sel?.addRange(range)
             }
-            sel?.removeAllRanges()
-            sel?.addRange(range)
-          }
-        }, 0)
+          })
+        })
       }
     }
   }, [block.id, block.order_index, sceneId, updateBlock, addBlock, deleteBlock])
@@ -306,14 +312,14 @@ export function SceneBlockEditor({ block, sceneId }: SceneBlockEditorProps) {
   const getBlockStyle = () => {
     switch (block.type) {
       case 'heading_1':
-        return 'text-[24px] font-bold leading-[32px] mt-6 mb-2'
+        return 'text-[24px] font-bold leading-[32px] py-[3px] mt-6 mb-2'
       case 'heading_2':
-        return 'text-[20px] font-bold leading-[28px] mt-4 mb-2'
+        return 'text-[20px] font-bold leading-[28px] py-[3px] mt-4 mb-2'
       case 'heading_3':
-        return 'text-[16px] font-bold leading-[24px] mt-3 mb-1'
+        return 'text-[16px] font-bold leading-[24px] py-[3px] mt-3 mb-1'
       case 'text':
       default:
-        return 'text-[14px] leading-[20px] mb-2'
+        return 'text-[16px] leading-[24px] py-[3px]'
     }
   }
 
