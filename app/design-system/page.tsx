@@ -1402,14 +1402,14 @@ interface HueContextMenuProps {
                 description="GripVertical (6-dot), 2s tooltip delay, focus-only placeholders, keyboard nav. Type / for slash commands."
               >
                 <div className="bg-[#191919] rounded-[12px] p-8">
-                  {/* Demo inline editor */}
+                  {/* Demo inline editor - no horizontal padding */}
                   <div
-                    className="w-full min-h-[200px] px-[16px] py-[24px] rounded-[12px] transition-colors cursor-text hover:bg-white/[0.02]"
+                    className="w-full min-h-[200px] py-[24px] rounded-[12px] transition-colors cursor-text hover:bg-white/[0.02]"
                   >
                     <div className="space-y-1">
-                      {/* Heading 1 - grip vertically centered with tooltip */}
-                      <div className="group relative flex items-center gap-2 px-2 -mx-2 rounded-[8px]">
-                        <div className="relative flex-shrink-0 opacity-0 group-hover:opacity-40 hover:!opacity-100 cursor-grab active:cursor-grabbing group/grip">
+                      {/* Heading 1 - grip in left margin, text aligned */}
+                      <div className="group relative">
+                        <div className="absolute left-[-32px] top-0 flex items-center h-full opacity-0 group-hover:opacity-40 hover:!opacity-100 cursor-grab active:cursor-grabbing group/grip">
                           <GripVertical className="w-5 h-5 text-white" />
                           {/* Tooltip - 2s delay, wider */}
                           <div className="absolute left-0 top-full mt-1 px-3 py-2 bg-[#191919] border border-white/10 rounded-[6px] shadow-lg opacity-0 group-hover/grip:opacity-100 transition-opacity delay-[2000ms] pointer-events-none z-50 text-center min-w-[100px] whitespace-nowrap">
@@ -1419,14 +1419,14 @@ interface HueContextMenuProps {
                             </div>
                           </div>
                         </div>
-                        <div className="flex-1 font-['Inter'] text-[24px] font-bold leading-[32px] text-white/90 mt-6 mb-2">
+                        <div className="w-full font-['Inter'] text-[24px] font-bold leading-[32px] text-white/90 mt-6 mb-2">
                           Scene Overview
                         </div>
                       </div>
 
                       {/* Text block - instant cursor, slash commands */}
-                      <div className="group relative flex items-center gap-2 px-2 -mx-2 rounded-[8px]">
-                        <div className="relative flex-shrink-0 opacity-0 group-hover:opacity-40 hover:!opacity-100 cursor-grab group/grip">
+                      <div className="group relative">
+                        <div className="absolute left-[-32px] top-0 flex items-center h-full opacity-0 group-hover:opacity-40 hover:!opacity-100 cursor-grab group/grip">
                           <GripVertical className="w-5 h-5 text-white" />
                           <div className="absolute left-0 top-full mt-1 px-3 py-2 bg-[#191919] border border-white/10 rounded-[6px] shadow-lg opacity-0 group-hover/grip:opacity-100 transition-opacity delay-[2000ms] pointer-events-none z-50 text-center min-w-[100px] whitespace-nowrap">
                             <div className="text-[11px] leading-[14px] text-white/60">
@@ -1435,14 +1435,14 @@ interface HueContextMenuProps {
                             </div>
                           </div>
                         </div>
-                        <div className="flex-1 font-['Inter'] text-[14px] leading-[20px] text-white/90 mb-2">
+                        <div className="w-full font-['Inter'] text-[14px] leading-[20px] text-white/90 mb-2">
                           The party enters a dimly lit tavern. Type / for menu. Click grip to toggle.
                         </div>
                       </div>
 
                       {/* Heading 2 */}
-                      <div className="group relative flex items-center gap-2 px-2 -mx-2 rounded-[8px]">
-                        <div className="relative flex-shrink-0 opacity-0 group-hover:opacity-40 hover:!opacity-100 cursor-grab group/grip">
+                      <div className="group relative">
+                        <div className="absolute left-[-32px] top-0 flex items-center h-full opacity-0 group-hover:opacity-40 hover:!opacity-100 cursor-grab group/grip">
                           <GripVertical className="w-5 h-5 text-white" />
                           <div className="absolute left-0 top-full mt-1 px-3 py-2 bg-[#191919] border border-white/10 rounded-[6px] shadow-lg opacity-0 group-hover/grip:opacity-100 transition-opacity delay-[2000ms] pointer-events-none z-50 text-center min-w-[100px] whitespace-nowrap">
                             <div className="text-[11px] leading-[14px] text-white/60">
@@ -1451,14 +1451,14 @@ interface HueContextMenuProps {
                             </div>
                           </div>
                         </div>
-                        <div className="flex-1 font-['Inter'] text-[20px] font-bold leading-[28px] text-white/90 mt-4 mb-2">
+                        <div className="w-full font-['Inter'] text-[20px] font-bold leading-[28px] text-white/90 mt-4 mb-2">
                           NPCs Present
                         </div>
                       </div>
 
                       {/* Empty block with new placeholder */}
-                      <div className="group relative flex items-center gap-2 px-2 -mx-2 rounded-[8px]">
-                        <div className="relative flex-shrink-0 opacity-0 group-hover:opacity-40 hover:!opacity-100 cursor-grab group/grip">
+                      <div className="group relative">
+                        <div className="absolute left-[-32px] top-0 flex items-center h-full opacity-0 group-hover:opacity-40 hover:!opacity-100 cursor-grab group/grip">
                           <GripVertical className="w-5 h-5 text-white" />
                           <div className="absolute left-0 top-full mt-1 px-3 py-2 bg-[#191919] border border-white/10 rounded-[6px] shadow-lg opacity-0 group-hover/grip:opacity-100 transition-opacity delay-[2000ms] pointer-events-none z-50 text-center min-w-[100px] whitespace-nowrap">
                             <div className="text-[11px] leading-[14px] text-white/60">
@@ -1467,7 +1467,7 @@ interface HueContextMenuProps {
                             </div>
                           </div>
                         </div>
-                        <div className="flex-1 font-['Inter'] text-[14px] leading-[20px] text-white/30 mb-2">
+                        <div className="w-full font-['Inter'] text-[14px] leading-[20px] text-white/30 mb-2">
                           Type / for commands
                         </div>
                       </div>
@@ -1487,9 +1487,9 @@ interface HueContextMenuProps {
 
               <CodeBlock
                 id="inline-notes-editor"
-                code={`// SceneNotesSection - Hover only on main container
+                code={`// SceneNotesSection - NO horizontal padding, text aligns with page
 <div
-  className={\`w-full min-h-[200px] px-[16px] py-[24px] rounded-[12px]
+  className={\`w-full min-h-[200px] py-[24px] rounded-[12px]
     transition-colors cursor-text \${isHovered ? 'bg-white/[0.02]' : 'bg-transparent'}\`}
   onMouseEnter={() => setIsHovered(true)}
   onMouseLeave={() => setIsHovered(false)}
@@ -1508,12 +1508,12 @@ interface HueContextMenuProps {
   )}
 </div>
 
-// SceneBlockEditor - GripVertical (6-dot), focus-only placeholder
-<div className="group relative flex items-center gap-2 px-2 -mx-2 rounded-[8px]">
-  {/* GripVertical: drag or left-click to toggle menu */}
+// SceneBlockEditor - Grip in left margin, text aligned
+<div className="group relative">
+  {/* GripVertical: absolutely positioned in left margin */}
   <div
     ref={gripRef}
-    className="relative flex-shrink-0 opacity-0 group-hover:opacity-40 hover:!opacity-100 cursor-grab group/grip"
+    className="absolute left-[-32px] top-0 flex items-center h-full opacity-0 group-hover:opacity-40 hover:!opacity-100 cursor-grab group/grip"
     onClick={handleGripClick}
   >
     <GripVertical className="w-5 h-5 text-white" />
@@ -1527,7 +1527,7 @@ interface HueContextMenuProps {
     </div>
   </div>
 
-  {/* Contenteditable - placeholder only when focused */}
+  {/* Contenteditable - full width, aligns with page title */}
   <div
     ref={contentRef}
     contentEditable
@@ -1535,7 +1535,7 @@ interface HueContextMenuProps {
     onKeyDown={handleKeyDown}
     onFocus={() => setIsFocused(true)}
     onBlur={() => setIsFocused(false)}
-    className="flex-1 outline-none text-white/90 font-['Inter']"
+    className="w-full outline-none text-white/90 font-['Inter']"
     data-placeholder={isFocused ? "Type / for commands" : ""}
     data-block-id={block.id}
   />

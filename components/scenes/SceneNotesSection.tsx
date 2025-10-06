@@ -45,7 +45,7 @@ export function SceneNotesSection({ scene }: SceneNotesSectionProps) {
 
   return (
     <div
-      className={`w-full min-h-[200px] px-[16px] py-[24px] rounded-[12px] transition-colors cursor-text ${
+      className={`w-full min-h-[200px] py-[24px] rounded-[12px] transition-colors cursor-text ${
         isHovered ? 'bg-white/[0.02]' : 'bg-transparent'
       }`}
       onMouseEnter={() => setIsHovered(true)}

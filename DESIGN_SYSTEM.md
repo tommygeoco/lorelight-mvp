@@ -1748,7 +1748,8 @@ Individual contenteditable block with grip interaction and slash commands.
 - **Instant cursor movement**: Seamless focus transitions between blocks
 
 **Grip Icon Behavior:**
-- **Position**: Vertically aligned to middle of element content
+- **Position**: Absolutely positioned in left margin (`left-[-32px]`), vertically centered
+- **Alignment**: Text aligns with page title and other sections (no offset from grip)
 - **Tooltip**: "**Drag** to move, **Click** to open menu" (emphasis on Drag and Click)
 - **Drag**: Click and drag to reorder blocks
 - **Left-click**: Opens BlockMenu positioned below grip
@@ -1798,12 +1799,13 @@ import { SceneBlockEditor } from '@/components/scenes/SceneBlockEditor'
 ```
 
 **Visual States:**
-- **Default**: Grip hidden, text visible
+- **Default**: Grip hidden in left margin, text visible and aligned
 - **Hover**: Grip shows at `opacity-40`, increases to `opacity-100` on grip hover
 - **Grip hover**: Tooltip appears with emphasized text
 - **Empty**: Placeholder text shows in `text-white/30`
 - **No row hover highlight**: Clean, minimal appearance
-- **Grip alignment**: Uses `items-center` with `self-start pt-1` on grip for vertical centering
+- **Grip positioning**: Absolutely positioned at `left-[-32px]` outside normal flow
+- **Text alignment**: Full width (`w-full`), aligns with page title and sections
 
 **Cursor Movement Performance:**
 - All focus transitions use `setTimeout(..., 0)` for next-tick execution

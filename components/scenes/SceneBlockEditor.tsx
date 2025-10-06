@@ -374,11 +374,11 @@ export function SceneBlockEditor({ block, sceneId }: SceneBlockEditorProps) {
 
   return (
     <>
-      <div className="group relative flex items-center gap-2 px-2 -mx-2 rounded-[8px]">
-        {/* Grip handle with delayed tooltip */}
+      <div className="group relative">
+        {/* Grip handle with delayed tooltip - absolutely positioned in left margin */}
         <div
           ref={gripRef}
-          className="relative flex-shrink-0 opacity-0 group-hover:opacity-40 hover:!opacity-100 transition-opacity cursor-grab active:cursor-grabbing group/grip"
+          className="absolute left-[-32px] top-0 flex items-center h-full opacity-0 group-hover:opacity-40 hover:!opacity-100 transition-opacity cursor-grab active:cursor-grabbing group/grip"
           onClick={handleGripClick}
         >
           <GripVertical className="w-5 h-5 text-white" />
@@ -406,7 +406,7 @@ export function SceneBlockEditor({ block, sceneId }: SceneBlockEditorProps) {
             // Don&apos;t hide toolbar immediately to allow clicking buttons
             setTimeout(() => setShowToolbar(false), 200)
           }}
-          className={`flex-1 outline-none text-white/90 font-['Inter'] ${getBlockStyle()}`}
+          className={`w-full outline-none text-white/90 font-['Inter'] ${getBlockStyle()}`}
           data-placeholder={isFocused ? getPlaceholder() : ''}
           data-block-id={block.id}
         />
