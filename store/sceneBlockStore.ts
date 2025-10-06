@@ -63,23 +63,51 @@ export const useSceneBlockStore = create<SceneBlockState>()(
         },
 
         addBlock: async (blockData: Omit<SceneBlockInsert, 'user_id'>) => {
-          try {
-            const newBlock = await sceneBlockService.create(blockData as SceneBlockInsert)
-            set(state => {
-              state.blocks.set(newBlock.id, newBlock)
-            })
-            return newBlock
-          } catch (error) {
-            const errorMessage = error instanceof Error
-              ? error.message
-              : typeof error === 'object' && error !== null && 'message' in error
-              ? String((error as { message: unknown }).message)
-              : 'Failed to create block'
+          // Generate temporary ID for instant UI update
+          const tempId = `temp-${crypto.randomUUID()}`
 
-            console.error('Failed to create block:', errorMessage, error)
-            set({ error: errorMessage })
-            throw new Error(errorMessage)
+          // Create optimistic block immediately
+          const optimisticBlock: SceneBlock = {
+            id: tempId,
+            scene_id: blockData.scene_id,
+            type: blockData.type,
+            content: blockData.content,
+            order_index: blockData.order_index,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            user_id: '', // Will be set by server
           }
+
+          // Add to store IMMEDIATELY for instant UI
+          set(state => {
+            state.blocks.set(tempId, optimisticBlock)
+          })
+
+          // Fire off DB creation in background (non-blocking)
+          sceneBlockService.create(blockData as SceneBlockInsert)
+            .then(newBlock => {
+              // Replace temp block with real block from DB
+              set(state => {
+                state.blocks.delete(tempId)
+                state.blocks.set(newBlock.id, newBlock)
+              })
+            })
+            .catch(error => {
+              // Remove temp block on error
+              set(state => {
+                state.blocks.delete(tempId)
+              })
+              const errorMessage = error instanceof Error
+                ? error.message
+                : typeof error === 'object' && error !== null && 'message' in error
+                ? String((error as { message: unknown }).message)
+                : 'Failed to create block'
+              console.error('Failed to create block:', errorMessage, error)
+              set({ error: errorMessage })
+            })
+
+          // Return optimistic block immediately
+          return optimisticBlock
         },
 
         updateBlock: async (id, updates) => {

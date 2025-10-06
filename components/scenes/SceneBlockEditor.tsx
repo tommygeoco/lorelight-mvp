@@ -104,20 +104,20 @@ export function SceneBlockEditor({ block, sceneId }: SceneBlockEditorProps) {
   }, [handleInput])
 
   // Handle keyboard shortcuts
-  const handleKeyDown = useCallback(async (e: React.KeyboardEvent) => {
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     const text = contentRef.current?.textContent || ''
 
     // Enter (without Shift) - create new block below
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault()
 
-      // Save current block (non-blocking)
+      // Save current block (fire and forget)
       if (saveTimeoutRef.current) {
         clearTimeout(saveTimeoutRef.current)
       }
       updateBlock(block.id, {
         content: { text: { text, formatting: [] } }
-      })
+      }).catch(() => {}) // Ignore errors, optimistic update already happened
 
       // Get blocks synchronously
       const blocksMap = useSceneBlockStore.getState().blocks
@@ -128,27 +128,15 @@ export function SceneBlockEditor({ block, sceneId }: SceneBlockEditorProps) {
       const currentIndex = blocks.findIndex(b => b.id === block.id)
       const newOrderIndex = block.order_index + 1
 
-      // Create new TEXT block IMMEDIATELY (optimistic)
-      const newBlockPromise = addBlock({
+      // Create new TEXT block INSTANTLY (returns immediately with temp ID)
+      addBlock({
         scene_id: sceneId,
         type: 'text',
         content: { text: { text: '', formatting: [] } },
         order_index: newOrderIndex,
-      })
-
-      // Update order of blocks after this one IN BACKGROUND (non-blocking)
-      const blocksToUpdate = blocks.slice(currentIndex + 1)
-      blocksToUpdate.forEach(b => {
-        updateBlock(b.id, {
-          order_index: b.order_index + 1
-        })
-      })
-
-      // Wait only for new block creation, then focus INSTANTLY
-      const newBlock = await newBlockPromise
-      if (newBlock) {
-        // Use requestAnimationFrame for immediate DOM update
-        requestAnimationFrame(() => {
+      }).then(newBlock => {
+        // Focus immediately on next frame (after React renders new block)
+        setTimeout(() => {
           const newBlockElement = document.querySelector(`[data-block-id="${newBlock.id}"]`) as HTMLDivElement
           if (newBlockElement) {
             newBlockElement.focus()
@@ -160,8 +148,16 @@ export function SceneBlockEditor({ block, sceneId }: SceneBlockEditorProps) {
             sel?.removeAllRanges()
             sel?.addRange(range)
           }
-        })
-      }
+        }, 0)
+      }).catch(() => {}) // Ignore errors, already handled in store
+
+      // Update order of blocks after this one IN BACKGROUND (fire and forget)
+      const blocksToUpdate = blocks.slice(currentIndex + 1)
+      blocksToUpdate.forEach(b => {
+        updateBlock(b.id, {
+          order_index: b.order_index + 1
+        }).catch(() => {}) // Ignore errors
+      })
     }
 
     // Shift+Enter - allow line break within same element (default behavior)
@@ -183,11 +179,12 @@ export function SceneBlockEditor({ block, sceneId }: SceneBlockEditorProps) {
       const currentIndex = blocks.findIndex(b => b.id === block.id)
       const previousBlock = currentIndex > 0 ? blocks[currentIndex - 1] : null
 
-      await deleteBlock(block.id)
+      // Delete INSTANTLY (optimistic, DB sync in background)
+      deleteBlock(block.id).catch(() => {}) // Ignore errors
 
-      // Focus previous block INSTANTLY using requestAnimationFrame
+      // Focus previous block immediately
       if (previousBlock) {
-        requestAnimationFrame(() => {
+        setTimeout(() => {
           const prevBlockElement = document.querySelector(`[data-block-id="${previousBlock.id}"]`) as HTMLDivElement
           if (prevBlockElement) {
             prevBlockElement.focus()
@@ -199,7 +196,7 @@ export function SceneBlockEditor({ block, sceneId }: SceneBlockEditorProps) {
             sel?.removeAllRanges()
             sel?.addRange(range)
           }
-        })
+        }, 0)
       }
     }
 
@@ -219,10 +216,11 @@ export function SceneBlockEditor({ block, sceneId }: SceneBlockEditorProps) {
       const prevBlock = currentIndex > 0 ? blocks[currentIndex - 1] : null
       const targetBlock = nextBlock || prevBlock
 
-      await deleteBlock(block.id)
+      // Delete INSTANTLY (optimistic, DB sync in background)
+      deleteBlock(block.id).catch(() => {}) // Ignore errors
 
       if (targetBlock) {
-        requestAnimationFrame(() => {
+        setTimeout(() => {
           const elem = document.querySelector(`[data-block-id="${targetBlock.id}"]`) as HTMLDivElement
           if (elem) {
             elem.focus()
@@ -238,7 +236,7 @@ export function SceneBlockEditor({ block, sceneId }: SceneBlockEditorProps) {
             sel?.removeAllRanges()
             sel?.addRange(range)
           }
-        })
+        }, 0)
       }
     }
   }, [block.id, block.order_index, sceneId, updateBlock, addBlock, deleteBlock])

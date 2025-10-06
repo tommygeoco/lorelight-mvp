@@ -1809,10 +1809,13 @@ import { SceneBlockEditor } from '@/components/scenes/SceneBlockEditor'
 - **Grip positioning**: Absolutely positioned at `left-[-32px]` outside normal flow
 - **Text alignment**: Full width (`w-full`), aligns with page title and sections
 
-**Cursor Movement Performance:**
-- All focus transitions use `setTimeout(..., 0)` for next-tick execution
-- Ensures DOM updates complete before focus
-- Feels instant and natural like native text editors
+**Performance Optimizations:**
+- **Optimistic updates**: All operations (add, update, delete) update UI immediately
+- **Background sync**: Database writes happen asynchronously without blocking
+- **Instant cursor movement**: `setTimeout(..., 0)` for immediate focus after React render
+- **No awaits**: All DB operations fire-and-forget with error handling
+- **Temporary IDs**: New blocks get `temp-${uuid}` IDs immediately, replaced when DB responds
+- **Result**: Blazing fast, zero-lag editing experience
 
 ---
 
