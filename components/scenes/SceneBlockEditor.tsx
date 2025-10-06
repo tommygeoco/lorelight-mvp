@@ -26,6 +26,7 @@ export function SceneBlockEditor({ block, sceneId }: SceneBlockEditorProps) {
   const [isFocused, setIsFocused] = useState(false)
   const saveTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined)
   const gripRef = useRef<HTMLDivElement>(null)
+  const isCreatingNewBlockRef = useRef(false)
 
   const updateBlock = useSceneBlockStore((state) => state.actions.updateBlock)
   const deleteBlock = useSceneBlockStore((state) => state.actions.deleteBlock)
@@ -111,6 +112,9 @@ export function SceneBlockEditor({ block, sceneId }: SceneBlockEditorProps) {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault()
 
+      // Mark that we're creating a new block (prevents onBlur interference)
+      isCreatingNewBlockRef.current = true
+
       // Save current block (fire and forget)
       if (saveTimeoutRef.current) {
         clearTimeout(saveTimeoutRef.current)
@@ -135,29 +139,47 @@ export function SceneBlockEditor({ block, sceneId }: SceneBlockEditorProps) {
         content: { text: { text: '', formatting: [] } },
         order_index: newOrderIndex,
       }).then(newBlock => {
-        // Focus with setTimeout to ensure React has fully rendered
-        setTimeout(() => {
-          const newBlockElement = document.querySelector(`[data-block-id="${newBlock.id}"]`) as HTMLDivElement
-          if (newBlockElement) {
-            newBlockElement.focus()
-            // Place cursor at start
-            const range = document.createRange()
-            const sel = window.getSelection()
-            range.setStart(newBlockElement, 0)
-            range.collapse(true)
-            sel?.removeAllRanges()
-            sel?.addRange(range)
+        // Multiple attempts to focus with increasing delays
+        const attemptFocus = (attempt = 0) => {
+          const delay = attempt * 5 // 0ms, 5ms, 10ms, 15ms
+          setTimeout(() => {
+            const newBlockElement = document.querySelector(`[data-block-id="${newBlock.id}"]`) as HTMLDivElement
+            if (newBlockElement) {
+              newBlockElement.focus()
+              // Place cursor at start
+              const range = document.createRange()
+              const sel = window.getSelection()
+              range.setStart(newBlockElement, 0)
+              range.collapse(true)
+              sel?.removeAllRanges()
+              sel?.addRange(range)
 
-            // Update order indices AFTER focusing (prevents re-render from stealing focus)
-            const blocksToUpdate = blocks.slice(currentIndex + 1)
-            blocksToUpdate.forEach(b => {
-              updateBlock(b.id, {
-                order_index: b.order_index + 1
-              }).catch(() => {}) // Ignore errors
-            })
-          }
-        }, 10)
-      }).catch(() => {}) // Ignore errors, already handled in store
+              // Reset flag after successful focus
+              isCreatingNewBlockRef.current = false
+
+              // Update order indices AFTER focusing
+              if (attempt === 0) {
+                const blocksToUpdate = blocks.slice(currentIndex + 1)
+                blocksToUpdate.forEach(b => {
+                  updateBlock(b.id, {
+                    order_index: b.order_index + 1
+                  }).catch(() => {}) // Ignore errors
+                })
+              }
+            } else if (attempt < 3) {
+              // Try again if element not found
+              attemptFocus(attempt + 1)
+            } else {
+              // Give up after 3 attempts
+              isCreatingNewBlockRef.current = false
+            }
+          }, delay)
+        }
+
+        attemptFocus()
+      }).catch(() => {
+        isCreatingNewBlockRef.current = false
+      })
     }
 
     // Shift+Enter - allow line break within same element (default behavior)
@@ -362,6 +384,9 @@ export function SceneBlockEditor({ block, sceneId }: SceneBlockEditorProps) {
           onMouseUp={handleMouseUp}
           onFocus={() => setIsFocused(true)}
           onBlur={() => {
+            // Don't blur if we're creating a new block
+            if (isCreatingNewBlockRef.current) return
+
             setIsFocused(false)
             // Don&apos;t hide toolbar immediately to allow clicking buttons
             setTimeout(() => setShowToolbar(false), 200)
