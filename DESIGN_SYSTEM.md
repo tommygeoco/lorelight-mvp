@@ -1760,13 +1760,16 @@ Individual contenteditable block with grip interaction and slash commands.
 - **Not available**: Headers, lists, and other block types do NOT trigger on `/`
 
 **Keyboard Behavior:**
-- **Enter**: Creates new TEXT block below (always text, not current block type)
+- **Enter**: Always creates new TEXT block below
+  - Works even if current block is empty (allows multiple empty lines)
   - Cursor automatically moves to new block (instant, no delay)
   - Positioned at start of new block
+  - Always creates TEXT type, regardless of current block type
 - **Shift+Enter**: Creates line break within same element (browser default)
-- **Backspace on empty**: Deletes block (unless it&apos;s the only one)
+- **Backspace on empty**: Deletes block (unless it's the only one)
   - Cursor automatically moves to previous block (instant, no delay)
   - Positioned at end of previous block
+- **Delete on empty**: Same behavior as Backspace
 
 **Text Selection Toolbar:**
 - **Text blocks only**: RichTextToolbar appears when selecting text in `text` blocks

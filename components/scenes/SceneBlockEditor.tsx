@@ -107,47 +107,9 @@ export function SceneBlockEditor({ block, sceneId }: SceneBlockEditorProps) {
   const handleKeyDown = useCallback(async (e: React.KeyboardEvent) => {
     const text = contentRef.current?.textContent || ''
 
-    // Enter (without Shift) - if empty, delete current and move to next, otherwise create new
+    // Enter (without Shift) - create new block below
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault()
-
-      // If element is empty, delete it and move to next/previous
-      if (text === '') {
-        const blocksMap = useSceneBlockStore.getState().blocks
-        const blocks = Array.from(blocksMap.values())
-          .filter(b => b.scene_id === sceneId)
-          .sort((a, b) => a.order_index - b.order_index)
-
-        if (blocks.length === 1) return
-
-        const currentIndex = blocks.findIndex(b => b.id === block.id)
-        const nextBlock = currentIndex < blocks.length - 1 ? blocks[currentIndex + 1] : null
-        const prevBlock = currentIndex > 0 ? blocks[currentIndex - 1] : null
-        const targetBlock = nextBlock || prevBlock
-
-        await deleteBlock(block.id)
-
-        if (targetBlock) {
-          requestAnimationFrame(() => {
-            const elem = document.querySelector(`[data-block-id="${targetBlock.id}"]`) as HTMLDivElement
-            if (elem) {
-              elem.focus()
-              const range = document.createRange()
-              const sel = window.getSelection()
-              if (nextBlock) {
-                range.setStart(elem, 0)
-                range.collapse(true)
-              } else {
-                range.selectNodeContents(elem)
-                range.collapse(false)
-              }
-              sel?.removeAllRanges()
-              sel?.addRange(range)
-            }
-          })
-        }
-        return
-      }
 
       // Save current block (non-blocking)
       if (saveTimeoutRef.current) {
