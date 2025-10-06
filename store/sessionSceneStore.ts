@@ -15,6 +15,7 @@ interface SessionSceneState {
   isLoading: boolean
   error: string | null
   fetchedSessions: Set<string> // Track which sessions we've fetched
+  _version: number // Force re-renders when incremented
 
   // Actions
   fetchScenesForSession: (sessionId: string, force?: boolean) => Promise<void>
@@ -37,6 +38,7 @@ export const useSessionSceneStore = create<SessionSceneState>()(
       isLoading: false,
       error: null,
       fetchedSessions: new Set(),
+      _version: 0,
 
       fetchScenesForSession: async (sessionId, force = false) => {
         // Don't refetch if already loaded (unless forced)
@@ -136,7 +138,9 @@ export const useSessionSceneStore = create<SessionSceneState>()(
           const updatedScenes = scenes.map(scene =>
             scene.id === sceneId ? { ...scene, ...updates } : scene
           )
+
           state.sessionScenes.set(sessionId, castDraft(updatedScenes))
+          state._version++ // Increment version to force re-renders
         })
       },
 

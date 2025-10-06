@@ -45,17 +45,12 @@ export function SceneAmbienceSection({ scene, sessionId }: SceneAmbienceSectionP
     // Update sceneStore (DB)
     await useSceneStore.getState().updateScene(scene.id, { audio_config: newConfig as unknown as Json })
 
-    // Update sessionSceneStore (UI)
+    // Update sessionSceneStore (UI) - use the action to increment _version
     if (sessionId) {
-      const state = useSessionSceneStore.getState()
-      const currentScenes = state.sessionScenes.get(sessionId) || []
-      const updatedScenes = currentScenes.map(s =>
-        s.id === scene.id ? { ...s, audio_config: newConfig, updated_at: new Date().toISOString() } : s
-      )
-      useSessionSceneStore.setState((state) => ({
-        ...state,
-        sessionScenes: new Map(state.sessionScenes).set(sessionId, updatedScenes)
-      }))
+      useSessionSceneStore.getState().updateSceneInSession(sessionId, scene.id, {
+        audio_config: newConfig as unknown as Scene['audio_config'],
+        updated_at: new Date().toISOString()
+      })
     }
 
     setIsAudioLibraryOpen(false)
@@ -65,20 +60,24 @@ export function SceneAmbienceSection({ scene, sessionId }: SceneAmbienceSectionP
     const { useSceneStore } = await import('@/store/sceneStore')
     const { useSessionSceneStore } = await import('@/store/sessionSceneStore')
 
-    // Update sceneStore (DB)
-    await useSceneStore.getState().updateScene(scene.id, { light_config: config as Json })
+    console.log('[SceneAmbienceSection] Saving light config:', JSON.stringify(config, null, 2))
 
-    // Update sessionSceneStore (UI)
+    // Update sceneStore (DB)
+    try {
+      await useSceneStore.getState().updateScene(scene.id, { light_config: config as Json })
+      console.log('[SceneAmbienceSection] Light config saved to database successfully')
+    } catch (error) {
+      console.error('[SceneAmbienceSection] Failed to save light config:', error)
+      throw error
+    }
+
+    // Update sessionSceneStore (UI) - use the action to increment _version
     if (sessionId) {
-      const state = useSessionSceneStore.getState()
-      const currentScenes = state.sessionScenes.get(sessionId) || []
-      const updatedScenes = currentScenes.map(s =>
-        s.id === scene.id ? { ...s, light_config: config, updated_at: new Date().toISOString() } : s
-      )
-      useSessionSceneStore.setState((state) => ({
-        ...state,
-        sessionScenes: new Map(state.sessionScenes).set(sessionId, updatedScenes)
-      }))
+      useSessionSceneStore.getState().updateSceneInSession(sessionId, scene.id, {
+        light_config: config as unknown as Scene['light_config'],
+        updated_at: new Date().toISOString()
+      })
+      console.log('[SceneAmbienceSection] Light config updated in session store')
     }
   }
 
@@ -168,6 +167,7 @@ export function SceneAmbienceSection({ scene, sessionId }: SceneAmbienceSectionP
       />
 
       <LightConfigModal
+        key={`light-config-${scene.id}-${scene.updated_at}`}
         isOpen={isLightConfigOpen}
         onClose={() => setIsLightConfigOpen(false)}
         onSave={handleLightSave}

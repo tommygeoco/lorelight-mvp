@@ -85,23 +85,57 @@ export const useSceneStore = create<SceneState>()(
       updateScene: async (id, updates) => {
         set({ error: null })
         const original = get().scenes.get(id)
-        if (!original) return
 
-        const optimisticUpdate = { ...original, ...updates, updated_at: new Date().toISOString() }
-        set(state => {
-          state.scenes.set(id, castDraft(optimisticUpdate))
-        })
+        // Only do optimistic update if scene exists in sceneStore
+        if (original) {
+          const optimisticUpdate = { ...original, ...updates, updated_at: new Date().toISOString() }
+          set(state => {
+            state.scenes.set(id, castDraft(optimisticUpdate))
+          })
+
+          // Also update sessionSceneStore to keep sessions in sync
+          import('@/store/sessionSceneStore').then(({ useSessionSceneStore }) => {
+            const sessionStore = useSessionSceneStore.getState()
+            sessionStore.sessionScenes.forEach((scenes, sessionId) => {
+              const sceneIndex = scenes.findIndex(s => s.id === id)
+              if (sceneIndex !== -1) {
+                sessionStore.updateSceneInSession(sessionId, id, optimisticUpdate)
+              }
+            })
+          }).catch(console.error)
+        }
 
         try {
+          // Always update database, even if scene not in local store
           const updated = await sceneService.update(id, updates)
-          set(state => {
-            state.scenes.set(id, castDraft(updated))
-          })
+
+          // Update sceneStore if scene exists there
+          if (original) {
+            set(state => {
+              state.scenes.set(id, castDraft(updated))
+            })
+          }
+
+          // Sync final update to sessionSceneStore
+          import('@/store/sessionSceneStore').then(({ useSessionSceneStore }) => {
+            const sessionStore = useSessionSceneStore.getState()
+            sessionStore.sessionScenes.forEach((scenes, sessionId) => {
+              const sceneIndex = scenes.findIndex(s => s.id === id)
+              if (sceneIndex !== -1) {
+                sessionStore.updateSceneInSession(sessionId, id, updated)
+              }
+            })
+          }).catch(console.error)
         } catch (error) {
-          set(state => {
-            state.scenes.set(id, castDraft(original))
-            state.error = error instanceof Error ? error.message : 'Failed to update scene'
-          })
+          // Only rollback if we did an optimistic update
+          if (original) {
+            set(state => {
+              state.scenes.set(id, castDraft(original))
+              state.error = error instanceof Error ? error.message : 'Failed to update scene'
+            })
+          } else {
+            set({ error: error instanceof Error ? error.message : 'Failed to update scene' })
+          }
           throw error
         }
       },
@@ -147,6 +181,26 @@ export const useSceneStore = create<SceneState>()(
             })
             state.currentSceneId = id
           })
+
+          // Sync to sessionSceneStore
+          import('@/store/sessionSceneStore').then(({ useSessionSceneStore }) => {
+            const sessionStore = useSessionSceneStore.getState()
+            sessionStore.sessionScenes.forEach((scenes, sessionId) => {
+              // Check if any of these scenes belong to this campaign
+              const hasCampaignScenes = scenes.some(s => s.campaign_id === campaignId)
+              if (hasCampaignScenes) {
+                // Update all scenes in this session for this campaign
+                scenes.forEach(scene => {
+                  if (scene.campaign_id === campaignId) {
+                    sessionStore.updateSceneInSession(sessionId, scene.id, {
+                      is_active: scene.id === id,
+                      updated_at: new Date().toISOString()
+                    })
+                  }
+                })
+              }
+            })
+          }).catch(console.error)
         } catch (error) {
           const message = error instanceof Error ? error.message : 'Failed to set active scene'
           set({ error: message })

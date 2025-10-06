@@ -9,6 +9,8 @@ export interface AudioSourceContext {
   type: AudioSource
   id: string | null // playlist ID, scene ID, or null for library
   name: string // Display name for the source
+  campaignId?: string // Campaign ID for scenes
+  sessionId?: string // Session ID for scenes
 }
 
 interface AudioPlayerState {
@@ -28,10 +30,10 @@ interface AudioPlayerState {
 
   // Actions
   loadTrack: (trackId: string, trackUrl: string, sourceContext?: AudioSourceContext) => void
-  play: () => void
-  pause: () => void
+  play: (options?: { skipSceneActivation?: boolean }) => void
+  pause: (options?: { skipSceneDeactivation?: boolean }) => void
   togglePlay: () => void
-  stop: () => void
+  stop: (options?: { skipSceneDeactivation?: boolean }) => void
   setVolume: (volume: number) => void
   toggleMute: () => void
   toggleLoop: () => void
@@ -99,8 +101,8 @@ export const useAudioStore = create<AudioPlayerState>()(
         }
       },
 
-      play: () => {
-        const { audioElement, volume, isMuted } = get()
+      play: (options) => {
+        const { audioElement, volume, isMuted, sourceContext } = get()
         if (audioElement) {
           // Ensure audio is not muted and has proper volume
           audioElement.muted = isMuted
@@ -120,45 +122,78 @@ export const useAudioStore = create<AudioPlayerState>()(
             }
           })
           set({ isPlaying: true })
+
+          // If playing a scene (and not called from scene activation), activate the scene
+          if (!options?.skipSceneActivation && sourceContext?.type === 'scene' && sourceContext.id) {
+            const sceneId = sourceContext.id
+
+            // Update database - activate scene
+            import('@/store/sceneStore').then(({ useSceneStore }) => {
+              useSceneStore.getState().activateScene(sceneId).catch(console.error)
+            }).catch(console.error)
+
+            // Update sessionSceneStore - find all sessions with this scene and activate it
+            Promise.all([
+              import('@/store/sessionSceneStore'),
+              import('immer')
+            ]).then(([{ useSessionSceneStore }, { castDraft }]) => {
+              const store = useSessionSceneStore.getState()
+
+              // Find all sessions containing this scene and update them
+              store.sessionScenes.forEach((scenes, sessionId) => {
+                const hasScene = scenes.some(s => s.id === sceneId)
+                if (hasScene) {
+                  // Update all scenes in this session (activate this one, deactivate others)
+                  const updatedScenes = scenes.map(s => ({
+                    ...s,
+                    is_active: s.id === sceneId,
+                    updated_at: new Date().toISOString()
+                  }))
+
+                  // Update the session with all scene changes at once
+                  useSessionSceneStore.setState((state) => {
+                    state.sessionScenes.set(sessionId, castDraft(updatedScenes))
+                    state._version++
+                  })
+                }
+              })
+            }).catch(console.error)
+          }
         }
       },
 
-      pause: () => {
+      pause: (options) => {
         const { audioElement, sourceContext } = get()
         if (audioElement) {
           audioElement.pause()
         }
         set({ isPlaying: false })
 
-        // Deactivate scene if audio was from a scene
-        if (sourceContext?.type === 'scene' && sourceContext.id) {
+        // If pausing a scene (and not called from scene deactivation), deactivate the scene
+        if (!options?.skipSceneDeactivation && sourceContext?.type === 'scene' && sourceContext.id) {
           const sceneId = sourceContext.id
 
-          // Update database - fire and forget
+          // Update database - deactivate scene
           import('@/store/sceneStore').then(({ useSceneStore }) => {
             useSceneStore.getState().deactivateScene(sceneId).catch(console.error)
-          })
+          }).catch(console.error)
 
-          // Update sessionSceneStore UI - all sessions with this scene
+          // Update sessionSceneStore - find all sessions with this scene and deactivate
           import('@/store/sessionSceneStore').then(({ useSessionSceneStore }) => {
             const state = useSessionSceneStore.getState()
-            const updatedSessionScenes = new Map(state.sessionScenes)
+            const sessionScenes = state.sessionScenes
 
-            // Find all sessions containing this scene and deactivate it
-            updatedSessionScenes.forEach((scenes, sessionId) => {
-              const sceneIndex = scenes.findIndex(s => s.id === sceneId)
-              if (sceneIndex !== -1) {
-                const updatedScenes = scenes.map(s =>
-                  s.id === sceneId
-                    ? { ...s, is_active: false, updated_at: new Date().toISOString() }
-                    : s
-                )
-                updatedSessionScenes.set(sessionId, updatedScenes)
+            sessionScenes.forEach((scenes, sessionId) => {
+              const hasScene = scenes.some(s => s.id === sceneId)
+              if (hasScene) {
+                // Use the store's updateSceneInSession action instead of setState
+                state.updateSceneInSession(sessionId, sceneId, {
+                  is_active: false,
+                  updated_at: new Date().toISOString()
+                })
               }
             })
-
-            useSessionSceneStore.setState({ sessionScenes: updatedSessionScenes })
-          })
+          }).catch(console.error)
         }
       },
 
@@ -171,7 +206,7 @@ export const useAudioStore = create<AudioPlayerState>()(
         }
       },
 
-      stop: () => {
+      stop: (options) => {
         const { audioElement, sourceContext } = get()
         if (audioElement) {
           audioElement.pause()
@@ -182,35 +217,31 @@ export const useAudioStore = create<AudioPlayerState>()(
           currentTime: 0,
         })
 
-        // Deactivate scene if audio was from a scene
-        if (sourceContext?.type === 'scene' && sourceContext.id) {
+        // If stopping a scene (and not called from scene deactivation), deactivate the scene
+        if (!options?.skipSceneDeactivation && sourceContext?.type === 'scene' && sourceContext.id) {
           const sceneId = sourceContext.id
 
-          // Update database - fire and forget
+          // Update database - deactivate scene
           import('@/store/sceneStore').then(({ useSceneStore }) => {
             useSceneStore.getState().deactivateScene(sceneId).catch(console.error)
-          })
+          }).catch(console.error)
 
-          // Update sessionSceneStore UI - all sessions with this scene
+          // Update sessionSceneStore - find all sessions with this scene and deactivate
           import('@/store/sessionSceneStore').then(({ useSessionSceneStore }) => {
             const state = useSessionSceneStore.getState()
-            const updatedSessionScenes = new Map(state.sessionScenes)
+            const sessionScenes = state.sessionScenes
 
-            // Find all sessions containing this scene and deactivate it
-            updatedSessionScenes.forEach((scenes, sessionId) => {
-              const sceneIndex = scenes.findIndex(s => s.id === sceneId)
-              if (sceneIndex !== -1) {
-                const updatedScenes = scenes.map(s =>
-                  s.id === sceneId
-                    ? { ...s, is_active: false, updated_at: new Date().toISOString() }
-                    : s
-                )
-                updatedSessionScenes.set(sessionId, updatedScenes)
+            sessionScenes.forEach((scenes, sessionId) => {
+              const hasScene = scenes.some(s => s.id === sceneId)
+              if (hasScene) {
+                // Use the store's updateSceneInSession action instead of setState
+                state.updateSceneInSession(sessionId, sceneId, {
+                  is_active: false,
+                  updated_at: new Date().toISOString()
+                })
               }
             })
-
-            useSessionSceneStore.setState({ sessionScenes: updatedSessionScenes })
-          })
+          }).catch(console.error)
         }
       },
 

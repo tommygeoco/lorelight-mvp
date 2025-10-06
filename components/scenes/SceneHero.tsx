@@ -1,11 +1,11 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo, useRef } from 'react'
 import { Play, Pause } from 'lucide-react'
 import type { Scene } from '@/types'
-import { InlineEditor } from '@/components/ui/InlineEditor'
 import { useSceneStore } from '@/store/sceneStore'
 import { useSessionSceneStore } from '@/store/sessionSceneStore'
+import { useAudioStore } from '@/store/audioStore'
 
 interface SceneHeroProps {
   scene: Scene
@@ -19,65 +19,95 @@ interface SceneHeroProps {
 export function SceneHero({ scene, sessionId }: SceneHeroProps) {
   const [isEditingTitle, setIsEditingTitle] = useState(false)
   const [isEditingDesc, setIsEditingDesc] = useState(false)
+  const titleInputRef = useRef<HTMLInputElement>(null)
+  const descInputRef = useRef<HTMLTextAreaElement>(null)
   const updateScene = useSceneStore((state) => state.updateScene)
   const activateScene = useSceneStore((state) => state.activateScene)
   const deactivateScene = useSceneStore((state) => state.deactivateScene)
 
-  const updateSessionScene = (updates: Partial<Scene>) => {
-    if (!sessionId) return
-
-    const state = useSessionSceneStore.getState()
-    const currentScenes = state.sessionScenes.get(sessionId) || []
-    const updatedScenes = currentScenes.map(s =>
-      s.id === scene.id ? { ...s, ...updates, updated_at: new Date().toISOString() } : s
-    )
-
-    // Use setState with proper Map update to trigger re-render
-    useSessionSceneStore.setState((state) => ({
-      ...state,
-      sessionScenes: new Map(state.sessionScenes).set(sessionId, updatedScenes)
-    }))
+  // Auto-select text when input mounts
+  const handleTitleMount = (el: HTMLInputElement | null) => {
+    if (el) {
+      titleInputRef.current = el
+      el.focus()
+      el.select()
+    }
   }
 
-  const handleTitleSave = async (newTitle: string) => {
-    if (newTitle.trim() === '') {
-      return
+  const handleDescMount = (el: HTMLTextAreaElement | null) => {
+    if (el) {
+      descInputRef.current = el
+      el.focus()
+      el.select()
     }
-    try {
-      const trimmedTitle = newTitle.trim()
-      await updateScene(scene.id, { name: trimmedTitle })
-      updateSessionScene({ name: trimmedTitle })
-    } catch (error) {
+  }
+
+  // Check if audio is actually playing this scene
+  const { isPlaying, sourceContext } = useAudioStore()
+  const isScenePlaying = useMemo(() => {
+    return scene.is_active &&
+           isPlaying &&
+           sourceContext?.type === 'scene' &&
+           sourceContext.id === scene.id
+  }, [scene.is_active, scene.id, isPlaying, sourceContext])
+
+  const handleTitleSave = () => {
+    const newTitle = titleInputRef.current?.value || ''
+
+    // Close immediately for snappy feel
+    setIsEditingTitle(false)
+
+    if (newTitle.trim() === '') return
+    if (newTitle.trim() === scene.name) return
+
+    const trimmedTitle = newTitle.trim()
+
+    // Optimistic update to sessionSceneStore for instant UI feedback
+    if (sessionId) {
+      useSessionSceneStore.getState().updateSceneInSession(sessionId, scene.id, {
+        name: trimmedTitle,
+        updated_at: new Date().toISOString()
+      })
+    }
+
+    // Fire and forget database save - don't await
+    updateScene(scene.id, { name: trimmedTitle }).catch(error => {
       console.error('Failed to save title:', error)
-    }
+    })
   }
 
-  const handleDescSave = async (newDesc: string) => {
-    try {
-      const trimmedDesc = newDesc.trim() || null
-      await updateScene(scene.id, { description: trimmedDesc })
-      updateSessionScene({ description: trimmedDesc })
-    } catch (error) {
-      console.error('Failed to save description:', error)
+  const handleDescSave = () => {
+    const newDesc = descInputRef.current?.value || ''
+    const trimmedDesc = newDesc.trim() || null
+
+    // Close immediately for snappy feel
+    setIsEditingDesc(false)
+
+    // Don't save if unchanged
+    if (trimmedDesc === scene.description) return
+
+    // Optimistic update to sessionSceneStore for instant UI feedback
+    if (sessionId) {
+      useSessionSceneStore.getState().updateSceneInSession(sessionId, scene.id, {
+        description: trimmedDesc,
+        updated_at: new Date().toISOString()
+      })
     }
+
+    // Fire and forget database save - don't await
+    updateScene(scene.id, { description: trimmedDesc }).catch(error => {
+      console.error('Failed to save description:', error)
+    })
   }
 
   const handlePlayPause = () => {
     if (scene.is_active) {
       // Optimistic UI update - deactivate
       if (sessionId) {
-        const state = useSessionSceneStore.getState()
-        const currentScenes = state.sessionScenes.get(sessionId) || []
-        const updatedScenes = currentScenes.map(s => ({
-          ...s,
-          is_active: s.id === scene.id ? false : s.is_active,
+        useSessionSceneStore.getState().updateSceneInSession(sessionId, scene.id, {
+          is_active: false,
           updated_at: new Date().toISOString()
-        }))
-
-        useSessionSceneStore.setState((state) => ({
-          ...state,
-          sessionScenes: new Map(state.sessionScenes).set(sessionId, updatedScenes)
-        }))
+        })
       }
 
       // Fire and forget - don't await
@@ -87,16 +117,22 @@ export function SceneHero({ scene, sessionId }: SceneHeroProps) {
       if (sessionId) {
         const state = useSessionSceneStore.getState()
         const currentScenes = state.sessionScenes.get(sessionId) || []
-        const updatedScenes = currentScenes.map(s => ({
-          ...s,
-          is_active: s.id === scene.id,
-          updated_at: new Date().toISOString()
-        }))
 
-        useSessionSceneStore.setState((state) => ({
-          ...state,
-          sessionScenes: new Map(state.sessionScenes).set(sessionId, updatedScenes)
-        }))
+        // Deactivate all other scenes
+        currentScenes.forEach(s => {
+          if (s.id !== scene.id && s.is_active) {
+            useSessionSceneStore.getState().updateSceneInSession(sessionId, s.id, {
+              is_active: false,
+              updated_at: new Date().toISOString()
+            })
+          }
+        })
+
+        // Activate this scene
+        useSessionSceneStore.getState().updateSceneInSession(sessionId, scene.id, {
+          is_active: true,
+          updated_at: new Date().toISOString()
+        })
       }
 
       // Fire and forget - don't await
@@ -138,13 +174,22 @@ export function SceneHero({ scene, sessionId }: SceneHeroProps) {
       <div className="max-w-[760px] mx-auto px-[32px] pb-[24px] space-y-[16px] relative z-10">
         {/* Editable title */}
         {isEditingTitle ? (
-          <InlineEditor
-            initialValue={scene.name}
-            onSave={handleTitleSave}
-            onCancel={() => setIsEditingTitle(false)}
-            className="font-['PP_Mondwest'] text-[60px] leading-[72px] tracking-[-1.2px] text-white"
+          <input
+            ref={handleTitleMount}
+            type="text"
+            defaultValue={scene.name}
+            onBlur={handleTitleSave}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault()
+                handleTitleSave()
+              } else if (e.key === 'Escape') {
+                e.preventDefault()
+                setIsEditingTitle(false)
+              }
+            }}
+            className="w-full bg-transparent border-none outline-none font-['PP_Mondwest'] text-[60px] leading-[72px] tracking-[-1.2px] text-white placeholder:text-white/40"
             placeholder="Scene name..."
-            autoFocus
           />
         ) : (
           <h1
@@ -156,26 +201,30 @@ export function SceneHero({ scene, sessionId }: SceneHeroProps) {
         )}
 
         {/* Editable description */}
-        <div className="min-h-[40px]">
+        <div className="relative h-[60px]">
           {isEditingDesc ? (
-            <InlineEditor
-              initialValue={scene.description || ''}
-              onSave={handleDescSave}
-              onCancel={() => setIsEditingDesc(false)}
-              className="font-['Inter'] text-[14px] leading-[20px] text-[#eeeeee]"
+            <textarea
+              ref={handleDescMount}
+              defaultValue={scene.description || ''}
+              onBlur={handleDescSave}
+              onKeyDown={(e) => {
+                if (e.key === 'Escape') {
+                  e.preventDefault()
+                  setIsEditingDesc(false)
+                }
+              }}
+              className="absolute inset-0 w-full h-full p-0 m-0 bg-transparent border-none outline-none font-['Inter'] text-[14px] leading-[20px] text-[#eeeeee] placeholder:text-white/40 resize-none overflow-hidden"
               placeholder="Add a description..."
-              multiline
-              autoFocus
             />
           ) : (
-            <p
+            <div
               onClick={() => setIsEditingDesc(true)}
-              className="font-['Inter'] text-[14px] leading-[20px] text-[#eeeeee] cursor-text"
+              className="absolute inset-0 w-full h-full p-0 m-0 font-['Inter'] text-[14px] leading-[20px] text-[#eeeeee] cursor-text overflow-hidden"
             >
               {scene.description || (
                 <span className="text-white/40">Add a description...</span>
               )}
-            </p>
+            </div>
           )}
         </div>
 
@@ -184,12 +233,12 @@ export function SceneHero({ scene, sessionId }: SceneHeroProps) {
           <button
             onClick={handlePlayPause}
             className={`flex items-center gap-2 px-[16px] py-[10px] rounded-[8px] font-['Inter'] text-[14px] font-medium transition-colors ${
-              scene.is_active
+              isScenePlaying
                 ? 'bg-white/10 text-white hover:bg-white/15'
                 : 'bg-white/5 text-white/70 hover:bg-white/10 hover:text-white'
             }`}
           >
-            {scene.is_active ? (
+            {isScenePlaying ? (
               <>
                 <Pause className="w-4 h-4" />
                 <span>Deactivate Scene</span>

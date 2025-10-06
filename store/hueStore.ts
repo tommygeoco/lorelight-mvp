@@ -13,12 +13,14 @@ interface HueState {
   // Available lights and rooms
   lights: Map<string, HueLight>
   rooms: Map<string, HueRoom>
+  error: string | null
 
   // Actions
   discoverBridge: () => Promise<void>
   connectBridge: (bridgeIp: string) => Promise<void>
   disconnectBridge: () => void
   fetchLightsAndRooms: () => Promise<void>
+  clearError: () => void
   applyLightConfig: (config: {
     lights?: Record<string, { on?: boolean; bri?: number; hue?: number; sat?: number; ct?: number; xy?: [number, number]; transitiontime?: number }>
     groups?: Record<string, { on?: boolean; bri?: number; hue?: number; sat?: number; ct?: number; xy?: [number, number]; transitiontime?: number }>
@@ -41,6 +43,7 @@ export const useHueStore = create<HueState>()(
       isConnected: false,
       lights: new Map(),
       rooms: new Map(),
+      error: null,
 
       discoverBridge: async () => {
         try {
@@ -86,10 +89,13 @@ export const useHueStore = create<HueState>()(
       fetchLightsAndRooms: async () => {
         const { bridgeIp, username } = get()
         if (!bridgeIp || !username) {
-          throw new Error('Bridge not connected')
+          const error = 'Bridge not connected'
+          set({ error })
+          throw new Error(error)
         }
 
         try {
+          set({ error: null })
           const [lights, rooms] = await Promise.all([
             hueService.getLights(bridgeIp, username),
             hueService.getRooms(bridgeIp, username),
@@ -106,10 +112,16 @@ export const useHueStore = create<HueState>()(
               state.rooms.set(room.id, room)
             })
           })
-        } catch (error) {
-          logger.error('Failed to fetch lights and rooms', error)
-          throw error
+        } catch {
+          const message = 'Unable to reach Hue Bridge. Make sure you\'re on the same network.'
+          // Don't log network errors - this is expected when away from bridge
+          set({ error: message })
+          // Don't throw - error is handled via state
         }
+      },
+
+      clearError: () => {
+        set({ error: null })
       },
 
       applyLightConfig: async (config) => {

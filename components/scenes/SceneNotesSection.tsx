@@ -3,7 +3,7 @@
 import { useMemo } from 'react'
 import type { Scene } from '@/types'
 import { useSceneBlockStore } from '@/store/sceneBlockStore'
-import { SceneBlockEditor } from './SceneBlockEditor'
+import { SceneNoteCard } from './SceneNoteCard'
 import { Plus } from 'lucide-react'
 
 interface SceneNotesSectionProps {
@@ -11,7 +11,7 @@ interface SceneNotesSectionProps {
 }
 
 /**
- * SceneNotesSection - Notion-like block-based notes editor
+ * SceneNotesSection - Card-based notes display matching Figma design
  * Context7: Minimal state, optimistic updates, fetch-once pattern
  */
 export function SceneNotesSection({ scene }: SceneNotesSectionProps) {
@@ -26,16 +26,19 @@ export function SceneNotesSection({ scene }: SceneNotesSectionProps) {
       .sort((a, b) => a.order_index - b.order_index)
   }, [blocksMap, scene.id])
 
-  const handleAddBlock = async () => {
+  const handleAddNote = async () => {
     try {
       await addBlock({
         scene_id: scene.id,
         type: 'text',
-        content: { text: { text: '', formatting: [] } },
+        content: {
+          title: '',
+          text: { text: '', formatting: [] }
+        },
         order_index: blocks.length,
       })
     } catch (error) {
-      console.error('Failed to add block:', error)
+      console.error('Failed to add note:', error)
       // Silently fail - migration 015 may not be applied yet
     }
   }
@@ -49,40 +52,37 @@ export function SceneNotesSection({ scene }: SceneNotesSectionProps) {
         </h2>
       </div>
 
-      {/* Blocks container */}
-      <div className="px-0 py-[24px] space-y-[8px]">
+      {/* Notes grid */}
+      <div className="px-0 py-[24px]">
         {blocks.length === 0 ? (
-          <div className="text-center py-8">
-            <p className="text-white/40 text-[14px] mb-4">
-              No notes yet. Add your first block to begin.
-            </p>
+          <button
+            onClick={handleAddNote}
+            className="w-full flex items-center justify-center gap-2 px-[16px] py-[12px] rounded-[12px] bg-white/[0.03] hover:bg-white/[0.05] text-white/40 hover:text-white/70 transition-colors font-['Inter'] text-[14px]"
+          >
+            <Plus className="w-4 h-4" />
+            Add Note
+          </button>
+        ) : (
+          <div className="space-y-4">
+            {/* 2-column grid */}
+            <div className="grid grid-cols-2 gap-4">
+              {blocks.map((block) => (
+                <SceneNoteCard
+                  key={block.id}
+                  block={block}
+                />
+              ))}
+            </div>
+
+            {/* Add note button */}
             <button
-              onClick={handleAddBlock}
-              className="inline-flex items-center gap-2 px-[16px] py-[8px] rounded-[8px] bg-white/5 hover:bg-white/10 text-white/70 hover:text-white transition-colors font-['Inter'] text-[14px]"
+              onClick={handleAddNote}
+              className="w-full flex items-center justify-center gap-2 px-[16px] py-[12px] rounded-[12px] bg-white/[0.03] hover:bg-white/[0.05] text-white/40 hover:text-white/70 transition-colors font-['Inter'] text-[14px]"
             >
               <Plus className="w-4 h-4" />
-              Add Note Block
+              Add Note
             </button>
           </div>
-        ) : (
-          <>
-            {blocks.map((block) => (
-              <SceneBlockEditor
-                key={block.id}
-                block={block}
-                sceneId={scene.id}
-              />
-            ))}
-
-            {/* Add block button at bottom */}
-            <button
-              onClick={handleAddBlock}
-              className="w-full flex items-center gap-2 px-[12px] py-[8px] rounded-[8px] text-white/40 hover:text-white/70 hover:bg-white/5 transition-colors font-['Inter'] text-[14px]"
-            >
-              <Plus className="w-4 h-4" />
-              Add Block
-            </button>
-          </>
         )}
       </div>
     </div>

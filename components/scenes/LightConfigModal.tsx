@@ -1,8 +1,10 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { X, Lightbulb, Eye, ChevronDown, ChevronRight, Sparkles } from 'lucide-react'
+import { X, Lightbulb, Eye, ChevronDown, ChevronRight, Sparkles, Flame, Zap, Activity, Wind } from 'lucide-react'
 import { useHueStore } from '@/store/hueStore'
+
+type LightEffect = 'none' | 'colorloop' | 'fireplace' | 'candle' | 'lightning' | 'pulse' | 'breath'
 
 interface LightConfig {
   on: boolean
@@ -10,7 +12,7 @@ interface LightConfig {
   hue?: number // 0-65535
   sat?: number // 0-254
   ct?: number // 153-500 (color temperature)
-  effect?: 'none' | 'colorloop'
+  effect?: LightEffect
   transitiontime: number
 }
 
@@ -46,7 +48,7 @@ const COLOR_PRESETS = [
  * Allows configuring each light individually within rooms
  */
 export function LightConfigModal({ isOpen, onClose, onSave, initialConfig }: LightConfigModalProps) {
-  const { rooms, lights, isConnected, fetchLightsAndRooms, applyLightConfig } = useHueStore()
+  const { rooms, lights, isConnected, error, fetchLightsAndRooms, applyLightConfig, clearError } = useHueStore()
   const [roomStates, setRoomStates] = useState<Map<string, RoomState>>(new Map())
   const [isPreviewing, setIsPreviewing] = useState(false)
 
@@ -82,6 +84,13 @@ export function LightConfigModal({ isOpen, onClose, onSave, initialConfig }: Lig
       fetchLightsAndRooms()
     }
   }, [isOpen, isConnected, fetchLightsAndRooms])
+
+  // Clear error when modal closes
+  useEffect(() => {
+    if (!isOpen) {
+      clearError()
+    }
+  }, [isOpen, clearError])
 
   if (!isOpen) return null
 
@@ -165,7 +174,7 @@ export function LightConfigModal({ isOpen, onClose, onSave, initialConfig }: Lig
     })
   }
 
-  const handleLightEffect = (roomId: string, lightId: string, effect: 'none' | 'colorloop') => {
+  const handleLightEffect = (roomId: string, lightId: string, effect: LightEffect) => {
     setRoomStates(prev => {
       const newStates = new Map(prev)
       const roomState = newStates.get(roomId)
@@ -210,6 +219,9 @@ export function LightConfigModal({ isOpen, onClose, onSave, initialConfig }: Lig
       })
     })
 
+    console.log('[LightConfigModal] Saving config with', Object.keys(config).length, 'lights')
+    console.log('[LightConfigModal] Config:', JSON.stringify({ lights: config }, null, 2))
+
     onSave({ lights: config })
     onClose()
   }
@@ -251,6 +263,31 @@ export function LightConfigModal({ isOpen, onClose, onSave, initialConfig }: Lig
               <p className="text-white/40 text-[14px]">
                 Connect to your Hue bridge to configure lighting
               </p>
+            </div>
+          ) : error ? (
+            <div className="text-center py-12">
+              <Lightbulb className="w-12 h-12 text-red-400/20 mx-auto mb-3" />
+              <p className="text-red-400/70 text-[14px] mb-2">{error}</p>
+              <p className="text-white/40 text-[12px]">
+                You can still view and clear saved configurations below
+              </p>
+              {totalLightsConfigured > 0 && (
+                <div className="mt-6 pt-6 border-t border-white/10">
+                  <p className="text-white/60 text-[14px] mb-4">
+                    {totalLightsConfigured} lights currently configured
+                  </p>
+                  <button
+                    onClick={() => {
+                      setRoomStates(new Map())
+                      onSave({ lights: {} })
+                      onClose()
+                    }}
+                    className="px-4 py-2 bg-red-500/10 text-red-400 rounded-[8px] hover:bg-red-500/20 transition-colors text-[13px]"
+                  >
+                    Clear Configuration
+                  </button>
+                </div>
+              )}
             </div>
           ) : roomsArray.length === 0 ? (
             <div className="text-center py-12">
@@ -372,12 +409,12 @@ export function LightConfigModal({ isOpen, onClose, onSave, initialConfig }: Lig
 
                               {/* Effects */}
                               <div className="space-y-1.5">
-                                <span className="text-[12px] text-white/50">Effect</span>
-                                <div className="flex gap-2">
+                                <span className="text-[12px] text-white/50">Effects</span>
+                                <div className="grid grid-cols-2 gap-1.5">
                                   <button
                                     onClick={() => handleLightEffect(room.id, light.id, 'none')}
-                                    className={`flex-1 px-3 py-1.5 rounded-[6px] text-[12px] font-medium transition-colors ${
-                                      lightConfig.effect !== 'colorloop'
+                                    className={`px-2 py-2 rounded-[6px] text-[11px] font-medium transition-colors inline-flex items-center justify-center gap-1 ${
+                                      !lightConfig.effect || lightConfig.effect === 'none'
                                         ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
                                         : 'bg-white/5 text-white/50 hover:bg-white/10'
                                     }`}
@@ -386,7 +423,7 @@ export function LightConfigModal({ isOpen, onClose, onSave, initialConfig }: Lig
                                   </button>
                                   <button
                                     onClick={() => handleLightEffect(room.id, light.id, 'colorloop')}
-                                    className={`flex-1 px-3 py-1.5 rounded-[6px] text-[12px] font-medium transition-colors inline-flex items-center justify-center gap-1.5 ${
+                                    className={`px-2 py-2 rounded-[6px] text-[11px] font-medium transition-colors inline-flex items-center justify-center gap-1 ${
                                       lightConfig.effect === 'colorloop'
                                         ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
                                         : 'bg-white/5 text-white/50 hover:bg-white/10'
@@ -394,6 +431,61 @@ export function LightConfigModal({ isOpen, onClose, onSave, initialConfig }: Lig
                                   >
                                     <Sparkles className="w-3 h-3" />
                                     Color Loop
+                                  </button>
+                                  <button
+                                    onClick={() => handleLightEffect(room.id, light.id, 'fireplace')}
+                                    className={`px-2 py-2 rounded-[6px] text-[11px] font-medium transition-colors inline-flex items-center justify-center gap-1 ${
+                                      lightConfig.effect === 'fireplace'
+                                        ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
+                                        : 'bg-white/5 text-white/50 hover:bg-white/10'
+                                    }`}
+                                  >
+                                    <Flame className="w-3 h-3" />
+                                    Fireplace
+                                  </button>
+                                  <button
+                                    onClick={() => handleLightEffect(room.id, light.id, 'candle')}
+                                    className={`px-2 py-2 rounded-[6px] text-[11px] font-medium transition-colors inline-flex items-center justify-center gap-1 ${
+                                      lightConfig.effect === 'candle'
+                                        ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
+                                        : 'bg-white/5 text-white/50 hover:bg-white/10'
+                                    }`}
+                                  >
+                                    <Flame className="w-3 h-3" />
+                                    Candle
+                                  </button>
+                                  <button
+                                    onClick={() => handleLightEffect(room.id, light.id, 'lightning')}
+                                    className={`px-2 py-2 rounded-[6px] text-[11px] font-medium transition-colors inline-flex items-center justify-center gap-1 ${
+                                      lightConfig.effect === 'lightning'
+                                        ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
+                                        : 'bg-white/5 text-white/50 hover:bg-white/10'
+                                    }`}
+                                  >
+                                    <Zap className="w-3 h-3" />
+                                    Lightning
+                                  </button>
+                                  <button
+                                    onClick={() => handleLightEffect(room.id, light.id, 'pulse')}
+                                    className={`px-2 py-2 rounded-[6px] text-[11px] font-medium transition-colors inline-flex items-center justify-center gap-1 ${
+                                      lightConfig.effect === 'pulse'
+                                        ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
+                                        : 'bg-white/5 text-white/50 hover:bg-white/10'
+                                    }`}
+                                  >
+                                    <Activity className="w-3 h-3" />
+                                    Pulse
+                                  </button>
+                                  <button
+                                    onClick={() => handleLightEffect(room.id, light.id, 'breath')}
+                                    className={`px-2 py-2 rounded-[6px] text-[11px] font-medium transition-colors inline-flex items-center justify-center gap-1 ${
+                                      lightConfig.effect === 'breath'
+                                        ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
+                                        : 'bg-white/5 text-white/50 hover:bg-white/10'
+                                    }`}
+                                  >
+                                    <Wind className="w-3 h-3" />
+                                    Breath
                                   </button>
                                 </div>
                               </div>

@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, useRef } from 'react'
-import { Upload, Music, Trash2, Play, Pause, X, Folder, ChevronRight } from 'lucide-react'
+import { Upload, Music, Trash2, Play, Pause, X, Folder, ChevronRight, Search } from 'lucide-react'
 import { useAudioFileStore } from '@/store/audioFileStore'
 import { useAudioFolderStore } from '@/store/audioFolderStore'
 import { useAudioStore } from '@/store/audioStore'
@@ -27,6 +27,7 @@ export function AudioLibrary({ isOpen, onClose, onSelect }: AudioLibraryProps) {
   const [currentFolderId, setCurrentFolderId] = useState<string | null>(null)
   const [deleteConfirmFile, setDeleteConfirmFile] = useState<AudioFile | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
 
   const {
     isLoading,
@@ -47,11 +48,22 @@ export function AudioLibrary({ isOpen, onClose, onSelect }: AudioLibraryProps) {
   const { addToast } = useToastStore()
   const { handleBackdropClick } = useModalBackdrop({ isOpen, onClose })
 
-  // Filter audio files by current folder
+  // Filter audio files by current folder and search query
   const audioFileArray = Array.from(audioFileMap.values()).filter(f => {
     if (!f.file_url || f.file_url.length === 0) return false
+
     // Show files that match current folder (null = root folder)
-    return f.folder_id === currentFolderId
+    if (f.folder_id !== currentFolderId) return false
+
+    // Apply search filter
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase()
+      const nameMatch = f.name.toLowerCase().includes(query)
+      const tagMatch = f.tags?.some(tag => tag.toLowerCase().includes(query))
+      return nameMatch || tagMatch
+    }
+
+    return true
   })
 
   // Get breadcrumb path and subfolders
@@ -163,6 +175,30 @@ export function AudioLibrary({ isOpen, onClose, onSelect }: AudioLibraryProps) {
             <X className="w-[18px] h-[18px] text-white/70" />
           </button>
         </div>
+
+        {/* Search Bar */}
+        {onSelect && (
+          <div className="px-6 py-3 border-b border-white/10">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search by name or tag..."
+                className="w-full pl-10 pr-4 py-2 bg-white/5 border border-white/10 rounded-[8px] text-[14px] text-white placeholder:text-white/40 focus:outline-none focus:border-white/20 transition-colors"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white/70"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Breadcrumb Navigation */}
         <div className="px-6 py-3 border-b border-white/10 flex items-center gap-2 text-sm">

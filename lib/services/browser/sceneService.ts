@@ -118,6 +118,9 @@ class SceneService {
    * Update a scene
    */
   async update(id: string, updates: SceneUpdate): Promise<Scene> {
+    console.log('[sceneService.update] Updating scene:', id)
+    console.log('[sceneService.update] Updates:', JSON.stringify(updates, null, 2))
+
     const { data, error } = await this.supabase
       .from('scenes')
       .update(updates)
@@ -126,8 +129,12 @@ class SceneService {
       .single()
 
     if (error) {
+      console.error('[sceneService.update] Failed to update scene:', error)
       throw error
     }
+
+    console.log('[sceneService.update] Scene updated successfully')
+    console.log('[sceneService.update] Returned data:', JSON.stringify(data, null, 2))
 
     return data
   }

@@ -115,6 +115,7 @@ export interface TextContent {
 }
 
 export interface BlockContent {
+  title?: string // Card title for note cards
   text?: TextContent
   items?: string[]
   checked?: boolean[]

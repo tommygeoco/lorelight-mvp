@@ -32,7 +32,7 @@ class SceneActivationService {
 
     // Parallel activation of audio + lights
     await Promise.all([
-      this.activateAudio(scene.audio_config as SceneAudioConfig | null, scene.id, scene.name),
+      this.activateAudio(scene.audio_config as SceneAudioConfig | null, scene.id, scene.name, scene.campaign_id),
       this.activateLights(scene.light_config as SceneLightConfig | null),
     ])
 
@@ -50,7 +50,7 @@ class SceneActivationService {
   /**
    * Activate audio for scene
    */
-  private async activateAudio(audioConfig: SceneAudioConfig | null, sceneId: string, sceneName: string): Promise<void> {
+  private async activateAudio(audioConfig: SceneAudioConfig | null, sceneId: string, sceneName: string, campaignId: string): Promise<void> {
     if (!audioConfig) return
 
     const { audio_id, volume, loop, start_time } = audioConfig
@@ -69,7 +69,8 @@ class SceneActivationService {
     audioStore.loadTrack(audioFile.id, audioFile.file_url, {
       type: 'scene',
       id: sceneId,
-      name: sceneName
+      name: sceneName,
+      campaignId
     })
 
     // Apply scene audio config
@@ -82,8 +83,8 @@ class SceneActivationService {
       audioStore.toggleLoop()
     }
 
-    // Start playback
-    audioStore.play()
+    // Start playback (skip scene activation to prevent circular loop)
+    audioStore.play({ skipSceneActivation: true })
 
     // Seek to start time if specified
     if (start_time && start_time > 0) {
@@ -148,10 +149,10 @@ class SceneActivationService {
   async deactivateScene(sceneId: string): Promise<void> {
     const startTime = performance.now()
 
-    // Stop audio playback
+    // Stop audio playback (skip scene deactivation to prevent circular loop)
     const { useAudioStore } = await import('@/store/audioStore')
     const audioStore = useAudioStore.getState()
-    audioStore.pause()
+    audioStore.pause({ skipSceneDeactivation: true })
 
     // Update database - set scene as inactive
     await this.supabase

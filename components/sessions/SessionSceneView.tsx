@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useSessionSceneStore } from '@/store/sessionSceneStore'
 import { useSceneStore } from '@/store/sceneStore'
 import { useToastStore } from '@/store/toastStore'
+import { useAudioStore } from '@/store/audioStore'
 import { Plus, Edit2, Copy, Trash2 } from 'lucide-react'
 import { DashboardLayoutWithSidebar } from '@/components/layouts/DashboardLayoutWithSidebar'
 import { DashboardSidebar } from '@/components/layouts/DashboardSidebar'
@@ -31,6 +32,7 @@ export function SessionSceneView({ campaignId, sessionId }: SessionSceneViewProp
     fetchScenesForSession,
     fetchedSessions,
     addSceneToSession,
+    _version, // Subscribe to version changes to trigger re-renders
   } = useSessionSceneStore()
 
   const {
@@ -39,6 +41,9 @@ export function SessionSceneView({ campaignId, sessionId }: SessionSceneViewProp
   } = useSceneStore()
 
   const { addToast } = useToastStore()
+
+  // Get audio state to determine if scene is actually playing
+  const { isPlaying, sourceContext } = useAudioStore()
 
   const [selectedSceneId, setSelectedSceneId] = useState<string | null>(null)
   const [isSceneModalOpen, setIsSceneModalOpen] = useState(false)
@@ -59,7 +64,8 @@ export function SessionSceneView({ campaignId, sessionId }: SessionSceneViewProp
   // Get session-specific scenes from sessionSceneStore
   const sceneArray = useMemo(
     () => sessionScenes.get(sessionId) || [],
-    [sessionScenes, sessionId]
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [sessionScenes, sessionId, _version] // _version forces re-render when scenes update
   )
 
   const sortedScenes = useMemo(() => {
@@ -304,23 +310,31 @@ export function SessionSceneView({ campaignId, sessionId }: SessionSceneViewProp
           </div>
         ) : (
           <ul role="list" className="space-y-2">
-            {sortedScenes.map((scene) => (
-              <li key={scene.id} data-scene-item>
-                <SceneListItem
-                  scene={scene}
-                  isActive={scene.is_active}
-                  isSelected={selectedSceneId === scene.id}
-                  isEditing={editingSceneId === scene.id}
-                  editingName={editingName}
-                  onEditingNameChange={setEditingName}
-                  onRenameSubmit={() => handleRenameSubmit(scene.id)}
-                  onCancelEdit={handleCancelEdit}
-                  onClick={() => handleSceneClick(scene)}
-                  onPlay={() => handlePlayScene(scene)}
-                  onContextMenu={(e) => handleContextMenu(e, scene)}
-                />
-              </li>
-            ))}
+            {sortedScenes.map((scene) => {
+              // Scene is truly active only if it's marked active AND audio is playing it
+              const isScenePlaying = scene.is_active &&
+                                    isPlaying &&
+                                    sourceContext?.type === 'scene' &&
+                                    sourceContext.id === scene.id
+
+              return (
+                <li key={scene.id} data-scene-item>
+                  <SceneListItem
+                    scene={scene}
+                    isActive={isScenePlaying}
+                    isSelected={selectedSceneId === scene.id}
+                    isEditing={editingSceneId === scene.id}
+                    editingName={editingName}
+                    onEditingNameChange={setEditingName}
+                    onRenameSubmit={() => handleRenameSubmit(scene.id)}
+                    onCancelEdit={handleCancelEdit}
+                    onClick={() => handleSceneClick(scene)}
+                    onPlay={() => handlePlayScene(scene)}
+                    onContextMenu={(e) => handleContextMenu(e, scene)}
+                  />
+                </li>
+              )
+            })}
           </ul>
         )}
       </div>

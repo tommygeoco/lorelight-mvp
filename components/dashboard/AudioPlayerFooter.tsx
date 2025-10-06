@@ -185,9 +185,16 @@ export function AudioPlayerFooter() {
         }
         break
       case 'scene':
-        // Navigate to scene page
-        if (sourceContext.id) {
-          router.push(`/scenes/${sourceContext.id}`)
+        // Navigate to scene library or sessions based on available context
+        if (sourceContext.sessionId && sourceContext.campaignId) {
+          // If we have session context, go to that specific session
+          router.push(`/campaigns/${sourceContext.campaignId}/sessions/${sourceContext.sessionId}`)
+        } else if (sourceContext.campaignId) {
+          // Otherwise go to scene library
+          router.push(`/campaigns/${sourceContext.campaignId}/scenes`)
+        } else {
+          // Fallback: go to campaigns page (old data without campaignId)
+          router.push('/campaigns')
         }
         break
     }
