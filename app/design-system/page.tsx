@@ -1402,9 +1402,9 @@ interface HueContextMenuProps {
                 description="GripVertical (6-dot), 2s tooltip delay, focus-only placeholders, keyboard nav. Type / for slash commands."
               >
                 <div className="bg-[#191919] rounded-[12px] p-8">
-                  {/* Demo inline editor - no horizontal padding */}
+                  {/* Demo inline editor - clean, no padding or background */}
                   <div
-                    className="w-full min-h-[200px] py-[24px] rounded-[12px] transition-colors cursor-text hover:bg-white/[0.02]"
+                    className="w-full min-h-[200px] select-text"
                   >
                     <div className="space-y-1">
                       {/* Heading 1 - grip in left margin, text aligned */}
@@ -1476,7 +1476,7 @@ interface HueContextMenuProps {
 
                   {/* Empty state demo */}
                   <div className="mt-6">
-                    <div className="w-full min-h-[150px] px-[16px] py-[24px] rounded-[12px] transition-colors cursor-text hover:bg-white/[0.02]">
+                    <div className="w-full min-h-[150px] select-text">
                       <div className="text-white/30 font-['Inter'] text-[14px] leading-[20px]">
                         Click to start writing...
                       </div>
@@ -1487,12 +1487,9 @@ interface HueContextMenuProps {
 
               <CodeBlock
                 id="inline-notes-editor"
-                code={`// SceneNotesSection - NO horizontal padding, text aligns with page
+                code={`// SceneNotesSection - Clean container, text selectable across blocks
 <div
-  className={\`w-full min-h-[200px] py-[24px] rounded-[12px]
-    transition-colors cursor-text \${isHovered ? 'bg-white/[0.02]' : 'bg-transparent'}\`}
-  onMouseEnter={() => setIsHovered(true)}
-  onMouseLeave={() => setIsHovered(false)}
+  className="w-full min-h-[200px] select-text"
   onClick={handleClick}
 >
   {blocks.length === 0 ? (
@@ -1527,7 +1524,7 @@ interface HueContextMenuProps {
     </div>
   </div>
 
-  {/* Contenteditable - full width, aligns with page title */}
+  {/* Contenteditable - full width, text selectable across blocks */}
   <div
     ref={contentRef}
     contentEditable
@@ -1535,7 +1532,7 @@ interface HueContextMenuProps {
     onKeyDown={handleKeyDown}
     onFocus={() => setIsFocused(true)}
     onBlur={() => setIsFocused(false)}
-    className="w-full outline-none text-white/90 font-['Inter']"
+    className="w-full outline-none text-white/90 font-['Inter'] select-text"
     data-placeholder={isFocused ? "Type / for commands" : ""}
     data-block-id={block.id}
   />

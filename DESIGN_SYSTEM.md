@@ -1692,17 +1692,18 @@ import { SceneHero } from '@/components/scenes/SceneHero'
 #### SceneNotesSection (Inline Text Editor)
 Location: `/components/scenes/SceneNotesSection.tsx`
 
-Inline, clickable text editor for scene notes with hover highlight and rich text formatting.
+Clean inline text editor for scene notes with rich text formatting and cross-block text selection.
 
 **Props:**
 - `scene: Scene` - Scene object
 
 **Features:**
 - **Inline editing**: Click anywhere to start typing (creates first block if empty)
-- **Hover highlight**: Subtle `bg-white/[0.02]` on hover to indicate interactivity
+- **Cross-block text selection**: Text is selectable across all blocks like a normal document
 - **Text selection toolbar**: Selecting text shows floating RichTextToolbar with formatting options
 - **Right-click context menu**: BlockMenu for inserting different block types
 - **No section header**: Seamless integration into scene content flow
+- **Clean design**: No padding, background, or hover effects on container
 
 **Usage:**
 ```tsx
@@ -1712,11 +1713,9 @@ import { SceneNotesSection } from '@/components/scenes/SceneNotesSection'
 ```
 
 **Visual Design:**
-- Container: `min-h-[200px] px-[16px] py-[24px] rounded-[12px]`
-- Hover state: `bg-white/[0.02]` (very subtle highlight)
+- Container: `min-h-[200px] select-text` (clean, no styling)
 - Empty state: `text-white/30` placeholder "Click to start writing..."
-- Cursor: `cursor-text` to indicate editability
-- Transitions: Smooth color transition on hover
+- Text selection: `select-text` allows natural text highlighting across blocks
 
 **Interaction Pattern:**
 1. **Empty state**: Click anywhere → creates first text block → focuses it

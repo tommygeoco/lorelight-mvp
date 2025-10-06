@@ -406,7 +406,7 @@ export function SceneBlockEditor({ block, sceneId }: SceneBlockEditorProps) {
             // Don&apos;t hide toolbar immediately to allow clicking buttons
             setTimeout(() => setShowToolbar(false), 200)
           }}
-          className={`w-full outline-none text-white/90 font-['Inter'] ${getBlockStyle()}`}
+          className={`w-full outline-none text-white/90 font-['Inter'] select-text ${getBlockStyle()}`}
           data-placeholder={isFocused ? getPlaceholder() : ''}
           data-block-id={block.id}
         />

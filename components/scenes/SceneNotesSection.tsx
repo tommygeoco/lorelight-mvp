@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import type { Scene } from '@/types'
 import { useSceneBlockStore } from '@/store/sceneBlockStore'
 import { SceneBlockEditor } from './SceneBlockEditor'
@@ -16,7 +16,6 @@ interface SceneNotesSectionProps {
 export function SceneNotesSection({ scene }: SceneNotesSectionProps) {
   const blocksMap = useSceneBlockStore((state) => state.blocks)
   const addBlock = useSceneBlockStore((state) => state.actions.addBlock)
-  const [isHovered, setIsHovered] = useState(false)
 
   // Get blocks for this scene
   const blocks = useMemo(() => {
@@ -26,7 +25,11 @@ export function SceneNotesSection({ scene }: SceneNotesSectionProps) {
       .sort((a, b) => a.order_index - b.order_index)
   }, [blocksMap, scene.id])
 
-  const handleClick = () => {
+  const handleClick = (e: React.MouseEvent) => {
+    // Only create block if clicking empty space (not on existing blocks)
+    const target = e.target as HTMLElement
+    if (target.closest('[data-block-id]')) return
+
     // If no blocks exist, create the first one
     if (blocks.length === 0) {
       addBlock({
@@ -45,11 +48,7 @@ export function SceneNotesSection({ scene }: SceneNotesSectionProps) {
 
   return (
     <div
-      className={`w-full min-h-[200px] py-[24px] rounded-[12px] transition-colors cursor-text ${
-        isHovered ? 'bg-white/[0.02]' : 'bg-transparent'
-      }`}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+      className="w-full min-h-[200px] select-text"
       onClick={handleClick}
     >
       {blocks.length === 0 ? (
