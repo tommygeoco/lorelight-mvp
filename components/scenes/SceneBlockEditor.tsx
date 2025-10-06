@@ -32,13 +32,22 @@ export function SceneBlockEditor({ block, sceneId }: SceneBlockEditorProps) {
   const deleteBlock = useSceneBlockStore((state) => state.actions.deleteBlock)
   const addBlock = useSceneBlockStore((state) => state.actions.addBlock)
 
-  // Initialize content on mount
+  // Initialize content only on first mount (not on re-renders)
   useEffect(() => {
     if (contentRef.current && !contentRef.current.innerHTML) {
       const text = block.content.text?.text || ''
       contentRef.current.innerHTML = text
     }
-  }, [block.id, block.content])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []) // Empty deps = only run once on mount
+
+  // Preserve focus through re-renders (e.g., when temp ID → real ID)
+  useEffect(() => {
+    if (isFocused && contentRef.current && document.activeElement !== contentRef.current) {
+      // This element should be focused but isn't - restore focus
+      contentRef.current.focus()
+    }
+  }, [block.id, isFocused]) // Re-run when ID changes or focus state changes
 
   // Debounced auto-save (500ms) + slash command detection
   const handleInput = useCallback(() => {
@@ -107,6 +116,11 @@ export function SceneBlockEditor({ block, sceneId }: SceneBlockEditorProps) {
   // Handle keyboard shortcuts
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     const text = contentRef.current?.textContent || ''
+
+    // If BlockMenu is open, let it handle keyboard events
+    if (showBlockMenu) {
+      return
+    }
 
     // Enter (without Shift) - create new block below
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -261,7 +275,7 @@ export function SceneBlockEditor({ block, sceneId }: SceneBlockEditorProps) {
         }, 10)
       }
     }
-  }, [block.id, block.order_index, sceneId, updateBlock, addBlock, deleteBlock])
+  }, [block.id, block.order_index, sceneId, updateBlock, addBlock, deleteBlock, showBlockMenu])
 
   // Cleanup timeout on unmount
   useEffect(() => {
@@ -294,20 +308,24 @@ export function SceneBlockEditor({ block, sceneId }: SceneBlockEditorProps) {
   }
 
   // Handle block type change
-  const handleBlockTypeChange = async (type: BlockType) => {
-    // If triggered by slash command, clear the slash
+  const handleBlockTypeChange = (type: BlockType) => {
+    // If triggered by slash command, clear the slash IMMEDIATELY
     if (blockMenuTrigger === 'slash' && contentRef.current) {
       contentRef.current.textContent = ''
+      contentRef.current.innerHTML = '' // Also clear HTML
     }
 
-    await updateBlock(block.id, { type })
+    // Close menu immediately
     setShowBlockMenu(false)
     setBlockMenuTrigger(null)
+
+    // Update block type (fire and forget)
+    updateBlock(block.id, { type }).catch(() => {})
 
     // Refocus content
     setTimeout(() => {
       contentRef.current?.focus()
-    }, 0)
+    }, 10)
   }
 
   // Handle delete from dropdown
