@@ -135,31 +135,29 @@ export function SceneBlockEditor({ block, sceneId }: SceneBlockEditorProps) {
         content: { text: { text: '', formatting: [] } },
         order_index: newOrderIndex,
       }).then(newBlock => {
-        // Focus after React render using double RAF for reliability
-        requestAnimationFrame(() => {
-          requestAnimationFrame(() => {
-            const newBlockElement = document.querySelector(`[data-block-id="${newBlock.id}"]`) as HTMLDivElement
-            if (newBlockElement) {
-              newBlockElement.focus()
-              // Place cursor at start
-              const range = document.createRange()
-              const sel = window.getSelection()
-              range.setStart(newBlockElement, 0)
-              range.collapse(true)
-              sel?.removeAllRanges()
-              sel?.addRange(range)
-            }
-          })
-        })
-      }).catch(() => {}) // Ignore errors, already handled in store
+        // Focus with setTimeout to ensure React has fully rendered
+        setTimeout(() => {
+          const newBlockElement = document.querySelector(`[data-block-id="${newBlock.id}"]`) as HTMLDivElement
+          if (newBlockElement) {
+            newBlockElement.focus()
+            // Place cursor at start
+            const range = document.createRange()
+            const sel = window.getSelection()
+            range.setStart(newBlockElement, 0)
+            range.collapse(true)
+            sel?.removeAllRanges()
+            sel?.addRange(range)
 
-      // Update order of blocks after this one IN BACKGROUND (fire and forget)
-      const blocksToUpdate = blocks.slice(currentIndex + 1)
-      blocksToUpdate.forEach(b => {
-        updateBlock(b.id, {
-          order_index: b.order_index + 1
-        }).catch(() => {}) // Ignore errors
-      })
+            // Update order indices AFTER focusing (prevents re-render from stealing focus)
+            const blocksToUpdate = blocks.slice(currentIndex + 1)
+            blocksToUpdate.forEach(b => {
+              updateBlock(b.id, {
+                order_index: b.order_index + 1
+              }).catch(() => {}) // Ignore errors
+            })
+          }
+        }, 10)
+      }).catch(() => {}) // Ignore errors, already handled in store
     }
 
     // Shift+Enter - allow line break within same element (default behavior)
@@ -184,23 +182,21 @@ export function SceneBlockEditor({ block, sceneId }: SceneBlockEditorProps) {
       // Delete INSTANTLY (optimistic, DB sync in background)
       deleteBlock(block.id).catch(() => {}) // Ignore errors
 
-      // Focus previous block immediately
+      // Focus previous block with small delay for React render
       if (previousBlock) {
-        requestAnimationFrame(() => {
-          requestAnimationFrame(() => {
-            const prevBlockElement = document.querySelector(`[data-block-id="${previousBlock.id}"]`) as HTMLDivElement
-            if (prevBlockElement) {
-              prevBlockElement.focus()
-              // Place cursor at end
-              const range = document.createRange()
-              const sel = window.getSelection()
-              range.selectNodeContents(prevBlockElement)
-              range.collapse(false)
-              sel?.removeAllRanges()
-              sel?.addRange(range)
-            }
-          })
-        })
+        setTimeout(() => {
+          const prevBlockElement = document.querySelector(`[data-block-id="${previousBlock.id}"]`) as HTMLDivElement
+          if (prevBlockElement) {
+            prevBlockElement.focus()
+            // Place cursor at end
+            const range = document.createRange()
+            const sel = window.getSelection()
+            range.selectNodeContents(prevBlockElement)
+            range.collapse(false)
+            sel?.removeAllRanges()
+            sel?.addRange(range)
+          }
+        }, 10)
       }
     }
 
@@ -224,25 +220,23 @@ export function SceneBlockEditor({ block, sceneId }: SceneBlockEditorProps) {
       deleteBlock(block.id).catch(() => {}) // Ignore errors
 
       if (targetBlock) {
-        requestAnimationFrame(() => {
-          requestAnimationFrame(() => {
-            const elem = document.querySelector(`[data-block-id="${targetBlock.id}"]`) as HTMLDivElement
-            if (elem) {
-              elem.focus()
-              const range = document.createRange()
-              const sel = window.getSelection()
-              if (nextBlock) {
-                range.setStart(elem, 0)
-                range.collapse(true)
-              } else {
-                range.selectNodeContents(elem)
-                range.collapse(false)
-              }
-              sel?.removeAllRanges()
-              sel?.addRange(range)
+        setTimeout(() => {
+          const elem = document.querySelector(`[data-block-id="${targetBlock.id}"]`) as HTMLDivElement
+          if (elem) {
+            elem.focus()
+            const range = document.createRange()
+            const sel = window.getSelection()
+            if (nextBlock) {
+              range.setStart(elem, 0)
+              range.collapse(true)
+            } else {
+              range.selectNodeContents(elem)
+              range.collapse(false)
             }
-          })
-        })
+            sel?.removeAllRanges()
+            sel?.addRange(range)
+          }
+        }, 10)
       }
     }
   }, [block.id, block.order_index, sceneId, updateBlock, addBlock, deleteBlock])
