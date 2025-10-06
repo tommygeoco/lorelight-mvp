@@ -1,70 +1,65 @@
-'use client'
-
-import { Lightbulb, Music } from 'lucide-react'
+import { Lightbulb, Music, LucideIcon } from 'lucide-react'
 
 interface AmbienceCardProps {
-  type: 'lighting' | 'audio'
+  variant: 'lighting' | 'audio'
   title: string
   subtitle: string
-  thumbnail?: string
+  hasConfig: boolean
+  onClick: () => void
+  icon?: LucideIcon
 }
 
-export function AmbienceCard({ type, title, subtitle, thumbnail }: AmbienceCardProps) {
-  const isLighting = type === 'lighting'
+/**
+ * AmbienceCard - Clickable card for audio/lighting configuration
+ * Context7: Figma design with gradient background and icon overlay
+ */
+export function AmbienceCard({
+  variant,
+  title,
+  subtitle,
+  hasConfig,
+  onClick,
+  icon: CustomIcon
+}: AmbienceCardProps) {
+  const Icon = CustomIcon || (variant === 'lighting' ? Lightbulb : Music)
 
   return (
-    <div className="bg-[var(--card-surface)] rounded-[8px] relative overflow-hidden shadow-lg h-[164px]">
-      {/* Gradient decorations for lighting */}
-      {isLighting && (
-        <>
-          <div
-            className="absolute w-[250.43px] h-[200.85px] -top-[45.5px] left-[146.45px] opacity-100 mix-blend-screen blur-2xl pointer-events-none"
-            style={{ background: 'radial-gradient(circle, rgba(139, 92, 246, 0.6) 0%, transparent 70%)' }}
-          />
-          <div
-            className="absolute w-[250.43px] h-[200.85px] -top-[45.5px] left-[236.47px] opacity-100 mix-blend-screen blur-2xl pointer-events-none"
-            style={{ background: 'radial-gradient(circle, rgba(236, 72, 153, 0.6) 0%, transparent 70%)' }}
-          />
-        </>
-      )}
-
-      {/* Audio background */}
-      {!isLighting && thumbnail && (
-        <>
-          <div className="absolute inset-0 bg-gradient-to-br from-orange-600/40 to-blue-600/40 rounded-[8px]" />
-          <div className="absolute inset-0 backdrop-blur-[50px] bg-white/[0.01]" />
-        </>
-      )}
-
-      {/* Content with 8px padding */}
-      <div className="relative p-2 flex flex-col h-full">
-        {/* Thumbnail - 64x64 at top */}
-        {thumbnail ? (
-          <div
-            className="w-16 h-16 rounded-[8px] shadow-md bg-cover bg-center flex-shrink-0"
-            style={{ backgroundImage: `url(${thumbnail})` }}
-          />
-        ) : (
-          <div className="w-16 h-16 rounded-[8px] bg-gradient-to-br from-purple-500/20 to-pink-500/20 shadow-md flex-shrink-0" />
+    <button
+      onClick={onClick}
+      className="basis-0 grow min-w-px bg-[#222222] rounded-[12px] p-[16px] shadow-md relative overflow-hidden cursor-pointer hover:bg-[#252525] transition-colors text-left"
+    >
+      {/* Gradient background */}
+      <div className="absolute inset-0 pointer-events-none">
+        {variant === 'lighting' && (
+          <div className="absolute left-[146px] top-[-45px] w-[250px] h-[200px]">
+            <div className="w-full h-full rounded-full bg-purple-400/20 blur-[80px]" />
+          </div>
         )}
-
-        {/* Content - 104px from top (16px padding + 64px thumbnail + 24px gap) */}
-        <div className="mt-6">
-          <div className="font-bold text-white text-base truncate">
-            {title}
-          </div>
-          <div className="font-medium text-white/70 mix-blend-overlay truncate">
-            {subtitle}
-          </div>
-        </div>
-
-        {/* Icon - absolute at top-right with 8px padding */}
-        {isLighting ? (
-          <Lightbulb className="absolute top-2 right-2 w-[18px] h-[18px] text-white/40" />
-        ) : (
-          <Music className="absolute top-2 right-2 w-[18px] h-[18px] text-white/40" />
+        {variant === 'audio' && hasConfig && (
+          <div className="absolute inset-0 bg-gradient-to-br from-orange-600/20 to-amber-800/20 backdrop-blur-[50px]" />
         )}
       </div>
-    </div>
+
+      {/* Content */}
+      <div className="relative z-10 flex flex-col gap-[24px]">
+        {/* Icon placeholder */}
+        <div className="w-[64px] h-[64px] bg-white/5 rounded-[6px] shadow-lg" />
+
+        {/* Text */}
+        <div className="flex flex-col gap-[6px]">
+          <h3 className="font-['Inter'] text-[16px] font-bold leading-[24px] text-white truncate">
+            {title}
+          </h3>
+          <p className="font-['Inter'] text-[14px] font-medium leading-[20px] text-white/60 truncate">
+            {subtitle}
+          </p>
+        </div>
+
+        {/* Icon indicator */}
+        <div className="absolute right-[16px] top-[16px] opacity-40">
+          <Icon className="w-[18px] h-[18px] text-white" />
+        </div>
+      </div>
+    </button>
   )
 }

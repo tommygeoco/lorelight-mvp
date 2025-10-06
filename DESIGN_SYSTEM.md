@@ -1635,12 +1635,450 @@ Consistent scrollbar appearance across the app.
 </div>
 ```
 
+### Scene Components
+
+#### SceneHero (Editable Title)
+Location: `/components/scenes/SceneHero.tsx`
+
+Editable scene title with gradient background and play/pause controls.
+
+**Props:**
+- `scene: Scene` - Scene object
+- `sessionId?: string` - Optional session ID for optimistic updates
+
+**Features:**
+- **Editable title**: Click title to edit, Enter to save, Escape to cancel
+- **Gradient background**: Purple-pink radial gradients matching PageHeader
+- **Play/Pause button**: Activate/deactivate scene
+- **Auto-select**: Text automatically selected when entering edit mode
+- **Zero layout shift**: Input and h1 have identical spacing (m-0 p-0 block)
+
+**Title Edit Pattern:**
+```tsx
+// Both h1 and input share identical spacing classes
+{isEditingTitle ? (
+  <input
+    className="w-full m-0 p-0 block bg-transparent border-none outline-none font-['PP_Mondwest'] text-[60px] leading-[72px] tracking-[-1.2px] text-white"
+  />
+) : (
+  <h1
+    className="m-0 p-0 block font-['PP_Mondwest'] text-[60px] leading-[72px] tracking-[-1.2px] text-white cursor-text"
+  >
+    {scene.name}
+  </h1>
+)}
+```
+
+**Critical Spacing Rule:**
+- **MUST use**: `m-0 p-0 block` on both h1 and input
+- **Why**: Prevents any margin/padding differences that cause layout shift
+- **Effect**: Entering/exiting edit mode has zero visual jump
+
+**Usage:**
+```tsx
+import { SceneHero } from '@/components/scenes/SceneHero'
+
+<SceneHero scene={scene} sessionId={sessionId} />
+```
+
+**Visual Design:**
+- Title: PP Mondwest 60px with -1.2px tracking
+- Gradient: Matching purple-pink radial gradients from PageHeader
+- Button: Play/Pause with icon and label
+- Layout: Centered 760px max-width container
+
+---
+
+#### SceneNotesSection (Inline Text Editor)
+Location: `/components/scenes/SceneNotesSection.tsx`
+
+Inline, clickable text editor for scene notes with hover highlight and rich text formatting.
+
+**Props:**
+- `scene: Scene` - Scene object
+
+**Features:**
+- **Inline editing**: Click anywhere to start typing (creates first block if empty)
+- **Hover highlight**: Subtle `bg-white/[0.02]` on hover to indicate interactivity
+- **Text selection toolbar**: Selecting text shows floating RichTextToolbar with formatting options
+- **Right-click context menu**: BlockMenu for inserting different block types
+- **No section header**: Seamless integration into scene content flow
+
+**Usage:**
+```tsx
+import { SceneNotesSection } from '@/components/scenes/SceneNotesSection'
+
+<SceneNotesSection scene={scene} />
+```
+
+**Visual Design:**
+- Container: `min-h-[200px] px-[16px] py-[24px] rounded-[12px]`
+- Hover state: `bg-white/[0.02]` (very subtle highlight)
+- Empty state: `text-white/30` placeholder "Click to start writing..."
+- Cursor: `cursor-text` to indicate editability
+- Transitions: Smooth color transition on hover
+
+**Interaction Pattern:**
+1. **Empty state**: Click anywhere → creates first text block → focuses it
+2. **With content**: Click block → edit it
+3. **Text selection**: Highlight text → RichTextToolbar appears above selection
+4. **Enter key**: Creates new block below current
+5. **Backspace on empty**: Deletes block (unless only one)
+6. **Grip interactions**: See SceneBlockEditor below
+
+**Context7 Note:** This replaces the previous card-based notes section and the scene description field. Notes are now the primary freeform content area for scenes.
+
+#### SceneBlockEditor
+Location: `/components/scenes/SceneBlockEditor.tsx`
+
+Individual contenteditable block with grip interaction and slash commands.
+
+**Props:**
+- `block: SceneBlock` - Block data
+- `sceneId: string` - Parent scene ID
+
+**Features:**
+- **Contenteditable**: Direct text editing with HTML support
+- **Auto-save**: 500ms debounced save to database
+- **Rich text formatting**: Bold, italic, underline, strikethrough, links (via text selection)
+- **Grip interaction**: Drag to reorder, left-click to open menu
+- **Slash commands**: Type `/` in text blocks to open block type menu
+- **Smart placeholders**: Shows block type or command hint
+- **Block types**: Text, H1, H2, H3, Lists, Images
+- **Instant cursor movement**: Seamless focus transitions between blocks
+
+**Grip Icon Behavior:**
+- **Position**: Vertically aligned to middle of element content
+- **Tooltip**: "**Drag** to move, **Click** to open menu" (emphasis on Drag and Click)
+- **Drag**: Click and drag to reorder blocks
+- **Left-click**: Opens BlockMenu positioned below grip
+
+**Slash Commands:**
+- **Text blocks only**: Typing `/` in empty or text-only blocks opens BlockMenu
+- **Position**: Menu appears below cursor/content area
+- **Auto-clear**: Selecting a block type clears the `/` character
+- **Not available**: Headers, lists, and other block types do NOT trigger on `/`
+
+**Keyboard Behavior:**
+- **Enter**: Creates new TEXT block below (always text, not current block type)
+  - Cursor automatically moves to new block (instant, no delay)
+  - Positioned at start of new block
+- **Shift+Enter**: Creates line break within same element (browser default)
+- **Backspace on empty**: Deletes block (unless it&apos;s the only one)
+  - Cursor automatically moves to previous block (instant, no delay)
+  - Positioned at end of previous block
+
+**Text Selection Toolbar:**
+- **Text blocks only**: RichTextToolbar appears when selecting text in `text` blocks
+- **Headers excluded**: Selecting text in H1/H2/H3 blocks does NOT show toolbar
+- **Conditional logic**: `if (block.type !== 'text')` prevents toolbar on headers
+
+**Delete Behavior:**
+1. User deletes all text → placeholder shows ("Heading 1", "Type / for commands", etc.)
+2. User backspaces on empty block → block deleted, cursor moves to previous
+3. User clicks grip → opens menu → "Delete Block" option
+
+**Placeholders by Block Type:**
+- `text`: "Type / for commands" (hints at slash command feature)
+- `heading_1`: "Heading 1"
+- `heading_2`: "Heading 2"
+- `heading_3`: "Heading 3"
+
+**Styling by Block Type:**
+- `text`: `text-[14px] leading-[20px] mb-2`
+- `heading_1`: `text-[24px] font-bold leading-[32px] mt-6 mb-2`
+- `heading_2`: `text-[20px] font-bold leading-[28px] mt-4 mb-2`
+- `heading_3`: `text-[16px] font-bold leading-[24px] mt-3 mb-1`
+
+**Usage:**
+```tsx
+import { SceneBlockEditor } from '@/components/scenes/SceneBlockEditor'
+
+<SceneBlockEditor block={block} sceneId={scene.id} />
+```
+
+**Visual States:**
+- **Default**: Grip hidden, text visible
+- **Hover**: Grip shows at `opacity-40`, increases to `opacity-100` on grip hover
+- **Grip hover**: Tooltip appears with emphasized text
+- **Empty**: Placeholder text shows in `text-white/30`
+- **No row hover highlight**: Clean, minimal appearance
+- **Grip alignment**: Uses `items-center` with `self-start pt-1` on grip for vertical centering
+
+**Cursor Movement Performance:**
+- All focus transitions use `setTimeout(..., 0)` for next-tick execution
+- Ensures DOM updates complete before focus
+- Feels instant and natural like native text editors
+
+---
+
+#### RichTextToolbar
+Location: `/components/ui/RichTextToolbar.tsx`
+
+Floating toolbar that appears above text selection with formatting options.
+
+**Props:**
+- `selection: Range` - Browser Range object for selected text
+- `onFormat: (format) => void` - Format handler
+- `onLink: () => void` - Link handler
+- `onClose: () => void` - Close handler
+
+**Features:**
+- **Auto-position**: Centers above selection, 48px offset
+- **Keyboard shortcuts**: Cmd+B (bold), Cmd+I (italic), Cmd+U (underline), Cmd+Shift+X (strikethrough)
+- **Close on click outside**: Auto-closes when clicking elsewhere
+- **Format buttons**: Bold, Italic, Underline, Strikethrough, Link
+
+**Usage:**
+```tsx
+import { RichTextToolbar } from '@/components/ui/RichTextToolbar'
+
+{showToolbar && selection && (
+  <RichTextToolbar
+    selection={selection}
+    onFormat={handleFormat}
+    onLink={handleLink}
+    onClose={() => setShowToolbar(false)}
+  />
+)}
+```
+
+**Styling:**
+- Container: `bg-[#191919] border border-white/10 rounded-[8px] shadow-xl px-2 py-2`
+- Buttons: `w-8 h-8 rounded-[6px] hover:bg-white/10`
+- Icons: `w-4 h-4 text-white/70`
+- Divider: `w-px h-6 bg-white/10 mx-1` (between format and link)
+
+---
+
+#### BlockMenu
+Location: `/components/ui/BlockMenu.tsx`
+
+Block type selector with delete option, triggered from grip icon.
+
+**Props:**
+- `anchorPoint: { x: number; y: number }` - Menu position
+- `currentType?: BlockType` - Currently selected type (shows checkmark)
+- `onInsert: (type: BlockType) => void` - Type change handler
+- `onDelete?: () => void` - Delete handler (optional, shows delete option)
+- `onClose: () => void` - Close handler
+
+**Block Types Available:**
+- Text (Type icon)
+- Heading 1 (Heading1 icon)
+- Heading 2 (Heading2 icon)
+- Heading 3 (Heading3 icon)
+- Bulleted List (List icon)
+- Numbered List (ListOrdered icon)
+- Checkbox List (CheckSquare icon)
+- Image / Media (Image icon)
+
+**Usage:**
+```tsx
+import { BlockMenu } from '@/components/ui/BlockMenu'
+
+// From grip right-click
+{showBlockMenu && (
+  <BlockMenu
+    anchorPoint={blockMenuPosition}
+    currentType={block.type}
+    onInsert={handleBlockTypeChange}
+    onDelete={handleDeleteFromMenu}
+    onClose={() => setShowBlockMenu(false)}
+  />
+)}
+```
+
+**Styling:**
+- Standard context menu pattern: `bg-[#191919] border border-white/10 rounded-[8px]`
+- Item padding: `px-4 py-2` with `gap-2`
+- Icons: `w-3.5 h-3.5`
+- Checkmark: Shows on current type (right side, `text-white/60`)
+- Divider: `h-px bg-white/10 my-1` before delete
+- Delete: `text-red-400 hover:bg-red-500/10`
+
+**Interaction:**
+- Clicking a type changes the block type and closes menu
+- Clicking delete removes the block (if not the only one) and closes menu
+- Escape or click outside closes menu
+
+---
+
+#### SceneSectionHeader
+Location: `/components/ui/SceneSectionHeader.tsx`
+
+Standardized section header for scene editor with consistent padding and typography.
+
+**Props:**
+- `title: string` - Section title
+
+**Usage:**
+```tsx
+import { SceneSectionHeader } from '@/components/ui/SceneSectionHeader'
+
+<SceneSectionHeader title="Ambience" />
+<SceneSectionHeader title="Notes" />
+<SceneSectionHeader title="Enemies" />
+```
+
+**Styling:**
+- Padding: `pb-0 pt-[24px]` (24px top spacing, flush bottom)
+- Typography: `text-[16px] font-semibold leading-[24px]` in Inter
+- Color: `text-white`
+
+**Context7 Note:** All section headers in scene editor use this component for consistency.
+
+---
+
+#### AmbienceCard
+Location: `/components/scenes/AmbienceCard.tsx`
+
+Clickable card for audio/lighting configuration with gradient backgrounds and icon overlays.
+
+**Props:**
+- `variant: 'lighting' | 'audio'` - Card type (determines gradient)
+- `title: string` - Card title (e.g., "Lighting", audio file name)
+- `subtitle: string` - Card subtitle (e.g., "Custom preset", duration)
+- `hasConfig: boolean` - Whether configuration exists (affects audio gradient)
+- `onClick: () => void` - Click handler
+- `icon?: LucideIcon` - Optional custom icon (defaults based on variant)
+
+**Usage:**
+```tsx
+import { AmbienceCard } from '@/components/scenes/AmbienceCard'
+
+<AmbienceCard
+  variant="lighting"
+  title="Lighting"
+  subtitle="Custom preset"
+  hasConfig={true}
+  onClick={() => setIsLightConfigOpen(true)}
+/>
+
+<AmbienceCard
+  variant="audio"
+  title="Tavern Ambience"
+  subtitle="3 min"
+  hasConfig={true}
+  onClick={() => setIsAudioLibraryOpen(true)}
+/>
+```
+
+**Visual Features:**
+- **Lighting**: Purple gradient blur (top-right)
+- **Audio**: Orange-amber gradient (when hasConfig=true)
+- **Layout**: 64px icon placeholder, title/subtitle, floating icon indicator
+- **Hover**: `bg-[#252525]` (subtle lift effect)
+
+**Styling:**
+- Base: `bg-[#222222] rounded-[12px] p-[16px]`
+- Responsive: `basis-0 grow min-w-px` (equal width in flex layout)
+- Text: Title in 16px bold, subtitle in 14px medium
+
+---
+
+#### ScenesSidebar
+Location: `/components/scenes/ScenesSidebar.tsx`
+
+Reusable scenes list sidebar used in both campaign-level and session-level views.
+
+**Props:**
+- `scenes: Scene[]` - Array of scenes to display
+- `selectedSceneId: string | null` - Currently selected scene ID
+- `onSceneClick: (scene: Scene) => void` - Scene click handler
+- `onSceneContextMenu: (e: React.MouseEvent, scene: Scene) => void` - Right-click handler
+- `onEmptySpaceContextMenu: (e: React.MouseEvent) => void` - Empty space right-click
+- `onCreate: () => void` - Create new scene handler
+- `onDelete?: (scene: Scene, e: React.MouseEvent) => void` - Optional delete handler
+- `renderSceneItem?: (scene: Scene, isSelected: boolean) => React.ReactNode` - Custom renderer
+
+**Usage:**
+```tsx
+import { ScenesSidebar } from '@/components/scenes/ScenesSidebar'
+
+<ScenesSidebar
+  scenes={sortedScenes}
+  selectedSceneId={selectedSceneId}
+  onSceneClick={handleSceneClick}
+  onSceneContextMenu={handleContextMenu}
+  onEmptySpaceContextMenu={handleEmptySpaceContextMenu}
+  onCreate={() => setIsSceneModalOpen(true)}
+  onDelete={handleDeleteClick}
+/>
+```
+
+**Features:**
+- Header with title + plus button
+- Empty state with Dark Fantasy Charm copy
+- Scene list with:
+  - Audio/Lights indicators (icons + text)
+  - Active/selected states
+  - Hover delete button (if onDelete provided)
+- Support for custom item rendering
+
+**States:**
+- Selected: `bg-white/10`
+- Active (not selected): `bg-white/[0.05]`
+- Hover: `hover:bg-white/5`
+
+---
+
+#### SceneContextMenu
+Location: `/components/scenes/SceneContextMenu.tsx`
+
+Right-click context menu for scenes with standard actions.
+
+**Props:**
+- `x: number` - Menu X position
+- `y: number` - Menu Y position
+- `scene?: Scene` - Scene being acted upon (undefined = empty space click)
+- `onNew: () => void` - New scene handler
+- `onRename: (scene: Scene) => void` - Rename handler
+- `onDuplicate: (scene: Scene) => void` - Duplicate handler
+- `onDelete: (scene: Scene) => void` - Delete handler
+
+**Usage:**
+```tsx
+import { SceneContextMenu } from '@/components/scenes/SceneContextMenu'
+
+{contextMenu && (
+  <SceneContextMenu
+    x={contextMenu.x}
+    y={contextMenu.y}
+    scene={contextMenu.scene}
+    onNew={() => {
+      setIsSceneModalOpen(true)
+      setContextMenu(null)
+    }}
+    onRename={(scene) => {
+      setEditingSceneId(scene.id)
+      setContextMenu(null)
+    }}
+    onDuplicate={handleDuplicate}
+    onDelete={handleDeleteClick}
+  />
+)}
+```
+
+**Menu Items:**
+- **Empty space**: "New Scene" only
+- **On scene**:
+  - "Rename" (Edit2 icon)
+  - "Duplicate" (Copy icon)
+  - [Divider]
+  - "Delete" (Trash2 icon, red styling)
+
+**Styling:** Follows standard context menu pattern (Design System > Context Menus)
+
+---
+
 ## Future Enhancements
 
 - [x] Dropdown menu component
 - [x] Tag/badge component
 - [x] Tooltip pattern
 - [x] Context menu pattern
+- [x] Scene editor components (Section Header, Ambience Card, Sidebar, Context Menu)
 - [ ] Add loading skeleton components
 - [ ] Create toast notification component
 - [ ] Create progress bar component

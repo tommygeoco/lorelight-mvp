@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { Plus, Music, Trash2, Edit2, Play, Pause, AlertCircle, MoreVertical, Info, X, Tag, ChevronDown, SlidersHorizontal, ChevronUp } from 'lucide-react'
+import { Plus, Music, Trash2, Edit2, Play, Pause, AlertCircle, MoreVertical, Info, X, Tag, ChevronDown, SlidersHorizontal, ChevronUp, Lightbulb, GripVertical } from 'lucide-react'
 import { BaseModal } from '@/components/ui/BaseModal'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { InputModal } from '@/components/ui/InputModal'
@@ -172,6 +172,7 @@ export default function DesignSystemPage() {
               <li><a href="#tooltips" className="text-white/60 hover:text-white transition-colors">Tooltips</a></li>
               <li><a href="#empty-states" className="text-white/60 hover:text-white transition-colors">Empty States</a></li>
               <li><a href="#sidebar-consistency" className="text-white/60 hover:text-white transition-colors">Sidebar Consistency</a></li>
+              <li><a href="#scene-components" className="text-white/60 hover:text-white transition-colors">Scene Components</a></li>
               <li><a href="#layouts" className="text-white/60 hover:text-white transition-colors">Layouts</a></li>
               <li><a href="#playing-track-animation" className="text-white/60 hover:text-white transition-colors">Playing Track Animation</a></li>
               <li><a href="#audio-player-footer" className="text-white/60 hover:text-white transition-colors">Audio Player Footer</a></li>
@@ -1389,6 +1390,382 @@ interface HueContextMenuProps {
   <div className="font-medium text-[13px]">{item.name}</div>
   <div className="text-[11px] text-white/50 mt-0.5">{item.subtitle}</div>
 </button>`}
+              />
+            </div>
+          </Section>
+
+          {/* Scene Components */}
+          <Section title="Scene Components">
+            <div id="scene-components" className="space-y-6">
+              <Example
+                title="Inline Notes Editor"
+                description="GripVertical (6-dot), 2s tooltip delay, focus-only placeholders, keyboard nav. Type / for slash commands."
+              >
+                <div className="bg-[#191919] rounded-[12px] p-8">
+                  {/* Demo inline editor */}
+                  <div
+                    className="w-full min-h-[200px] px-[16px] py-[24px] rounded-[12px] transition-colors cursor-text hover:bg-white/[0.02]"
+                  >
+                    <div className="space-y-1">
+                      {/* Heading 1 - grip vertically centered with tooltip */}
+                      <div className="group relative flex items-center gap-2 px-2 -mx-2 rounded-[8px]">
+                        <div className="relative flex-shrink-0 opacity-0 group-hover:opacity-40 hover:!opacity-100 cursor-grab active:cursor-grabbing group/grip">
+                          <GripVertical className="w-5 h-5 text-white" />
+                          {/* Tooltip - 2s delay, wider */}
+                          <div className="absolute left-0 top-full mt-1 px-3 py-2 bg-[#191919] border border-white/10 rounded-[6px] shadow-lg opacity-0 group-hover/grip:opacity-100 transition-opacity delay-[2000ms] pointer-events-none z-50 text-center min-w-[100px] whitespace-nowrap">
+                            <div className="text-[11px] leading-[14px] text-white/60">
+                              <div><span className="text-white">Drag</span> to move</div>
+                              <div className="mt-1"><span className="text-white">Click</span> to open</div>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex-1 font-['Inter'] text-[24px] font-bold leading-[32px] text-white/90 mt-6 mb-2">
+                          Scene Overview
+                        </div>
+                      </div>
+
+                      {/* Text block - instant cursor, slash commands */}
+                      <div className="group relative flex items-center gap-2 px-2 -mx-2 rounded-[8px]">
+                        <div className="relative flex-shrink-0 opacity-0 group-hover:opacity-40 hover:!opacity-100 cursor-grab group/grip">
+                          <GripVertical className="w-5 h-5 text-white" />
+                          <div className="absolute left-0 top-full mt-1 px-3 py-2 bg-[#191919] border border-white/10 rounded-[6px] shadow-lg opacity-0 group-hover/grip:opacity-100 transition-opacity delay-[2000ms] pointer-events-none z-50 text-center min-w-[100px] whitespace-nowrap">
+                            <div className="text-[11px] leading-[14px] text-white/60">
+                              <div><span className="text-white">Drag</span> to move</div>
+                              <div className="mt-1"><span className="text-white">Click</span> to open</div>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex-1 font-['Inter'] text-[14px] leading-[20px] text-white/90 mb-2">
+                          The party enters a dimly lit tavern. Type / for menu. Click grip to toggle.
+                        </div>
+                      </div>
+
+                      {/* Heading 2 */}
+                      <div className="group relative flex items-center gap-2 px-2 -mx-2 rounded-[8px]">
+                        <div className="relative flex-shrink-0 opacity-0 group-hover:opacity-40 hover:!opacity-100 cursor-grab group/grip">
+                          <GripVertical className="w-5 h-5 text-white" />
+                          <div className="absolute left-0 top-full mt-1 px-3 py-2 bg-[#191919] border border-white/10 rounded-[6px] shadow-lg opacity-0 group-hover/grip:opacity-100 transition-opacity delay-[2000ms] pointer-events-none z-50 text-center min-w-[100px] whitespace-nowrap">
+                            <div className="text-[11px] leading-[14px] text-white/60">
+                              <div><span className="text-white">Drag</span> to move</div>
+                              <div className="mt-1"><span className="text-white">Click</span> to open</div>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex-1 font-['Inter'] text-[20px] font-bold leading-[28px] text-white/90 mt-4 mb-2">
+                          NPCs Present
+                        </div>
+                      </div>
+
+                      {/* Empty block with new placeholder */}
+                      <div className="group relative flex items-center gap-2 px-2 -mx-2 rounded-[8px]">
+                        <div className="relative flex-shrink-0 opacity-0 group-hover:opacity-40 hover:!opacity-100 cursor-grab group/grip">
+                          <GripVertical className="w-5 h-5 text-white" />
+                          <div className="absolute left-0 top-full mt-1 px-3 py-2 bg-[#191919] border border-white/10 rounded-[6px] shadow-lg opacity-0 group-hover/grip:opacity-100 transition-opacity delay-[2000ms] pointer-events-none z-50 text-center min-w-[100px] whitespace-nowrap">
+                            <div className="text-[11px] leading-[14px] text-white/60">
+                              <div><span className="text-white">Drag</span> to move</div>
+                              <div className="mt-1"><span className="text-white">Click</span> to open</div>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex-1 font-['Inter'] text-[14px] leading-[20px] text-white/30 mb-2">
+                          Type / for commands
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Empty state demo */}
+                  <div className="mt-6">
+                    <div className="w-full min-h-[150px] px-[16px] py-[24px] rounded-[12px] transition-colors cursor-text hover:bg-white/[0.02]">
+                      <div className="text-white/30 font-['Inter'] text-[14px] leading-[20px]">
+                        Click to start writing...
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </Example>
+
+              <CodeBlock
+                id="inline-notes-editor"
+                code={`// SceneNotesSection - Hover only on main container
+<div
+  className={\`w-full min-h-[200px] px-[16px] py-[24px] rounded-[12px]
+    transition-colors cursor-text \${isHovered ? 'bg-white/[0.02]' : 'bg-transparent'}\`}
+  onMouseEnter={() => setIsHovered(true)}
+  onMouseLeave={() => setIsHovered(false)}
+  onClick={handleClick}
+>
+  {blocks.length === 0 ? (
+    <div className="text-white/30 font-['Inter'] text-[14px] leading-[20px]">
+      Click to start writing...
+    </div>
+  ) : (
+    <div className="space-y-1">
+      {blocks.map((block) => (
+        <SceneBlockEditor key={block.id} block={block} sceneId={scene.id} />
+      ))}
+    </div>
+  )}
+</div>
+
+// SceneBlockEditor - GripVertical (6-dot), focus-only placeholder
+<div className="group relative flex items-center gap-2 px-2 -mx-2 rounded-[8px]">
+  {/* GripVertical: drag or left-click to toggle menu */}
+  <div
+    ref={gripRef}
+    className="relative flex-shrink-0 opacity-0 group-hover:opacity-40 hover:!opacity-100 cursor-grab group/grip"
+    onClick={handleGripClick}
+  >
+    <GripVertical className="w-5 h-5 text-white" />
+
+    {/* Tooltip - 2s delay, wider */}
+    <div className="absolute left-0 top-full mt-1 px-3 py-2 bg-[#191919] border border-white/10 rounded-[6px] shadow-lg opacity-0 group-hover/grip:opacity-100 transition-opacity delay-[2000ms] pointer-events-none text-center min-w-[100px] whitespace-nowrap">
+      <div className="text-[11px] leading-[14px] text-white/60">
+        <div><span className="text-white">Drag</span> to move</div>
+        <div className="mt-1"><span className="text-white">Click</span> to open</div>
+      </div>
+    </div>
+  </div>
+
+  {/* Contenteditable - placeholder only when focused */}
+  <div
+    ref={contentRef}
+    contentEditable
+    onInput={handleInput}
+    onKeyDown={handleKeyDown}
+    onFocus={() => setIsFocused(true)}
+    onBlur={() => setIsFocused(false)}
+    className="flex-1 outline-none text-white/90 font-['Inter']"
+    data-placeholder={isFocused ? "Type / for commands" : ""}
+    data-block-id={block.id}
+  />
+</div>
+
+// Grip Click Toggle
+const handleGripClick = (e: React.MouseEvent) => {
+  e.preventDefault()
+  e.stopPropagation()
+
+  // Toggle menu open/closed
+  if (showBlockMenu && blockMenuTrigger === 'grip') {
+    setShowBlockMenu(false)
+    setBlockMenuTrigger(null)
+    return
+  }
+
+  // Open menu positioned below grip
+  const rect = gripRef.current.getBoundingClientRect()
+  setBlockMenuPosition({ x: rect.left, y: rect.bottom + 4 })
+  setBlockMenuTrigger('grip')
+  setShowBlockMenu(true)
+}
+
+// Slash Command Detection (text blocks only)
+const handleInput = () => {
+  const text = contentRef.current?.textContent || ''
+
+  if (block.type === 'text' && text === '/') {
+    const rect = contentRef.current.getBoundingClientRect()
+    setBlockMenuPosition({ x: rect.left, y: rect.bottom + 4 })
+    setShowBlockMenu(true)
+    return
+  }
+
+  // ... auto-save logic
+}
+
+// Keyboard with INSTANT Cursor Movement (requestAnimationFrame)
+const handleKeyDown = async (e: React.KeyboardEvent) => {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault()
+
+    // Save current (non-blocking)
+    updateBlock(block.id, { content: { text: { text, ... } } })
+
+    // Create new block immediately
+    const newBlockPromise = addBlock({ type: 'text', ... })
+
+    // Update order indices IN BACKGROUND (non-blocking)
+    blocksToUpdate.forEach(b => {
+      updateBlock(b.id, { order_index: b.order_index + 1 })
+    })
+
+    // Wait only for new block, then focus INSTANTLY
+    const newBlock = await newBlockPromise
+    requestAnimationFrame(() => {
+      const elem = document.querySelector(\`[data-block-id="\${newBlock.id}"]\`)
+      elem?.focus()
+      // Place cursor at start
+    })
+  }
+
+  if (e.key === 'Backspace' && text === '') {
+    const prevBlock = blocks[currentIndex - 1]
+    await deleteBlock(block.id)
+
+    // Focus INSTANTLY using requestAnimationFrame
+    requestAnimationFrame(() => {
+      const elem = document.querySelector(\`[data-block-id="\${prevBlock.id}"]\`)
+      elem?.focus()
+      // Place cursor at end
+    })
+  }
+}
+
+// BlockMenu on grip click or slash command
+{showBlockMenu && (
+  <BlockMenu
+    anchorPoint={blockMenuPosition}
+    currentType={block.type}
+    onInsert={handleBlockTypeChange}
+    onDelete={handleDeleteFromMenu}
+    onClose={() => setShowBlockMenu(false)}
+  />
+)}`}
+              />
+              <Example title="SceneSectionHeader" description="Standardized section header for scene editor">
+                <div className="space-y-4">
+                  <div className="pb-0 pt-[24px]">
+                    <h2 className="font-['Inter'] text-[16px] font-semibold leading-[24px] text-white">
+                      Ambience
+                    </h2>
+                  </div>
+                  <div className="pb-0 pt-[24px]">
+                    <h2 className="font-['Inter'] text-[16px] font-semibold leading-[24px] text-white">
+                      Notes
+                    </h2>
+                  </div>
+                </div>
+              </Example>
+
+              <CodeBlock
+                id="scene-section-header"
+                code={`import { SceneSectionHeader } from '@/components/ui/SceneSectionHeader'
+
+<SceneSectionHeader title="Ambience" />
+<SceneSectionHeader title="Notes" />
+<SceneSectionHeader title="Enemies" />`}
+              />
+
+              <Example title="AmbienceCard" description="Clickable cards for audio/lighting configuration with gradient backgrounds">
+                <div className="flex gap-[16px]">
+                  <button className="basis-0 grow min-w-px bg-[#222222] rounded-[12px] p-[16px] shadow-md relative overflow-hidden cursor-pointer hover:bg-[#252525] transition-colors text-left">
+                    {/* Purple gradient */}
+                    <div className="absolute inset-0 pointer-events-none">
+                      <div className="absolute left-[146px] top-[-45px] w-[250px] h-[200px]">
+                        <div className="w-full h-full rounded-full bg-purple-400/20 blur-[80px]" />
+                      </div>
+                    </div>
+                    <div className="relative z-10 flex flex-col gap-[24px]">
+                      <div className="w-[64px] h-[64px] bg-white/5 rounded-[6px] shadow-lg" />
+                      <div className="flex flex-col gap-[6px]">
+                        <h3 className="font-['Inter'] text-[16px] font-bold leading-[24px] text-white">Lighting</h3>
+                        <p className="font-['Inter'] text-[14px] font-medium leading-[20px] text-white/60">Custom preset</p>
+                      </div>
+                      <div className="absolute right-[16px] top-[16px] opacity-40">
+                        <Lightbulb className="w-[18px] h-[18px] text-white" />
+                      </div>
+                    </div>
+                  </button>
+
+                  <button className="basis-0 grow min-w-px bg-[#222222] rounded-[12px] p-[16px] shadow-md relative overflow-hidden cursor-pointer hover:bg-[#252525] transition-colors text-left">
+                    {/* Orange-amber gradient */}
+                    <div className="absolute inset-0 bg-gradient-to-br from-orange-600/20 to-amber-800/20 backdrop-blur-[50px]" />
+                    <div className="relative z-10 flex flex-col gap-[24px]">
+                      <div className="w-[64px] h-[64px] bg-white/5 rounded-[6px] shadow-lg" />
+                      <div className="flex flex-col gap-[6px]">
+                        <h3 className="font-['Inter'] text-[16px] font-bold leading-[24px] text-white truncate">Tavern Ambience</h3>
+                        <p className="font-['Inter'] text-[14px] font-medium leading-[20px] text-white/60 truncate">3 min</p>
+                      </div>
+                      <div className="absolute right-[16px] top-[16px] opacity-40">
+                        <Music className="w-[18px] h-[18px] text-white" />
+                      </div>
+                    </div>
+                  </button>
+                </div>
+              </Example>
+
+              <CodeBlock
+                id="ambience-card"
+                code={`import { AmbienceCard } from '@/components/scenes/AmbienceCard'
+
+<div className="flex gap-[16px]">
+  <AmbienceCard
+    variant="lighting"
+    title="Lighting"
+    subtitle="Custom preset"
+    hasConfig={true}
+    onClick={() => setIsLightConfigOpen(true)}
+  />
+
+  <AmbienceCard
+    variant="audio"
+    title="Tavern Ambience"
+    subtitle="3 min"
+    hasConfig={true}
+    onClick={() => setIsAudioLibraryOpen(true)}
+  />
+</div>`}
+              />
+
+              <Example title="ScenesSidebar" description="Reusable scenes list sidebar with configurable callbacks">
+                <div className="w-[320px] h-[400px] bg-[#191919] rounded-[8px] flex flex-col">
+                  <div className="px-6 py-4 flex items-center justify-between">
+                    <h2 className="text-base font-semibold text-white">Scenes</h2>
+                    <button className="w-8 h-8 rounded-[8px] hover:bg-white/5 flex items-center justify-center transition-colors">
+                      <Plus className="w-[18px] h-[18px] text-white/70" />
+                    </button>
+                  </div>
+                  <div className="flex-1 overflow-y-auto scrollbar-custom px-6 py-4">
+                    <ul role="list" className="space-y-2">
+                      <li>
+                        <div className="group flex flex-col px-3 py-2 rounded-[8px] bg-white/10 transition-colors cursor-pointer">
+                          <div className="flex items-center gap-2">
+                            <span className="flex-1 truncate text-[13px] text-white font-medium">The Tavern</span>
+                          </div>
+                          <div className="ml-0 text-[11px] text-white/30 mt-0.5 flex items-center gap-2">
+                            <span className="flex items-center gap-1">
+                              <Music className="w-3 h-3" />
+                              Audio
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <Lightbulb className="w-3 h-3" />
+                              Lights
+                            </span>
+                          </div>
+                        </div>
+                      </li>
+                      <li>
+                        <div className="group flex flex-col px-3 py-2 rounded-[8px] hover:bg-white/5 transition-colors cursor-pointer">
+                          <div className="flex items-center gap-2">
+                            <span className="flex-1 truncate text-[13px] text-white font-medium">Dark Forest</span>
+                          </div>
+                          <div className="ml-0 text-[11px] text-white/30 mt-0.5 flex items-center gap-2">
+                            <span className="flex items-center gap-1">
+                              <Music className="w-3 h-3" />
+                              Audio
+                            </span>
+                          </div>
+                        </div>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </Example>
+
+              <CodeBlock
+                id="scenes-sidebar"
+                code={`import { ScenesSidebar } from '@/components/scenes/ScenesSidebar'
+
+<ScenesSidebar
+  scenes={sortedScenes}
+  selectedSceneId={selectedSceneId}
+  onSceneClick={handleSceneClick}
+  onSceneContextMenu={handleContextMenu}
+  onEmptySpaceContextMenu={handleEmptySpaceContextMenu}
+  onCreate={() => setIsSceneModalOpen(true)}
+  onDelete={handleDeleteClick}
+/>`}
               />
             </div>
           </Section>

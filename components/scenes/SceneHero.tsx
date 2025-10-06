@@ -18,9 +18,7 @@ interface SceneHeroProps {
  */
 export function SceneHero({ scene, sessionId }: SceneHeroProps) {
   const [isEditingTitle, setIsEditingTitle] = useState(false)
-  const [isEditingDesc, setIsEditingDesc] = useState(false)
   const titleInputRef = useRef<HTMLInputElement>(null)
-  const descInputRef = useRef<HTMLTextAreaElement>(null)
   const updateScene = useSceneStore((state) => state.updateScene)
   const activateScene = useSceneStore((state) => state.activateScene)
   const deactivateScene = useSceneStore((state) => state.deactivateScene)
@@ -29,14 +27,6 @@ export function SceneHero({ scene, sessionId }: SceneHeroProps) {
   const handleTitleMount = (el: HTMLInputElement | null) => {
     if (el) {
       titleInputRef.current = el
-      el.focus()
-      el.select()
-    }
-  }
-
-  const handleDescMount = (el: HTMLTextAreaElement | null) => {
-    if (el) {
-      descInputRef.current = el
       el.focus()
       el.select()
     }
@@ -73,30 +63,6 @@ export function SceneHero({ scene, sessionId }: SceneHeroProps) {
     // Fire and forget database save - don't await
     updateScene(scene.id, { name: trimmedTitle }).catch(error => {
       console.error('Failed to save title:', error)
-    })
-  }
-
-  const handleDescSave = () => {
-    const newDesc = descInputRef.current?.value || ''
-    const trimmedDesc = newDesc.trim() || null
-
-    // Close immediately for snappy feel
-    setIsEditingDesc(false)
-
-    // Don't save if unchanged
-    if (trimmedDesc === scene.description) return
-
-    // Optimistic update to sessionSceneStore for instant UI feedback
-    if (sessionId) {
-      useSessionSceneStore.getState().updateSceneInSession(sessionId, scene.id, {
-        description: trimmedDesc,
-        updated_at: new Date().toISOString()
-      })
-    }
-
-    // Fire and forget database save - don't await
-    updateScene(scene.id, { description: trimmedDesc }).catch(error => {
-      console.error('Failed to save description:', error)
     })
   }
 
@@ -188,45 +154,17 @@ export function SceneHero({ scene, sessionId }: SceneHeroProps) {
                 setIsEditingTitle(false)
               }
             }}
-            className="w-full bg-transparent border-none outline-none font-['PP_Mondwest'] text-[60px] leading-[72px] tracking-[-1.2px] text-white placeholder:text-white/40"
+            className="w-full m-0 p-0 block bg-transparent border-none outline-none font-['PP_Mondwest'] text-[60px] leading-[72px] tracking-[-1.2px] text-white placeholder:text-white/40"
             placeholder="Scene name..."
           />
         ) : (
           <h1
             onClick={() => setIsEditingTitle(true)}
-            className="font-['PP_Mondwest'] text-[60px] leading-[72px] tracking-[-1.2px] text-white cursor-text"
+            className="m-0 p-0 block font-['PP_Mondwest'] text-[60px] leading-[72px] tracking-[-1.2px] text-white cursor-text"
           >
             {scene.name}
           </h1>
         )}
-
-        {/* Editable description */}
-        <div className="relative h-[60px]">
-          {isEditingDesc ? (
-            <textarea
-              ref={handleDescMount}
-              defaultValue={scene.description || ''}
-              onBlur={handleDescSave}
-              onKeyDown={(e) => {
-                if (e.key === 'Escape') {
-                  e.preventDefault()
-                  setIsEditingDesc(false)
-                }
-              }}
-              className="absolute inset-0 w-full h-full p-0 m-0 bg-transparent border-none outline-none font-['Inter'] text-[14px] leading-[20px] text-[#eeeeee] placeholder:text-white/40 resize-none overflow-hidden"
-              placeholder="Add a description..."
-            />
-          ) : (
-            <div
-              onClick={() => setIsEditingDesc(true)}
-              className="absolute inset-0 w-full h-full p-0 m-0 font-['Inter'] text-[14px] leading-[20px] text-[#eeeeee] cursor-text overflow-hidden"
-            >
-              {scene.description || (
-                <span className="text-white/40">Add a description...</span>
-              )}
-            </div>
-          )}
-        </div>
 
         {/* Play/Pause Button */}
         <div className="mt-[24px]">

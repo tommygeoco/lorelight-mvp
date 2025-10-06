@@ -1,10 +1,11 @@
 'use client'
 
-import { useEffect, useMemo } from 'react'
+import { useEffect } from 'react'
 import type { Scene } from '@/types'
 import { SceneHero } from './SceneHero'
 import { SceneAmbienceSection } from './SceneAmbienceSection'
 import { SceneNotesSection } from './SceneNotesSection'
+import { SceneNPCsSection } from './SceneNPCsSection'
 import { useSceneBlockStore } from '@/store/sceneBlockStore'
 import { useSceneNPCStore } from '@/store/sceneNPCStore'
 import { useAudioFileStore } from '@/store/audioFileStore'
@@ -23,15 +24,6 @@ export function SceneEditor({ scene, campaignId, sessionId }: SceneEditorProps) 
   const fetchBlocks = useSceneBlockStore((state) => state.actions.fetchBlocksForScene)
   const fetchNPCs = useSceneNPCStore((state) => state.actions.fetchNPCsForScene)
   const fetchAudioFiles = useAudioFileStore((state) => state.fetchAudioFiles)
-
-  const npcsMap = useSceneNPCStore((state) => state.npcs)
-  const npcs = useMemo(() => {
-    // Defensive check: ensure npcsMap is a Map
-    const map = npcsMap instanceof Map ? npcsMap : new Map()
-    return Array.from(map.values())
-      .filter(n => n.scene_id === scene.id)
-      .sort((a, b) => a.order_index - b.order_index)
-  }, [npcsMap, scene.id])
 
   // Fetch data on mount
   useEffect(() => {
@@ -52,28 +44,14 @@ export function SceneEditor({ scene, campaignId, sessionId }: SceneEditorProps) 
 
       {/* Main content area */}
       <div className="max-w-[760px] mx-auto px-[32px] py-[40px] space-y-[16px]">
+        {/* Notes section - Primary content area */}
+        <SceneNotesSection scene={scene} />
+
         {/* Ambience section (audio + lights) */}
         <SceneAmbienceSection scene={scene} campaignId={campaignId} sessionId={sessionId} />
 
-        {/* Notes section */}
-        <SceneNotesSection scene={scene} />
-
-        {/* NPCs section - Coming in Phase 6 */}
-        <div className="w-full">
-          <div className="pb-0 pt-[24px]">
-            <h2 className="font-['Inter'] text-[16px] font-semibold leading-[24px] text-white">
-              Enemies
-            </h2>
-          </div>
-          <div className="px-0 py-[24px]">
-            <div className="text-center py-8">
-              <p className="text-white/40 text-[14px]">
-                NPC management coming soon...<br />
-                {npcs.length} NPC{npcs.length !== 1 ? 's' : ''} loaded
-              </p>
-            </div>
-          </div>
-        </div>
+        {/* NPCs section */}
+        <SceneNPCsSection scene={scene} />
       </div>
     </div>
   )

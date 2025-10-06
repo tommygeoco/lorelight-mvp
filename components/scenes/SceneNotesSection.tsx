@@ -1,22 +1,22 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import type { Scene } from '@/types'
 import { useSceneBlockStore } from '@/store/sceneBlockStore'
-import { SceneNoteCard } from './SceneNoteCard'
-import { Plus } from 'lucide-react'
+import { SceneBlockEditor } from './SceneBlockEditor'
 
 interface SceneNotesSectionProps {
   scene: Scene
 }
 
 /**
- * SceneNotesSection - Card-based notes display matching Figma design
- * Context7: Minimal state, optimistic updates, fetch-once pattern
+ * SceneNotesSection - Inline text editor with hover highlight
+ * Context7: Clickable text area, grip right-click for block type menu, hover on container only
  */
 export function SceneNotesSection({ scene }: SceneNotesSectionProps) {
   const blocksMap = useSceneBlockStore((state) => state.blocks)
   const addBlock = useSceneBlockStore((state) => state.actions.addBlock)
+  const [isHovered, setIsHovered] = useState(false)
 
   // Get blocks for this scene
   const blocks = useMemo(() => {
@@ -26,65 +26,48 @@ export function SceneNotesSection({ scene }: SceneNotesSectionProps) {
       .sort((a, b) => a.order_index - b.order_index)
   }, [blocksMap, scene.id])
 
-  const handleAddNote = async () => {
-    try {
-      await addBlock({
+  const handleClick = () => {
+    // If no blocks exist, create the first one
+    if (blocks.length === 0) {
+      addBlock({
         scene_id: scene.id,
         type: 'text',
         content: {
-          title: '',
           text: { text: '', formatting: [] }
         },
-        order_index: blocks.length,
+        order_index: 0,
+      }).catch(error => {
+        console.error('Failed to add block:', error)
+        // Silently fail - migration 015 may not be applied yet
       })
-    } catch (error) {
-      console.error('Failed to add note:', error)
-      // Silently fail - migration 015 may not be applied yet
     }
   }
 
   return (
-    <div className="w-full">
-      {/* Section header */}
-      <div className="pb-0 pt-[24px]">
-        <h2 className="font-['Inter'] text-[16px] font-semibold leading-[24px] text-white">
-          Notes
-        </h2>
-      </div>
-
-      {/* Notes grid */}
-      <div className="px-0 py-[24px]">
-        {blocks.length === 0 ? (
-          <button
-            onClick={handleAddNote}
-            className="w-full flex items-center justify-center gap-2 px-[16px] py-[12px] rounded-[12px] bg-white/[0.03] hover:bg-white/[0.05] text-white/40 hover:text-white/70 transition-colors font-['Inter'] text-[14px]"
-          >
-            <Plus className="w-4 h-4" />
-            Add Note
-          </button>
-        ) : (
-          <div className="space-y-4">
-            {/* 2-column grid */}
-            <div className="grid grid-cols-2 gap-4">
-              {blocks.map((block) => (
-                <SceneNoteCard
-                  key={block.id}
-                  block={block}
-                />
-              ))}
-            </div>
-
-            {/* Add note button */}
-            <button
-              onClick={handleAddNote}
-              className="w-full flex items-center justify-center gap-2 px-[16px] py-[12px] rounded-[12px] bg-white/[0.03] hover:bg-white/[0.05] text-white/40 hover:text-white/70 transition-colors font-['Inter'] text-[14px]"
-            >
-              <Plus className="w-4 h-4" />
-              Add Note
-            </button>
-          </div>
-        )}
-      </div>
+    <div
+      className={`w-full min-h-[200px] px-[16px] py-[24px] rounded-[12px] transition-colors cursor-text ${
+        isHovered ? 'bg-white/[0.02]' : 'bg-transparent'
+      }`}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      onClick={handleClick}
+    >
+      {blocks.length === 0 ? (
+        <div className="text-white/30 font-['Inter'] text-[14px] leading-[20px]">
+          Click to start writing...
+        </div>
+      ) : (
+        <div className="space-y-1">
+          {blocks.map((block) => (
+            <SceneBlockEditor
+              key={block.id}
+              block={block}
+              sceneId={scene.id}
+            />
+          ))}
+        </div>
+      )}
     </div>
   )
 }
+
