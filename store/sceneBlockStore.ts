@@ -1,5 +1,4 @@
 import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
 import { immer } from 'zustand/middleware/immer'
 import { enableMapSet } from 'immer'
 import type { SceneBlock, SceneBlockInsert, SceneBlockUpdate } from '@/types'
@@ -16,7 +15,7 @@ interface SceneBlockState {
 
   actions: {
     fetchBlocksForScene: (sceneId: string) => Promise<void>
-    addBlock: (block: Omit<SceneBlockInsert, 'user_id'>) => Promise<SceneBlock>
+    addBlock: (block: Omit<SceneBlockInsert, 'user_id'>) => SceneBlock
     updateBlock: (id: string, updates: SceneBlockUpdate) => Promise<void>
     deleteBlock: (id: string) => Promise<void>
     reorder: (sceneId: string, blockIds: string[]) => Promise<void>
@@ -30,14 +29,13 @@ interface SceneBlockState {
  * Context7: Notion-like blocks for rich text scene notes
  */
 export const useSceneBlockStore = create<SceneBlockState>()(
-  persist(
-    immer((set, get) => ({
-      blocks: new Map(),
-      isLoading: false,
-      error: null,
-      fetchedScenes: new Set(),
+  immer((set, get) => ({
+    blocks: new Map(),
+    isLoading: false,
+    error: null,
+    fetchedScenes: new Set(),
 
-      actions: {
+    actions: {
         fetchBlocksForScene: async (sceneId: string) => {
           // Don&apos;t refetch if already loaded
           if (get().fetchedScenes.has(sceneId)) {
@@ -62,28 +60,58 @@ export const useSceneBlockStore = create<SceneBlockState>()(
           }
         },
 
-        addBlock: async (blockData: Omit<SceneBlockInsert, 'user_id'>) => {
-          try {
-            // Create in DB and wait for it - NO temp IDs
-            const newBlock = await sceneBlockService.create(blockData as SceneBlockInsert)
+        addBlock: (blockData: Omit<SceneBlockInsert, 'user_id'>) => {
+          // Generate stable client ID that never changes (used as React key)
+          const clientId = `client-${crypto.randomUUID()}`
 
-            // Add to store after DB confirms
-            set(state => {
-              state.blocks.set(newBlock.id, newBlock)
+          // Create optimistic block with client ID
+          const optimisticBlock: SceneBlock & { clientId: string } = {
+            id: clientId, // Use client ID temporarily
+            clientId, // Store stable client ID
+            scene_id: blockData.scene_id,
+            type: blockData.type,
+            content: blockData.content,
+            order_index: blockData.order_index,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            user_id: '',
+          }
+
+          // Add to store IMMEDIATELY for instant UI
+          set(state => {
+            state.blocks.set(clientId, optimisticBlock as SceneBlock)
+          })
+
+          // Create in DB in background
+          sceneBlockService.create(blockData as SceneBlockInsert)
+            .then(serverBlock => {
+              // Update with server data but KEEP client ID as key
+              set(state => {
+                const blockWithClientId = { ...serverBlock, clientId } as SceneBlock & { clientId: string }
+                state.blocks.set(clientId, blockWithClientId as SceneBlock)
+              })
+            })
+            .catch(error => {
+              // Remove on error
+              set(state => {
+                state.blocks.delete(clientId)
+              })
+
+              // Log detailed error information
+              console.error('❌ Failed to create block in database:', {
+                error,
+                errorMessage: error?.message,
+                errorCode: error?.code,
+                errorDetails: error?.details,
+                errorHint: error?.hint,
+                blockData,
+              })
+
+              const errorMessage = error instanceof Error ? error.message : 'Failed to create block'
+              set({ error: errorMessage })
             })
 
-            return newBlock
-          } catch (error) {
-            const errorMessage = error instanceof Error
-              ? error.message
-              : typeof error === 'object' && error !== null && 'message' in error
-              ? String((error as { message: unknown }).message)
-              : 'Failed to create block'
-
-            console.error('Failed to create block:', errorMessage, error)
-            set({ error: errorMessage })
-            throw new Error(errorMessage)
-          }
+          return optimisticBlock as SceneBlock
         },
 
         updateBlock: async (id, updates) => {
@@ -172,40 +200,5 @@ export const useSceneBlockStore = create<SceneBlockState>()(
 
         clearError: () => set({ error: null }),
       },
-    })),
-    {
-      name: 'scene-blocks',
-      partialize: (state) => ({
-        blocks: state.blocks,
-        fetchedScenes: state.fetchedScenes,
-      }),
-      storage: {
-        getItem: (name) => {
-          const str = localStorage.getItem(name)
-          if (!str) return null
-
-          const { state } = JSON.parse(str)
-
-          // Convert plain objects back to Maps/Sets
-          return {
-            state: {
-              ...state,
-              blocks: new Map(Object.entries(state.blocks || {})),
-              fetchedScenes: new Set(state.fetchedScenes || []),
-            }
-          }
-        },
-        setItem: (name, value) => {
-          const serialized = {
-            state: {
-              blocks: Object.fromEntries(value.state.blocks || new Map()),
-              fetchedScenes: Array.from(value.state.fetchedScenes || new Set()),
-            }
-          }
-          localStorage.setItem(name, JSON.stringify(serialized))
-        },
-        removeItem: (name) => localStorage.removeItem(name),
-      },
-    }
-  )
+    }))
 )

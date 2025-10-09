@@ -39,9 +39,6 @@ export function SceneNotesSection({ scene }: SceneNotesSectionProps) {
           text: { text: '', formatting: [] }
         },
         order_index: 0,
-      }).catch(error => {
-        console.error('Failed to add block:', error)
-        // Silently fail - migration 015 may not be applied yet
       })
     }
   }
@@ -57,13 +54,18 @@ export function SceneNotesSection({ scene }: SceneNotesSectionProps) {
         </div>
       ) : (
         <div className="space-y-1">
-          {blocks.map((block) => (
-            <SceneBlockEditor
-              key={block.id}
-              block={block}
-              sceneId={scene.id}
-            />
-          ))}
+          {blocks.map((block) => {
+            // Use stable clientId as key if available, fallback to id
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const key = (block as any).clientId || block.id
+            return (
+              <SceneBlockEditor
+                key={key}
+                block={block}
+                sceneId={scene.id}
+              />
+            )
+          })}
         </div>
       )}
     </div>

@@ -27,18 +27,24 @@ export function SceneBlockEditor({ block, sceneId }: SceneBlockEditorProps) {
   const saveTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined)
   const gripRef = useRef<HTMLDivElement>(null)
   const isProcessingEnterRef = useRef(false)
+  const isProcessingDeleteRef = useRef(false)
 
   const updateBlock = useSceneBlockStore((state) => state.actions.updateBlock)
   const deleteBlock = useSceneBlockStore((state) => state.actions.deleteBlock)
   const addBlock = useSceneBlockStore((state) => state.actions.addBlock)
 
-  // Initialize content on mount
+  // Use stable clientId if available for DOM queries
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const blockKey = (block as any).clientId || block.id
+
+  // Initialize content on mount ONLY (no dependencies to avoid re-renders)
   useEffect(() => {
     if (contentRef.current && !contentRef.current.innerHTML) {
       const text = block.content.text?.text || ''
       contentRef.current.innerHTML = text
     }
-  }, [block.content.text?.text])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   // Debounced auto-save (500ms) + slash command detection
   const handleInput = useCallback(() => {
@@ -121,50 +127,43 @@ export function SceneBlockEditor({ block, sceneId }: SceneBlockEditorProps) {
       if (isProcessingEnterRef.current) return
       isProcessingEnterRef.current = true
 
-      // Save current block content
-      if (saveTimeoutRef.current) {
-        clearTimeout(saveTimeoutRef.current)
-      }
+      // Get all blocks for this scene sorted by order
+      const store = useSceneBlockStore.getState()
+      const allBlocks = Array.from(store.blocks.values())
+        .filter(b => b.scene_id === sceneId)
+        .sort((a, b) => a.order_index - b.order_index)
 
-      const currentText = text
-      updateBlock(block.id, {
-        content: { text: { text: currentText, formatting: [] } }
-      }).catch(() => {})
+      // Find current block position
+      const currentIndex = allBlocks.findIndex(b => b.id === block.id)
 
-      // Create new block and wait for it
-      addBlock({
+      // Use fractional ordering - new block goes between current and next
+      const nextBlock = allBlocks[currentIndex + 1]
+      const newOrderIndex = nextBlock
+        ? (block.order_index + nextBlock.order_index) / 2
+        : block.order_index + 1000
+
+      // Create new block immediately
+      const newBlock = addBlock({
         scene_id: sceneId,
         type: 'text',
         content: { text: { text: '', formatting: [] } },
-        order_index: block.order_index + 1,
-      }).then(newBlock => {
-        // Update order of blocks that come after
-        const blocksMap = useSceneBlockStore.getState().blocks
-        const blocks = Array.from(blocksMap.values())
-          .filter(b => b.scene_id === sceneId && b.order_index > block.order_index && b.id !== newBlock.id)
+        order_index: newOrderIndex,
+      })
 
-        blocks.forEach(b => {
-          updateBlock(b.id, {
-            order_index: b.order_index + 1
-          }).catch(() => {})
-        })
-
-        // Focus new block
-        setTimeout(() => {
-          const newBlockElement = document.querySelector(`[data-block-id="${newBlock.id}"]`) as HTMLDivElement
-          if (newBlockElement) {
-            newBlockElement.focus()
-            const range = document.createRange()
-            const sel = window.getSelection()
-            range.setStart(newBlockElement, 0)
-            range.collapse(true)
-            sel?.removeAllRanges()
-            sel?.addRange(range)
-          }
-          isProcessingEnterRef.current = false
-        }, 50)
-      }).catch((error) => {
-        console.error('Failed to create block:', error)
+      // Focus new block immediately
+      requestAnimationFrame(() => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const clientId = (newBlock as any).clientId || newBlock.id
+        const newBlockElement = document.querySelector(`[data-block-id="${clientId}"]`) as HTMLDivElement
+        if (newBlockElement) {
+          newBlockElement.focus()
+          const range = document.createRange()
+          const sel = window.getSelection()
+          range.setStart(newBlockElement, 0)
+          range.collapse(true)
+          sel?.removeAllRanges()
+          sel?.addRange(range)
+        }
         isProcessingEnterRef.current = false
       })
     }
@@ -176,28 +175,37 @@ export function SceneBlockEditor({ block, sceneId }: SceneBlockEditorProps) {
     if (e.key === 'Backspace' && text === '') {
       e.preventDefault()
 
-      // Don&apos;t delete if it&apos;s the only block
-      const blocksMap = useSceneBlockStore.getState().blocks
-      const blocks = Array.from(blocksMap.values())
+      // Prevent duplicate delete operations
+      if (isProcessingDeleteRef.current) return
+      isProcessingDeleteRef.current = true
+
+      // Get all blocks for this scene
+      const store = useSceneBlockStore.getState()
+      const blocks = Array.from(store.blocks.values())
         .filter(b => b.scene_id === sceneId)
         .sort((a, b) => a.order_index - b.order_index)
 
-      if (blocks.length === 1) return
+      // Don&apos;t delete if it&apos;s the only block
+      if (blocks.length === 1) {
+        isProcessingDeleteRef.current = false
+        return
+      }
 
-      // Find previous block to focus
+      // Find previous block
       const currentIndex = blocks.findIndex(b => b.id === block.id)
       const previousBlock = currentIndex > 0 ? blocks[currentIndex - 1] : null
 
-      // Delete INSTANTLY (optimistic, DB sync in background)
-      deleteBlock(block.id).catch(() => {}) // Ignore errors
+      // Delete this block
+      deleteBlock(block.id).catch(() => {})
 
-      // Focus previous block with small delay for React render
+      // Focus previous block immediately
       if (previousBlock) {
-        setTimeout(() => {
-          const prevBlockElement = document.querySelector(`[data-block-id="${previousBlock.id}"]`) as HTMLDivElement
+        requestAnimationFrame(() => {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const prevKey = (previousBlock as any).clientId || previousBlock.id
+          const prevBlockElement = document.querySelector(`[data-block-id="${prevKey}"]`) as HTMLDivElement
           if (prevBlockElement) {
             prevBlockElement.focus()
-            // Place cursor at end
             const range = document.createRange()
             const sel = window.getSelection()
             range.selectNodeContents(prevBlockElement)
@@ -205,7 +213,10 @@ export function SceneBlockEditor({ block, sceneId }: SceneBlockEditorProps) {
             sel?.removeAllRanges()
             sel?.addRange(range)
           }
-        }, 10)
+          isProcessingDeleteRef.current = false
+        })
+      } else {
+        isProcessingDeleteRef.current = false
       }
     }
 
@@ -213,24 +224,37 @@ export function SceneBlockEditor({ block, sceneId }: SceneBlockEditorProps) {
     if (e.key === 'Delete' && text === '') {
       e.preventDefault()
 
-      const blocksMap = useSceneBlockStore.getState().blocks
-      const blocks = Array.from(blocksMap.values())
+      // Prevent duplicate delete operations
+      if (isProcessingDeleteRef.current) return
+      isProcessingDeleteRef.current = true
+
+      // Get all blocks for this scene
+      const store = useSceneBlockStore.getState()
+      const blocks = Array.from(store.blocks.values())
         .filter(b => b.scene_id === sceneId)
         .sort((a, b) => a.order_index - b.order_index)
 
-      if (blocks.length === 1) return
+      // Don&apos;t delete if it&apos;s the only block
+      if (blocks.length === 1) {
+        isProcessingDeleteRef.current = false
+        return
+      }
 
+      // Find next or previous block
       const currentIndex = blocks.findIndex(b => b.id === block.id)
       const nextBlock = currentIndex < blocks.length - 1 ? blocks[currentIndex + 1] : null
       const prevBlock = currentIndex > 0 ? blocks[currentIndex - 1] : null
       const targetBlock = nextBlock || prevBlock
 
-      // Delete INSTANTLY (optimistic, DB sync in background)
-      deleteBlock(block.id).catch(() => {}) // Ignore errors
+      // Delete this block
+      deleteBlock(block.id).catch(() => {})
 
+      // Focus target block immediately
       if (targetBlock) {
-        setTimeout(() => {
-          const elem = document.querySelector(`[data-block-id="${targetBlock.id}"]`) as HTMLDivElement
+        requestAnimationFrame(() => {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const targetKey = (targetBlock as any).clientId || targetBlock.id
+          const elem = document.querySelector(`[data-block-id="${targetKey}"]`) as HTMLDivElement
           if (elem) {
             elem.focus()
             const range = document.createRange()
@@ -245,10 +269,13 @@ export function SceneBlockEditor({ block, sceneId }: SceneBlockEditorProps) {
             sel?.removeAllRanges()
             sel?.addRange(range)
           }
-        }, 10)
+          isProcessingDeleteRef.current = false
+        })
+      } else {
+        isProcessingDeleteRef.current = false
       }
     }
-  }, [block.id, block.order_index, sceneId, updateBlock, addBlock, deleteBlock, showBlockMenu])
+  }, [block.id, block.order_index, sceneId, addBlock, deleteBlock, showBlockMenu])
 
   // Cleanup timeout on unmount
   useEffect(() => {
@@ -381,7 +408,7 @@ export function SceneBlockEditor({ block, sceneId }: SceneBlockEditorProps) {
           }}
           className={`w-full outline-none text-white/90 font-['Inter'] select-text ${getBlockStyle()}`}
           data-placeholder={isFocused ? getPlaceholder() : ''}
-          data-block-id={block.id}
+          data-block-id={blockKey}
         />
 
         <style jsx>{`
