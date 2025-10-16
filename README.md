@@ -119,6 +119,49 @@ lorelight-mvp/
 
 ## Developer Guidelines
 
+### Documentation Philosophy
+
+**Core Principle: Consolidation Over Creation**
+
+This codebase maintains a **strict 5-document limit** to prevent bloat and ensure maintainability:
+
+1. **README.md** - Project overview, quick start, developer guidelines (this file)
+2. **SETUP.md** - Environment setup, installation, troubleshooting
+3. **DESIGN_SYSTEM.md** - UI components, patterns, styling rules
+4. **docs/technical-prd.md** - Product requirements, architecture, roadmap
+5. **CHANGELOG.md** - Version history, features, breaking changes
+
+**Rules for Developers & AI Agents:**
+
+✅ **DO:**
+- Update existing docs when adding features
+- Add sections to appropriate existing files
+- Use code comments for implementation details
+- Put troubleshooting in SETUP.md
+- Put architecture decisions in README.md or PRD
+- Document new components in DESIGN_SYSTEM.md
+- Track changes in CHANGELOG.md
+
+❌ **DON'T:**
+- Create new markdown files (use existing structure)
+- Duplicate information across files
+- Create "PHASE_X_COMPLETE.md" or status docs
+- Write separate "MIGRATION_GUIDE.md" or "TROUBLESHOOTING.md"
+- Add planning docs like "SPEC.md" or "DESIGN.md" (use PRD)
+- Create per-feature documentation files
+
+**Exception:** Temporary working docs (REFACTORING_SUMMARY.md) can exist during major work but should be deleted after merging or archived.
+
+**If you need to add significant documentation:**
+1. Check if it fits in an existing file (90% of the time it does)
+2. Add a new section to the most relevant file
+3. Update the table of contents if needed
+4. Never create a 6th permanent doc without explicit approval
+
+**This prevents:** Documentation sprawl (we had 22 files, consolidated to 5 with zero information loss).
+
+---
+
 ### Architecture Patterns
 
 **Service Layer:**  

@@ -777,6 +777,35 @@ MVP is considered successful when:
 
 ## Code Quality Standards
 
+### Documentation Standards
+
+**5-Document Limit:**
+This project maintains exactly 5 permanent documentation files to prevent bloat:
+1. README.md (overview, quick start, developer guidelines)
+2. SETUP.md (installation, troubleshooting)
+3. DESIGN_SYSTEM.md (UI components, patterns)
+4. docs/technical-prd.md (this file - requirements, architecture)
+5. CHANGELOG.md (version history)
+
+**For Developers & AI Agents:**
+- ✅ Update existing docs, don't create new ones
+- ✅ Add sections to appropriate existing files
+- ✅ Use inline code comments for implementation details
+- ❌ Don't create phase docs, migration guides, or per-feature specs
+- ❌ Don't duplicate information across files
+- **Exception:** Temporary working docs during major refactoring (delete after merge)
+
+**When adding features:**
+- Component patterns → DESIGN_SYSTEM.md
+- Setup instructions → SETUP.md
+- Architecture changes → This file (technical-prd.md)
+- Developer guidelines → README.md
+- Version updates → CHANGELOG.md
+
+**This prevents documentation sprawl** (we consolidated 22 files to 5 with zero information loss in October 2025).
+
+---
+
 ### TypeScript
 - Strict mode enabled
 - No `any` types without explicit reason
@@ -788,6 +817,12 @@ MVP is considered successful when:
 - Custom hooks for shared logic
 - Proper cleanup in useEffect
 - Memoization for expensive operations
+
+### Code Organization
+- Keep components <200 lines
+- Extract sub-components for complex UI
+- One component per file
+- Colocate related components in feature folders
 
 ### Testing
 - 80% code coverage target
