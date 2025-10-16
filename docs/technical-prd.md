@@ -2,13 +2,76 @@
 
 ## Executive Summary
 
-Lorelight MVP is a streamlined DM command center focused on the core experience: seamless scene management with integrated audio playback and smart lighting control for tabletop RPG sessions. This version removes complexity while delivering a polished, performant experience.
+Lorelight MVP is a streamlined DM command center focused on the core experience: seamless scene management with integrated audio playback and smart lighting control for tabletop RPG sessions. This version delivers a polished, performant experience with a 3-tier feature architecture.
 
 ## Product Vision
 
 Create a battle-tested, lightning-fast tool that allows DMs to switch between pre-configured scenes (ambient music + lighting) with zero friction during live gameplay sessions.
 
-## Core Features (MVP Scope)
+## Feature Architecture: 3-Tier System
+
+Lorelight MVP follows a 3-tier architecture to balance immediate usability with advanced power-user features and future growth:
+
+### Tier 1: Essential Features (Core MVP)
+**Target:** All DMs, required for basic gameplay sessions
+
+Core functionality for running tabletop sessions:
+- User authentication and account management
+- Campaign and session organization  
+- Scene system with audio + lighting activation
+- Basic audio library (upload, tags, simple organization)
+- Audio player with persistent playback controls
+- Philips Hue smart lighting integration
+- Performance target: <100ms scene switching
+
+**Status:** ✅ Production Ready
+
+### Tier 2: Enhanced Features (Power Users)
+**Target:** Experienced DMs who need advanced organization and note-taking
+
+Advanced tools for complex campaigns:
+- **Scene Blocks**: Notion-like rich text editor for scene notes
+  - 8 block types: text, heading_1, heading_2, heading_3, image, bulleted_list, numbered_list, checkbox_list
+  - JSONB-based flexible content structure
+  - Drag-to-reorder blocks
+  - Real-time editing with optimistic updates
+- **Scene NPCs**: Enemy and NPC management per scene
+  - Name, description, flexible JSONB stats
+  - Image upload support
+  - Order management with drag-and-drop
+- **Advanced File Explorer**: Hierarchical audio organization
+  - Unlimited folder nesting
+  - Drag-and-drop file/folder moves
+  - Search and filter across library
+  - Context menu operations
+  - Breadcrumb navigation
+- **Audio Playlists**: Collection-based organization
+  - Many-to-many relationships (one file in multiple playlists)
+  - Ordered playback with drag-and-drop reordering
+  - Quick playlist creation and editing
+
+**Status:** ✅ Implemented, documented as advanced features
+
+### Tier 3: Future Enhancements (Post-Launch)
+**Target:** Feature requests and platform expansion
+
+Features explicitly excluded from MVP scope:
+- Combat tracker with initiative, HP, conditions
+- Dice roller with 3D physics
+- Session recording and playback
+- Notes system (general campaign notes, not scene-specific)
+- Shared campaigns (multi-DM collaboration)
+- Mobile native apps (iOS/Android)
+- Voice control integration
+- Music streaming service integration (Spotify, Apple Music)
+- Advanced analytics (session duration, scene usage stats)
+- Community scene marketplace
+
+**Status:** 🚧 Planned, not yet scheduled
+
+---
+
+## Tier 1: Essential Features (Detailed Specifications)
 
 ### 1. Campaign & Session Management
 - **Campaigns**: Top-level organizational containers
@@ -382,19 +445,274 @@ npm run lint
 - Supabase logs for database errors
 - Custom analytics for user flows
 
-## Future Enhancements (Post-MVP)
+## Tier 2: Enhanced Features (Detailed Specifications)
 
-These features are **explicitly excluded** from MVP but documented for future consideration:
+### Scene Blocks (Notion-like Rich Text)
 
-- Combat tracker
-- NPC/Location/Item management
-- Dice roller
-- Notes system
-- Session recording/playback
-- Shared campaigns (multi-DM)
-- Mobile app
-- Voice control
-- Music streaming integration (Spotify, etc.)
+**Purpose:** Allow DMs to write detailed scene notes directly within scenes using a rich text editor.
+
+**Database Schema:**
+```sql
+CREATE TABLE scene_blocks (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  scene_id UUID NOT NULL REFERENCES scenes(id) ON DELETE CASCADE,
+  type TEXT NOT NULL CHECK (type IN ('text', 'heading_1', 'heading_2', 'heading_3', 'image', 'bulleted_list', 'numbered_list', 'checkbox_list')),
+  content JSONB NOT NULL DEFAULT '{}'::jsonb,
+  order_index INTEGER NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE
+);
+```
+
+**Block Types:**
+1. **text**: Plain text with formatting support (bold, italic, underline, links)
+2. **heading_1**: Large heading (60px PP Mondwest font)
+3. **heading_2**: Medium heading (24px)
+4. **heading_3**: Small heading (18px)
+5. **image**: Image blocks with URL and alt text
+6. **bulleted_list**: Unordered list items
+7. **numbered_list**: Ordered list items
+8. **checkbox_list**: Todo-style checkboxes
+
+**Content Structure (JSONB):**
+```typescript
+interface BlockContent {
+  text?: {
+    text: string
+    formatting: Array<{
+      start: number
+      end: number
+      bold?: boolean
+      italic?: boolean
+      underline?: boolean
+      link?: string
+    }>
+  }
+  items?: string[]        // For lists
+  checked?: boolean[]     // For checkbox lists
+  url?: string           // For images
+  alt?: string           // For images
+}
+```
+
+**Key Features:**
+- Drag-to-reorder blocks
+- Keyboard shortcuts (Cmd+B bold, Cmd+I italic, etc.)
+- Auto-save with 500ms debounce
+- Optimistic updates with rollback on error
+- Block type conversion (text → heading, list → checkbox, etc.)
+
+**Current Status:** ✅ Implemented
+- Store: `sceneBlockStore.ts` (198 lines)
+- Service: `sceneBlockService.ts` (137 lines)
+- Components: `SceneBlockEditor.tsx`, `SceneNotesSection.tsx`
+
+---
+
+### Scene NPCs (Enemy Management)
+
+**Purpose:** Track NPCs and enemies relevant to specific scenes for quick reference during gameplay.
+
+**Database Schema:**
+```sql
+CREATE TABLE scene_npcs (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  scene_id UUID NOT NULL REFERENCES scenes(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  description TEXT,
+  stats JSONB,              -- Flexible structure for any RPG system
+  image_url TEXT,
+  order_index INTEGER NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE
+);
+```
+
+**Stats Structure (Flexible JSONB):**
+```typescript
+interface NPCStats {
+  // Flexible - supports any RPG system
+  hp?: number | { current: number; max: number }
+  ac?: number
+  speed?: string | number
+  abilities?: Record<string, number>  // STR, DEX, CON, etc.
+  skills?: Record<string, number>
+  attacks?: Array<{
+    name: string
+    bonus: number
+    damage: string
+  }>
+  // ... any other fields
+}
+```
+
+**Key Features:**
+- Quick NPC creation with name and description
+- Optional stat tracking (DM's choice of system)
+- Image upload support for token/portrait
+- Drag-to-reorder NPCs within scene
+- Copy NPCs between scenes
+- Hide/show stats during play
+
+**Current Status:** ✅ Implemented
+- Store: `sceneNPCStore.ts` (166 lines)
+- Service: `sceneNPCService.ts` (137 lines)
+- Components: `SceneEditor.tsx` with NPC section
+
+---
+
+### Advanced File Explorer
+
+**Purpose:** Hierarchical organization for large audio libraries (100+ files).
+
+**Database Schema:**
+```sql
+CREATE TABLE audio_folders (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  parent_id UUID REFERENCES audio_folders(id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Updated audio_files table
+ALTER TABLE audio_files ADD COLUMN folder_id UUID REFERENCES audio_folders(id) ON DELETE SET NULL;
+```
+
+**Key Features:**
+- Unlimited folder nesting depth
+- Drag-and-drop file/folder moves
+- Breadcrumb navigation
+- Context menu (right-click) operations
+- Search across all folders
+- Collapsible tree view with state persistence
+
+**Components:**
+- `FileExplorer.tsx` - Main tree view component
+- `FileExplorerRow.tsx` - Individual row with drag support
+- `FileExplorerHeader.tsx` - Search and filters
+- Custom hooks: `useTreeExpansion`, `useFileExplorerSearch`, `useDragDrop`
+
+**Current Status:** ✅ Implemented
+- Store: `audioFolderStore.ts` (243 lines)
+- Service: `audioFolderService.ts` (111 lines)
+
+---
+
+### Known Issues & Planned Improvements (Tier 2)
+
+#### File Explorer Performance Issues
+
+**Problem 1: No Virtualization**
+- **Impact**: Slow rendering with 100+ files
+- **Current Behavior**: Renders all tree nodes in DOM
+- **Planned Fix**: Implement react-window for virtual scrolling
+- **Estimated Impact**: 10x faster rendering for large libraries
+- **Priority**: High (affects power users)
+
+**Problem 2: Tree Rebuild on Every Render**
+- **Impact**: Expensive computation on state changes
+- **Current Behavior**: `useMemo` recalculates entire tree structure
+- **Planned Fix**: Add React.memo to FileExplorerRow, granular memoization
+- **Estimated Impact**: 50% reduction in render time
+- **Priority**: Medium
+
+**Problem 3: No Pagination**
+- **Impact**: Loads all files at once
+- **Current Behavior**: Single fetch for all user files
+- **Planned Fix**: Cursor-based pagination (50 files per page)
+- **Estimated Impact**: Faster initial load, reduced memory
+- **Priority**: Medium
+
+#### Large File Upload Issues
+
+**Problem 1: Memory Loading**
+- **Impact**: 500MB files load entirely to memory
+- **Current Behavior**: `file.arrayBuffer()` loads full file
+- **Planned Fix**: Chunked multipart upload (5MB chunks)
+- **Estimated Impact**: 80% memory reduction, resume support
+- **Priority**: Critical (blocks large file uploads)
+- **Implementation**: Use S3 multipart upload API
+
+**Problem 2: No Progress for Large Files**
+- **Impact**: Upload appears frozen for minutes
+- **Current Behavior**: Single progress update at end
+- **Planned Fix**: Chunk-level progress callbacks
+- **Estimated Impact**: Better UX, upload transparency
+- **Priority**: High
+
+**Problem 3: No Upload Queue Limits**
+- **Impact**: All files upload simultaneously
+- **Current Behavior**: Unlimited concurrent uploads
+- **Planned Fix**: Queue with max 3 concurrent uploads
+- **Estimated Impact**: Better bandwidth management
+- **Priority**: Medium
+
+#### Scene Blocks Performance
+
+**Problem: No Lazy Loading**
+- **Impact**: All blocks load on scene open
+- **Current Behavior**: Fetch all blocks for scene
+- **Planned Fix**: Lazy load blocks on scroll (virtual list)
+- **Estimated Impact**: Faster scene opening for large notes
+- **Priority**: Low (scenes typically have <20 blocks)
+
+---
+
+### Enhancement Recommendations (Priority Order)
+
+1. **Critical: Chunked File Upload** (blocks large files)
+   - Multipart upload for files >10MB
+   - Chunk size: 5MB
+   - Resume support
+   - Estimated time: 8 hours
+
+2. **High: File Explorer Virtualization** (performance)
+   - react-window integration
+   - Virtual scrolling for tree
+   - Estimated time: 6 hours
+
+3. **High: Upload Progress for Large Files**
+   - Chunk-level callbacks
+   - Progress bar per file
+   - Estimated time: 3 hours
+
+4. **Medium: Pagination for Audio Library**
+   - Cursor-based (50 files/page)
+   - Infinite scroll or "Load More"
+   - Estimated time: 4 hours
+
+5. **Medium: Upload Queue Management**
+   - Max 3 concurrent uploads
+   - Retry failed chunks
+   - Estimated time: 3 hours
+
+6. **Low: Tree Memoization Optimization**
+   - React.memo on rows
+   - Granular tree updates
+   - Estimated time: 2 hours
+
+**Total Estimated Effort:** 26 hours for all improvements
+
+---
+
+## Tier 3: Future Enhancements (Post-MVP)
+
+These features are **explicitly excluded** from current scope but documented for future consideration:
+
+- **Combat tracker**: Initiative, HP tracking, conditions, turn management
+- **Dice roller**: 3D physics-based rolling with custom dice sets
+- **Session recording**: Record and replay entire sessions
+- **General notes system**: Campaign-wide notes (not scene-specific)
+- **Shared campaigns**: Multi-DM collaboration with permissions
+- **Mobile apps**: Native iOS/Android apps
+- **Voice control**: "Alexa, switch to combat scene"
+- **Streaming integration**: Spotify, Apple Music, YouTube Music
+- **Advanced analytics**: Usage stats, popular scenes, session insights
+- **Community marketplace**: Share and download scene templates
 
 ## Development Phases
 
@@ -509,6 +827,22 @@ npm test
 
 ---
 
-**Document Version**: 1.0
-**Last Updated**: 2025-09-29
-**Status**: Ready for Implementation
+## Document History
+
+**Version 2.0** - 2025-10-16
+- Added 3-tier feature architecture (Essential/Enhanced/Future)
+- Documented Tier 2 features: Scene Blocks, Scene NPCs, Advanced File Explorer
+- Added known issues and improvement recommendations
+- Documented file upload performance concerns
+- Updated success criteria (all achieved ✅)
+
+**Version 1.0** - 2025-09-29
+- Initial technical specification
+- Core MVP feature definitions
+- Database schema documentation
+
+---
+
+**Current Version**: 2.0
+**Last Updated**: October 16, 2025
+**Status**: Production Ready (Tier 1 + 2 Complete)
