@@ -121,40 +121,28 @@ export const useSceneBlockStore = create<SceneBlockState>()(
         },
 
         deleteBlock: async (id) => {
-          console.log('🗑️ deleteBlock called with id:', id)
-          console.log('Before delete - blocks size:', get().blocks.size)
-
           // Optimistic delete - remove from UI immediately
           set(state => {
-            const hadBlock = state.blocks.has(id)
             state.blocks.delete(id)
             state._version++ // Force re-render
-            console.log(`After delete - had block: ${hadBlock}, new size: ${state.blocks.size}, version: ${state._version}`)
           })
 
           // Skip database delete if this is a client-only ID (from broken optimistic updates)
           if (id.startsWith('client-')) {
-            console.warn(`Skipping DB delete for client-only block: ${id}`)
             return
           }
 
           // Skip if not a valid UUID format
           const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
           if (!uuidRegex.test(id)) {
-            console.warn(`Skipping DB delete for invalid UUID: ${id}`)
             return
           }
 
           try {
             await sceneBlockService.delete(id)
-            console.log('✅ Database delete succeeded for:', id)
           } catch (error) {
-            // Log error but don't throw - block already removed from UI
-            console.warn('Failed to delete block from database (may not exist):', {
-              id,
-              error,
-              message: error instanceof Error ? error.message : String(error),
-            })
+            // Don't throw - block already removed from UI
+            // Most errors here are "block not found" which is fine
 
             // Don't rollback - the block is gone from UI and that's what matters
             // Most errors here are "block not found" which is fine

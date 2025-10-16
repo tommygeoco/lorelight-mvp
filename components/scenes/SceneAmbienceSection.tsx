@@ -60,12 +60,9 @@ export function SceneAmbienceSection({ scene, sessionId }: SceneAmbienceSectionP
     const { useSceneStore } = await import('@/store/sceneStore')
     const { useSessionSceneStore } = await import('@/store/sessionSceneStore')
 
-    console.log('[SceneAmbienceSection] Saving light config:', JSON.stringify(config, null, 2))
-
     // Update sceneStore (DB)
     try {
       await useSceneStore.getState().updateScene(scene.id, { light_config: config as Json })
-      console.log('[SceneAmbienceSection] Light config saved to database successfully')
     } catch (error) {
       console.error('[SceneAmbienceSection] Failed to save light config:', error)
       throw error
@@ -77,7 +74,6 @@ export function SceneAmbienceSection({ scene, sessionId }: SceneAmbienceSectionP
         light_config: config as unknown as Scene['light_config'],
         updated_at: new Date().toISOString()
       })
-      console.log('[SceneAmbienceSection] Light config updated in session store')
     }
   }
 

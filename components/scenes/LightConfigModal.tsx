@@ -219,9 +219,6 @@ export function LightConfigModal({ isOpen, onClose, onSave, initialConfig }: Lig
       })
     })
 
-    console.log('[LightConfigModal] Saving config with', Object.keys(config).length, 'lights')
-    console.log('[LightConfigModal] Config:', JSON.stringify({ lights: config }, null, 2))
-
     onSave({ lights: config })
     onClose()
   }

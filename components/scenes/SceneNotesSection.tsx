@@ -27,8 +27,6 @@ export function SceneNotesSection({ scene }: SceneNotesSectionProps) {
       .filter(b => b.scene_id === scene.id)
       .sort((a, b) => a.order_index - b.order_index)
 
-    console.log(`📋 SceneNotesSection render - version: ${version}, blocks for scene ${scene.id}:`, filtered.length)
-
     return filtered
   }, [blocksMap, scene.id, version])
 
