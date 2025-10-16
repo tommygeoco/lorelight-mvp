@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useRef, useMemo } from 'react'
+import { useEffect, useState, useRef, useMemo, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Upload, Trash2, Play, Pause, Search, Plus, SlidersHorizontal, Tag, Minus, Edit2, MoreVertical, ChevronUp, ChevronDown } from 'lucide-react'
 import { DashboardLayoutWithSidebar } from '@/components/layouts/DashboardLayoutWithSidebar'
@@ -22,7 +22,7 @@ import { getRandomLoadingMessage } from '@/lib/constants/loadingMessages'
 import { formatDuration, formatFileSize } from '@/lib/utils/audio'
 import type { AudioFile } from '@/types'
 
-export default function AudioPage() {
+function AudioPageContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { user } = useAuthStore()
@@ -1487,5 +1487,13 @@ export default function AudioPage() {
       />
 
     </DashboardLayoutWithSidebar>
+  )
+}
+
+export default function AudioPage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center h-screen"><p className="text-white/60">Loading audio library...</p></div>}>
+      <AudioPageContent />
+    </Suspense>
   )
 }
