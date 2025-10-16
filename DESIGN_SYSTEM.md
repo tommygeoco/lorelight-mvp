@@ -1635,13 +1635,247 @@ Consistent scrollbar appearance across the app.
 </div>
 ```
 
-## Future Enhancements
+## Enhanced Features (Tier 2)
 
-- [x] Dropdown menu component
-- [x] Tag/badge component
+### Scene Blocks (Notion-like Editor)
+
+Rich text editing system for scene notes using block-based content.
+
+**Block Types:**
+1. **text** - Plain text with formatting (bold, italic, underline, links)
+2. **heading_1** - Large heading (60px PP Mondwest)
+3. **heading_2** - Medium heading (24px)
+4. **heading_3** - Small heading (18px)
+5. **image** - Image blocks with URL
+6. **bulleted_list** - Unordered lists
+7. **numbered_list** - Ordered lists
+8. **checkbox_list** - Todo-style checkboxes
+
+**Components:**
+- `SceneBlockEditor.tsx` - Block editor with inline editing
+- `SceneNotesSection.tsx` - Block container with add/delete
+- `SceneNoteCard.tsx` - Individual block display
+
+**Pattern:**
+```tsx
+// Block display with inline editing
+<div className="bg-[#222222] rounded-[12px] p-4 border border-white/10">
+  {block.type === 'text' && (
+    <p className="text-[14px] text-white/90 leading-relaxed">
+      {block.content.text}
+    </p>
+  )}
+  {block.type === 'heading_1' && (
+    <h1 className="text-[60px] font-mondwest text-white mb-4">
+      {block.content.text}
+    </h1>
+  )}
+  {/* ... other block types */}
+</div>
+```
+
+**Keyboard Shortcuts:**
+- Cmd/Ctrl + B: Bold
+- Cmd/Ctrl + I: Italic
+- Cmd/Ctrl + U: Underline
+- Backspace on empty block: Delete block
+- Enter: Create new block below
+
+**State Management:**
+- Store: `sceneBlockStore.ts`
+- Service: `sceneBlockService.ts`
+- Optimistic updates with auto-save (500ms debounce)
+
+---
+
+### Scene NPCs (Enemy Management)
+
+NPC and enemy management system with flexible stat tracking.
+
+**Components:**
+- Located in `SceneEditor.tsx` (NPC section)
+- Card-based layout in 3-column grid
+
+**Pattern:**
+```tsx
+// NPC Card
+<div className="bg-[#222222] rounded-[12px] p-4 border border-white/10">
+  {/* NPC Image (if provided) */}
+  {npc.image_url && (
+    <img 
+      src={npc.image_url} 
+      alt={npc.name}
+      className="w-full h-32 object-cover rounded-lg mb-3"
+    />
+  )}
+  
+  {/* NPC Name */}
+  <h3 className="text-lg font-semibold text-white mb-2">
+    {npc.name}
+  </h3>
+  
+  {/* Description */}
+  {npc.description && (
+    <p className="text-[13px] text-white/60 mb-3">
+      {npc.description}
+    </p>
+  )}
+  
+  {/* Stats (flexible JSONB) */}
+  {npc.stats && (
+    <div className="space-y-1">
+      {Object.entries(npc.stats).map(([key, value]) => (
+        <div key={key} className="flex justify-between text-[13px]">
+          <span className="text-white/60">{key}:</span>
+          <span className="text-white font-medium">{value}</span>
+        </div>
+      ))}
+    </div>
+  )}
+</div>
+```
+
+**State Management:**
+- Store: `sceneNPCStore.ts`
+- Service: `sceneNPCService.ts`
+- Drag-to-reorder with order_index
+
+---
+
+### Advanced File Explorer
+
+Hierarchical file organization with tree view, drag-and-drop, and search.
+
+**Components:**
+- `FileExplorer.tsx` - Main tree component
+- `FileExplorerRow.tsx` - Individual row with drag support
+- `FileExplorerHeader.tsx` - Search and sort controls
+- Custom hooks: `useTreeExpansion`, `useFileExplorerSearch`, `useDragDrop`
+
+**Pattern:**
+```tsx
+<FileExplorer
+  items={audioFiles}
+  onItemClick={(item) => handleSelect(item)}
+  onItemDoubleClick={(item) => handlePlay(item)}
+  onDragDrop={(draggedId, targetId) => handleMove(draggedId, targetId)}
+  renderItem={(item) => (
+    <div className="flex items-center gap-2">
+      <Music className="w-4 h-4 text-white/40" />
+      <span className="text-[14px] text-white">{item.name}</span>
+    </div>
+  )}
+  searchFields={['name', 'tags']}
+  enableDragDrop={true}
+  enableSearch={true}
+  rowHeight={48}
+  indentSize={24}
+/>
+```
+
+**Features:**
+- Unlimited nesting depth
+- Collapsible folders with state persistence
+- Search across all levels
+- Drag-and-drop file/folder moves
+- Context menu operations
+- Breadcrumb navigation
+
+**State Management:**
+- Store: `audioFolderStore.ts`
+- Service: `audioFolderService.ts`
+- Hierarchical tree with parent_id references
+
+**Performance Considerations:**
+- Renders all nodes (no virtualization yet)
+- Tree rebuilds on state changes (memoized)
+- For large libraries (100+ files), see PRD for improvement plans
+
+---
+
+### Audio Playlists
+
+Collection-based audio organization with many-to-many relationships.
+
+**Components:**
+- `PlaylistsSidebar.tsx` - Playlist list in 320px sidebar
+- Integrated into main audio library view
+
+**Pattern:**
+```tsx
+// Playlist sidebar item
+<button
+  onClick={() => setSelectedPlaylist(playlist.id)}
+  className={`w-full flex items-center gap-2 px-3 py-2 rounded-[8px] transition-colors ${
+    isSelected 
+      ? 'bg-white/10 text-white' 
+      : 'text-white/70 hover:text-white hover:bg-white/5'
+  }`}
+>
+  <Music className="w-4 h-4 flex-shrink-0" />
+  <span className="flex-1 truncate text-[13px] font-medium">
+    {playlist.name}
+  </span>
+  <span className="text-[11px] text-white/50">
+    {audioCount}
+  </span>
+</button>
+```
+
+**Features:**
+- Many-to-many: one file in multiple playlists
+- Drag-and-drop reordering
+- Quick creation via sidebar
+- Inline rename with Enter/Escape
+- Context menu for edit/delete
+
+**State Management:**
+- Store: `audioPlaylistStore.ts`
+- Service: `audioPlaylistService.ts`
+- Junction table: `playlist_audio`
+
+---
+
+## Component Status Summary
+
+### UI Foundation (Tier 1) ✅
+- [x] BaseModal, ConfirmDialog, InputModal
+- [x] PageHeader, SectionHeader
+- [x] EmptyState (4 variants)
+- [x] Dropdown menus
+- [x] Context menus
+- [x] Tag/badge components
 - [x] Tooltip pattern
-- [x] Context menu pattern
-- [ ] Add loading skeleton components
-- [ ] Create toast notification component
-- [ ] Create progress bar component
-- [ ] Add tab navigation component
+- [x] Custom scrollbar styling
+- [x] Inline editing pattern
+
+### Enhanced Components (Tier 2) ✅
+- [x] Scene Blocks editor (8 block types)
+- [x] Scene NPCs management
+- [x] Advanced File Explorer (tree view, drag-drop)
+- [x] Audio Playlists (sidebar + management)
+
+### Future Enhancements (Tier 3)
+- [ ] Loading skeleton components
+- [ ] Toast notification system (toastStore exists, UI pending)
+- [ ] Progress bar component
+- [ ] Tab navigation component
+- [ ] Virtualized lists (react-window)
+- [ ] Infinite scroll pagination
+
+---
+
+## Performance Notes
+
+### Current Performance
+- Scene switching: <100ms ✅
+- Audio library: Fast for <50 files
+- File explorer: Works well for <100 files
+- Optimistic updates: Instant UI feedback
+
+### Known Limitations
+- File explorer: No virtualization (slow with 100+ files)
+- Audio library: Loads all files at once (no pagination)
+- Large file uploads: Memory intensive (loads to buffer)
+
+See `docs/TECHNICAL_PRD.md` for detailed improvement plans.
