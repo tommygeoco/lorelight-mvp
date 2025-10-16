@@ -113,10 +113,13 @@ class AudioService {
   }
 
   /**
-   * Delete an audio file entry
-   * Note: Actual file in R2 should be deleted separately
+   * Delete an audio file entry and remove from R2
    */
   async delete(id: string): Promise<void> {
+    // First get the file to extract R2 key
+    const file = await this.get(id)
+    
+    // Delete from database
     const { error } = await this.supabase
       .from('audio_files')
       .delete()
@@ -124,6 +127,27 @@ class AudioService {
 
     if (error) {
       throw error
+    }
+
+    // Delete from R2 if file exists
+    if (file && file.file_url) {
+      try {
+        const url = new URL(file.file_url)
+        const key = url.pathname.substring(1) // Remove leading slash
+        
+        // Call R2 deletion API
+        const response = await fetch(`/api/delete-r2?key=${encodeURIComponent(key)}`, {
+          method: 'DELETE',
+        })
+
+        if (!response.ok) {
+          console.warn('R2 deletion failed:', await response.json())
+          // Don't throw - DB deletion succeeded, R2 cleanup can be done later
+        }
+      } catch (error) {
+        console.warn('Failed to delete from R2:', error)
+        // Don't throw - DB deletion succeeded
+      }
     }
   }
 

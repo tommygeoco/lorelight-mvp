@@ -103,8 +103,8 @@ export const useAudioFileStore = create<AudioFileState>()(
         })
 
         try {
+          // Delete from DB and R2 (handled in service)
           await audioService.delete(id)
-          // TODO: Delete from R2 as well
         } catch (error) {
           logger.error('Failed to delete audio file', error, { audioFileId: id })
           // Rollback
