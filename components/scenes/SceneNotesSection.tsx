@@ -16,15 +16,21 @@ interface SceneNotesSectionProps {
  */
 export function SceneNotesSection({ scene }: SceneNotesSectionProps) {
   const blocksMap = useSceneBlockStore((state) => state.blocks)
+  const version = useSceneBlockStore((state) => state._version) // Subscribe to changes
   const addBlock = useSceneBlockStore((state) => state.actions.addBlock)
+  const deleteBlock = useSceneBlockStore((state) => state.actions.deleteBlock)
 
   // Get blocks for this scene
   const blocks = useMemo(() => {
     const map = blocksMap instanceof Map ? blocksMap : new Map()
-    return Array.from(map.values())
+    const filtered = Array.from(map.values())
       .filter(b => b.scene_id === scene.id)
       .sort((a, b) => a.order_index - b.order_index)
-  }, [blocksMap, scene.id])
+
+    console.log(`📋 SceneNotesSection render - version: ${version}, blocks for scene ${scene.id}:`, filtered.length)
+
+    return filtered
+  }, [blocksMap, scene.id, version])
 
   const handleAddNote = async () => {
     try {
@@ -43,13 +49,30 @@ export function SceneNotesSection({ scene }: SceneNotesSectionProps) {
     }
   }
 
+  const handleClearAll = async () => {
+    if (!confirm(`Delete all ${blocks.length} notes? This cannot be undone.`)) return
+
+    // Delete all blocks in parallel
+    await Promise.allSettled(
+      blocks.map(block => deleteBlock(block.id))
+    )
+  }
+
   return (
     <div className="w-full">
       {/* Section header */}
-      <div className="pb-0 pt-[24px]">
+      <div className="pb-0 pt-[24px] flex items-center justify-between">
         <h2 className="font-['Inter'] text-[16px] font-semibold leading-[24px] text-white">
-          Notes
+          Notes {blocks.length > 0 && <span className="text-white/40">({blocks.length})</span>}
         </h2>
+        {blocks.length > 3 && (
+          <button
+            onClick={handleClearAll}
+            className="text-[13px] text-red-400/70 hover:text-red-400 transition-colors"
+          >
+            Clear All
+          </button>
+        )}
       </div>
 
       {/* Notes grid */}

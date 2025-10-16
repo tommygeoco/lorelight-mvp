@@ -43,7 +43,12 @@ export function SceneNoteCard({ block }: SceneNoteCardProps) {
   }
 
   const handleDelete = async () => {
-    await deleteBlock(block.id)
+    try {
+      await deleteBlock(block.id)
+    } catch (error) {
+      console.error('Failed to delete note:', error)
+      // Silently fail - the optimistic delete already removed it from UI
+    }
   }
 
   return (
