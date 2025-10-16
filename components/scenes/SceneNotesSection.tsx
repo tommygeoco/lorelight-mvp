@@ -28,7 +28,8 @@ export function SceneNotesSection({ scene }: SceneNotesSectionProps) {
       .sort((a, b) => a.order_index - b.order_index)
 
     return filtered
-  }, [blocksMap, scene.id, version])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [blocksMap, scene.id, version]) // version intentionally included to force re-render on changes
 
   const handleAddNote = async () => {
     try {

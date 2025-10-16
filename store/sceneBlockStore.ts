@@ -140,11 +140,8 @@ export const useSceneBlockStore = create<SceneBlockState>()(
 
           try {
             await sceneBlockService.delete(id)
-          } catch (error) {
+          } catch {
             // Don't throw - block already removed from UI
-            // Most errors here are "block not found" which is fine
-
-            // Don't rollback - the block is gone from UI and that's what matters
             // Most errors here are "block not found" which is fine
           }
         },
