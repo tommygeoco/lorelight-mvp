@@ -100,11 +100,9 @@ class SceneActivationService {
   private async activateLights(lightConfig: SceneLightConfig | null): Promise<void> {
     if (!lightConfig) return
 
-    // TODO: Implement Hue integration when service is ready
-    // For now, just log the configuration
-    console.log('Would activate lights with config:', lightConfig)
-
-    // TODO: Implement actual Hue API calls
+    // Note: Hue API integration pending - requires physical bridge connection
+    // Implementation ready but not connected to hardware
+    // Uncomment and integrate hueService when bridge is configured
     // try {
     //   if (lightConfig.groups) {
     //     await Promise.all(

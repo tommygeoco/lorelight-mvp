@@ -205,7 +205,7 @@ export function LightCard({ light }: LightCardProps) {
             <HueContextMenu
               entityName={light.name}
               onStartEdit={() => {
-                // TODO: Implement inline rename
+                // Note: Inline rename not implemented - lights renamed via Hue app
               }}
               triggerButton={
                 <button

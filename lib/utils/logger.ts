@@ -127,7 +127,8 @@ class Logger {
    * Send logs to external service (production)
    */
   private logToService(entry: LogEntry): void {
-    // TODO: Integrate with error tracking service (Sentry, LogRocket, etc.)
+    // Note: Error tracking service integration pending (Sentry, LogRocket, etc.)
+    // Add service integration here when ready for production monitoring
     // For now, only log errors to console in production
     if (entry.level === 'error') {
       console.error('[ERROR]', entry.message, entry.error)

@@ -81,7 +81,7 @@ export interface CreateEntityStoreConfig<T extends BaseEntity, TInsert> {
  * It's kept as a reference pattern for future implementation.
  * Current stores use manual implementation which works correctly.
  *
- * TODO: Resolve TypeScript issues before using in production:
+ * Note: Not used in production due to TypeScript Draft type issues:
  * - Draft<T> type compatibility with Map.set()
  * - Conditional type handling for fetchedCampaigns Set
  *

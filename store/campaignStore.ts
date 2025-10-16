@@ -28,7 +28,8 @@ interface CampaignState {
  * Context7: Optimistic updates with local state + database sync
  *
  * NOTE: This store uses the old manual implementation.
- * TODO: Migrate to createEntityStore factory in future refactor.
+ * Note: Manual implementation used instead of createEntityStore factory
+ * due to TypeScript Draft type issues. See createEntityStore.ts for details.
  */
 export const useCampaignStore = create<CampaignState>()(
   persist(

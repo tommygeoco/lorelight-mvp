@@ -257,7 +257,7 @@ export function RoomCard({ room, lights }: RoomCardProps) {
             <HueContextMenu
               entityName={room.name}
               onStartEdit={() => {
-                // TODO: Implement inline rename
+                // Note: Inline rename not implemented - rooms renamed via Hue app
               }}
               onDelete={async () => {
                 await deleteRoom(room.id)

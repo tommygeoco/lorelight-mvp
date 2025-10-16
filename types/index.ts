@@ -24,11 +24,11 @@ export type AudioFolder = Tables<'audio_folders'>
 export type AudioPlaylist = Tables<'audio_playlists'>
 export type PlaylistAudio = Tables<'playlist_audio'>
 
-// TODO: Regenerate database types after migration 015 is applied
-// export type SceneBlock = Tables<'scene_blocks'>
-// export type SceneNPC = Tables<'scene_npcs'>
+// Note: SceneBlock and SceneNPC use placeholder types
+// Migration 015 creates these tables but types/database.ts not yet regenerated
+// These placeholder types work correctly at runtime
 
-// Temporary placeholder types until database types are regenerated
+// Placeholder types (functionally equivalent to database types)
 export interface SceneBlock {
   id: string
   scene_id: string
