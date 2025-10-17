@@ -269,9 +269,14 @@ export function LightConfigModal({ isOpen, onClose, onSave, initialConfig }: Lig
       })
     })
 
+    // Special handling: If no rooms selected, mark as "lights off" config
+    const finalConfig = selectedRoomIds.length === 0 
+      ? { lights: config, rooms: selectedRoomIds, lightsOff: true }
+      : { lights: config, rooms: selectedRoomIds }
+
     setIsSaving(true)
     try {
-      await onSave({ lights: config, rooms: selectedRoomIds })
+      await onSave(finalConfig)
       onClose()
     } catch (error) {
       console.error('Failed to save light configuration:', error)

@@ -125,14 +125,29 @@ export const useHueStore = create<HueState>()(
       },
 
       applyLightConfig: async (config) => {
-        const { bridgeIp, username } = get()
+        const { bridgeIp, username, lights: availableLights } = get()
         
         if (!bridgeIp || !username) {
           throw new Error('Bridge not connected')
         }
 
         try {
-          await hueService.applyLightConfig(bridgeIp, username, config)
+          // Check if this is an explicit "lights off" config
+          const configWithFlag = config as { lights?: Record<string, any>, lightsOff?: boolean }
+          
+          if (configWithFlag.lightsOff === true) {
+            // Turn off all available lights
+            const offConfig = {
+              lights: Array.from(availableLights.keys()).reduce((acc, lightId) => {
+                acc[lightId] = { on: false, transitiontime: 4 }
+                return acc
+              }, {} as Record<string, { on: boolean, transitiontime: number }>)
+            }
+            await hueService.applyLightConfig(bridgeIp, username, offConfig)
+          } else {
+            // Normal config application
+            await hueService.applyLightConfig(bridgeIp, username, config)
+          }
         } catch (error) {
           logger.error('Failed to apply light config', error)
           throw error
