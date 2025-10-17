@@ -9,8 +9,15 @@ import { PageHeader } from '@/components/ui/PageHeader'
 import { SectionHeader } from '@/components/ui/SectionHeader'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
+import { Tooltip } from '@/components/ui/Tooltip'
+import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card'
+import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table'
+import { useToastStore } from '@/store/toastStore'
 
 export default function DesignSystemPage() {
+  const { addToast } = useToastStore()
   const [showBaseModal, setShowBaseModal] = useState(false)
   const [showConfirmDialog, setShowConfirmDialog] = useState(false)
   const [showInputModal, setShowInputModal] = useState(false)
@@ -302,12 +309,20 @@ export default function DesignSystemPage() {
           {/* Buttons */}
           <Section title="Buttons">
             <div id="buttons" className="space-y-6">
-              <Example title="Button Variants" description="Primary, Ghost, Destructive, and Icon buttons">
+              <Example title="Button Variants" description="Variants: default, ghost, destructive, outline, secondary, link; Sizes: default, sm, lg, icon">
                 <div className="flex flex-wrap gap-4">
                   <Button variant="default">Primary Button</Button>
                   <Button variant="ghost">Ghost Button</Button>
                   <Button variant="destructive">Destructive</Button>
+                  <Button variant="outline">Outline</Button>
+                  <Button variant="secondary">Secondary</Button>
                   <Button variant="default" disabled>Disabled</Button>
+                  <Button size="icon" aria-label="Play">
+                    <Play className="w-[18px] h-[18px]" />
+                  </Button>
+                  <Button onClick={() => addToast('Saved successfully', 'success')}>
+                    Show Success Toast
+                  </Button>
                 </div>
               </Example>
 
@@ -329,13 +344,15 @@ export default function DesignSystemPage() {
               </Example>
 
               <CodeBlock
-                id="button-primary"
-                code={`<Button variant="default">Primary Button</Button>
+                id="button-usage"
+                code={`import { Button } from '@/components/ui/button'
 
-// Or custom styling
-<button className="px-4 py-2 text-[14px] font-semibold text-black bg-white rounded-[8px] hover:bg-white/90 transition-colors">
-  Primary Action
-</button>`}
+<Button variant="default">Primary</Button>
+<Button variant="ghost">Ghost</Button>
+<Button variant="destructive">Delete</Button>
+<Button variant="outline">Outline</Button>
+<Button variant="secondary">Secondary</Button>
+<Button size="icon" aria-label="Play">\n  <Play className="w-[18px] h-[18px]" />\n</Button>`}
               />
             </div>
           </Section>
@@ -453,20 +470,23 @@ export default function DesignSystemPage() {
           <Section title="Inputs">
             <div id="inputs" className="space-y-6">
               <Example title="Text Input">
-                <input
-                  type="text"
-                  placeholder="Enter text..."
-                  className="w-full px-4 py-3 bg-[rgba(255,255,255,0.07)] border border-[#3a3a3a] rounded-[8px] text-[14px] text-white placeholder:text-[#606060] focus:outline-none focus:border-white/20 transition-colors"
-                />
+                <Input placeholder="Enter text..." />
               </Example>
 
               <CodeBlock
                 id="input-text"
-                code={`<input
-  type="text"
-  placeholder="Enter text..."
-  className="w-full px-4 py-3 bg-[rgba(255,255,255,0.07)] border border-[#3a3a3a] rounded-[8px] text-[14px] text-white placeholder:text-[#606060] focus:outline-none focus:border-white/20 transition-colors"
-/>`}
+                code={`import { Input } from '@/components/ui/input'
+
+<Input placeholder="Enter text..." />`}
+              />
+              <Example title="Textarea">
+                <Textarea placeholder="Write something..." />
+              </Example>
+              <CodeBlock
+                id="textarea"
+                code={`import { Textarea } from '@/components/ui/textarea'
+
+<Textarea placeholder="Write something..." />`}
               />
             </div>
           </Section>
@@ -474,35 +494,52 @@ export default function DesignSystemPage() {
           {/* Cards */}
           <Section title="Cards">
             <div id="cards" className="space-y-6">
-              <Example title="Standard Card">
-                <div className="bg-[#191919] rounded-[8px] p-4 border border-white/10">
-                  <h3 className="text-[14px] font-semibold text-white mb-2">Card Title</h3>
-                  <p className="text-[13px] text-white/60">Card content goes here</p>
-                </div>
+              <Example title="Card Component">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Card Title</CardTitle>
+                    <CardDescription>Card description goes here</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-[13px] text-white/80">Card content goes here</p>
+                  </CardContent>
+                  <CardFooter>
+                    <Button size="sm">Action</Button>
+                  </CardFooter>
+                </Card>
               </Example>
 
               <Example title="Interactive Card">
-                <div className="bg-[#191919] rounded-[8px] p-4 border border-white/10 hover:bg-white/5 cursor-pointer transition-colors">
-                  <div className="flex items-center gap-3">
-                    <Music className="w-5 h-5 text-white/60" />
-                    <div>
-                      <h3 className="text-[14px] font-semibold text-white">Interactive Card</h3>
-                      <p className="text-[13px] text-white/60">Hover to see effect</p>
+                <Card className="hover:bg-white/5 cursor-pointer transition-colors">
+                  <CardContent>
+                    <div className="flex items-center gap-3">
+                      <Music className="w-5 h-5 text-white/60" />
+                      <div>
+                        <h3 className="text-[14px] font-semibold text-white">Interactive Card</h3>
+                        <p className="text-[13px] text-white/60">Hover to see effect</p>
+                      </div>
                     </div>
-                  </div>
-                </div>
+                  </CardContent>
+                </Card>
               </Example>
 
               <CodeBlock
                 id="card-standard"
-                code={`<div className="bg-[#191919] rounded-[8px] p-4 border border-white/10">
-  {/* Card content */}
-</div>
+                code={`import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card'
+
+<Card>
+  <CardHeader>
+    <CardTitle>Card Title</CardTitle>
+    <CardDescription>Card description goes here</CardDescription>
+  </CardHeader>
+  <CardContent>Content...</CardContent>
+  <CardFooter>Footer actions</CardFooter>
+</Card>
 
 // Interactive variant
-<div className="bg-[#191919] rounded-[8px] p-4 border border-white/10 hover:bg-white/5 cursor-pointer transition-colors">
-  {/* Card content */}
-</div>`}
+<Card className="hover:bg-white/5 cursor-pointer transition-colors">
+  <CardContent>Hover to see effect</CardContent>
+</Card>`}
               />
             </div>
           </Section>
@@ -510,78 +547,68 @@ export default function DesignSystemPage() {
           {/* Tables */}
           <Section title="Tables">
             <div id="tables" className="space-y-6">
-              <Example title="Data Table" description="Standard table structure with hover states and actions">
+              <Example title="Data Table" description="Standard table using Table components">
                 <div className="flex flex-col">
-                  {/* Table Header */}
-                  <div className="flex items-center gap-4 px-6 py-3 border-b border-white/10 text-[13px] text-white/60 font-medium">
-                    <div className="flex-1">Name</div>
-                    <div className="w-24">Duration</div>
-                    <div className="w-32">Type</div>
-                    <div className="w-12"></div>
-                  </div>
-
-                  {/* Table Rows */}
-                  {sampleTableData.map((item) => (
-                    <div
-                      key={item.id}
-                      className="group flex items-center gap-4 px-6 py-3 hover:bg-white/5 border-b border-white/5 cursor-pointer transition-colors"
-                      onContextMenu={(e) => {
-                        e.preventDefault()
-                        setContextMenu({
-                          x: e.clientX,
-                          y: e.clientY,
-                          item: { id: item.id, name: item.name }
-                        })
-                      }}
-                    >
-                      <div className="flex-1 flex items-center gap-3">
-                        <Music className="w-4 h-4 text-white/40" />
-                        <span className="text-[14px] text-white truncate">{item.name}</span>
-                      </div>
-                      <div className="w-24 text-[13px] text-white/60">{item.duration}</div>
-                      <div className="w-32 text-[13px] text-white/60">{item.type}</div>
-                      <div className="w-12">
-                        <button className="opacity-0 group-hover:opacity-100 w-8 h-8 flex items-center justify-center hover:bg-white/10 rounded transition-all">
-                          <MoreVertical className="w-4 h-4 text-white/60" />
-                        </button>
-                      </div>
-                    </div>
-                  ))}
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="px-6 py-3">Name</TableHead>
+                        <TableHead className="px-6 py-3 w-24">Duration</TableHead>
+                        <TableHead className="px-6 py-3 w-32">Type</TableHead>
+                        <TableHead className="px-6 py-3 w-12" />
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {sampleTableData.map((item) => (
+                        <TableRow key={item.id} className="group cursor-pointer">
+                          <TableCell className="px-6 py-3">
+                            <div className="flex items-center gap-3">
+                              <Music className="w-4 h-4 text-white/40" />
+                              <span className="text-[14px] text-white truncate">{item.name}</span>
+                            </div>
+                          </TableCell>
+                          <TableCell className="px-6 py-3 text-[13px] text-white/60">{item.duration}</TableCell>
+                          <TableCell className="px-6 py-3 text-[13px] text-white/60">{item.type}</TableCell>
+                          <TableCell className="px-6 py-3 text-right">
+                            <button className="opacity-0 group-hover:opacity-100 w-8 h-8 flex items-center justify-center hover:bg-white/10 rounded transition-all">
+                              <MoreVertical className="w-4 h-4 text-white/60" />
+                            </button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
                 </div>
                 <p className="text-[13px] text-white/60 mt-4">Try right-clicking on a row to see context menu</p>
               </Example>
 
               <CodeBlock
                 id="table-pattern"
-                code={`<div className="flex flex-col">
-  {/* Table Header */}
-  <div className="flex items-center gap-4 px-6 py-3 border-b border-white/10 text-[13px] text-white/60 font-medium">
-    <div className="flex-1">Name</div>
-    <div className="w-24">Duration</div>
-    <div className="w-32">Type</div>
-    <div className="w-12"></div>
-  </div>
+                code={`import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table'
 
-  {/* Table Rows */}
-  {items.map((item) => (
-    <div
-      key={item.id}
-      className="group flex items-center gap-4 px-6 py-3 hover:bg-white/5 border-b border-white/5 cursor-pointer transition-colors"
-    >
-      <div className="flex-1 flex items-center gap-3">
-        <Music className="w-4 h-4 text-white/40" />
-        <span className="text-[14px] text-white truncate">{item.name}</span>
-      </div>
-      <div className="w-24 text-[13px] text-white/60">{item.duration}</div>
-      <div className="w-32 text-[13px] text-white/60">{item.type}</div>
-      <div className="w-12">
-        <button className="opacity-0 group-hover:opacity-100 w-8 h-8 flex items-center justify-center hover:bg-white/10 rounded transition-all">
-          <MoreVertical className="w-4 h-4 text-white/60" />
-        </button>
-      </div>
-    </div>
-  ))}
-</div>`}
+<Table>
+  <TableHeader>
+    <TableRow>
+      <TableHead>Name</TableHead>
+      <TableHead className="w-24">Duration</TableHead>
+      <TableHead className="w-32">Type</TableHead>
+      <TableHead className="w-12" />
+    </TableRow>
+  </TableHeader>
+  <TableBody>
+    {items.map(item => (
+      <TableRow key={item.id}>
+        <TableCell className="flex items-center gap-3">
+          <Music className="w-4 h-4 text-white/40" />
+          <span className="text-[14px] text-white truncate">{item.name}</span>
+        </TableCell>
+        <TableCell className="w-24 text-[13px] text-white/60">{item.duration}</TableCell>
+        <TableCell className="w-32 text-[13px] text-white/60">{item.type}</TableCell>
+        <TableCell className="w-12 text-right">…</TableCell>
+      </TableRow>
+    ))}
+  </TableBody>
+</Table>`}
               />
 
               <Example title="Sortable Table" description="Click column headers to sort ascending/descending">
@@ -1184,28 +1211,23 @@ useEffect(() => {
           {/* Tooltips */}
           <Section title="Tooltips">
             <div id="tooltips" className="space-y-6">
-              <Example title="Hover Tooltip" description="Hover over the info icon to see tooltip">
+              <Example title="Hover Tooltip" description="Accessible Tooltip component">
                 <div className="flex gap-6 p-8">
-                  <button className="relative group">
-                    <Info className="w-5 h-5 text-white/60" />
-                    <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 bg-[#191919] border border-white/10 rounded-[6px] text-[13px] text-white whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                      This is a tooltip
-                    </span>
-                  </button>
-
-                  <button className="relative group">
-                    <AlertCircle className="w-5 h-5 text-yellow-500" />
-                    <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 bg-[#191919] border border-white/10 rounded-[6px] text-[13px] text-white whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                      Warning: This action is irreversible
-                    </span>
-                  </button>
-
-                  <button className="relative group">
-                    <Play className="w-5 h-5 text-white/60" />
-                    <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 bg-[#191919] border border-white/10 rounded-[6px] text-[13px] text-white whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                      Play audio track
-                    </span>
-                  </button>
+                  <Tooltip content="This is a tooltip" position="top">
+                    <button aria-label="Info">
+                      <Info className="w-5 h-5 text-white/60" />
+                    </button>
+                  </Tooltip>
+                  <Tooltip content="Warning: This action is irreversible" position="top">
+                    <button aria-label="Warning">
+                      <AlertCircle className="w-5 h-5 text-yellow-500" />
+                    </button>
+                  </Tooltip>
+                  <Tooltip content="Play audio track" position="top">
+                    <button aria-label="Play">
+                      <Play className="w-5 h-5 text-white/60" />
+                    </button>
+                  </Tooltip>
                 </div>
               </Example>
 
