@@ -136,16 +136,18 @@ class HueService {
     lightId: string,
     state: LightState
   ): Promise<void> {
-    const response = await fetch(
-      `http://${bridgeIp}/api/${username}/lights/${lightId}/state`,
-      {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(state),
-      }
-    )
+    const url = `http://${bridgeIp}/api/${username}/lights/${lightId}/state`
+    
+    const response = await fetch(url, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(state),
+    })
 
-    if (!response.ok) throw new Error('Failed to set light state')
+    if (!response.ok) {
+      const errorText = await response.text()
+      throw new Error(`Failed to set light ${lightId}: ${response.status} ${errorText}`)
+    }
   }
 
   /**

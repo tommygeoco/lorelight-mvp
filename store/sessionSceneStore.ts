@@ -131,9 +131,16 @@ export const useSessionSceneStore = create<SessionSceneState>()(
       },
 
       updateSceneInSession: (sessionId, sceneId, updates) => {
+        console.log('[sessionSceneStore] updateSceneInSession called:', { sessionId, sceneId, updates })
         set(state => {
           const scenes = state.sessionScenes.get(sessionId)
-          if (!scenes) return
+          if (!scenes) {
+            console.log('[sessionSceneStore] No scenes found for session:', sessionId)
+            return
+          }
+
+          const sceneIndex = scenes.findIndex(s => s.id === sceneId)
+          console.log('[sessionSceneStore] Scene found at index:', sceneIndex)
 
           const updatedScenes = scenes.map(scene =>
             scene.id === sceneId ? { ...scene, ...updates } : scene
@@ -141,6 +148,7 @@ export const useSessionSceneStore = create<SessionSceneState>()(
 
           state.sessionScenes.set(sessionId, castDraft(updatedScenes))
           state._version++ // Increment version to force re-renders
+          console.log('[sessionSceneStore] Scene updated, new _version:', state._version)
         })
       },
 

@@ -51,14 +51,40 @@ export function LightConfigModal({ isOpen, onClose, onSave, initialConfig }: Lig
   const { rooms, lights, isConnected, error, fetchLightsAndRooms, applyLightConfig, clearError } = useHueStore()
   const [roomStates, setRoomStates] = useState<Map<string, RoomState>>(new Map())
   const [isPreviewing, setIsPreviewing] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
 
   // Load initial configuration
   useEffect(() => {
-    if (isOpen && initialConfig && typeof initialConfig === 'object' && 'lights' in initialConfig) {
-      const lightsConfig = (initialConfig as { lights: Record<string, LightConfig> }).lights
-      const newRoomStates = new Map<string, RoomState>()
+    if (!isOpen || !initialConfig || typeof initialConfig !== 'object' || !('lights' in initialConfig)) {
+      return
+    }
 
-      // Group lights by room
+    const configObj = initialConfig as { lights: Record<string, LightConfig>, rooms?: string[] }
+    const lightsConfig = configObj.lights
+    const savedRoomIds = configObj.rooms || []
+    const newRoomStates = new Map<string, RoomState>()
+
+    // If we have saved room IDs, use those to determine which rooms to check
+    // Otherwise fall back to inferring from lights (backwards compatibility)
+    if (savedRoomIds.length > 0) {
+      rooms.forEach(room => {
+        if (savedRoomIds.includes(room.id)) {
+          const roomLights = new Map<string, LightConfig>()
+          room.lights.forEach(lightId => {
+            if (lightsConfig[lightId]) {
+              roomLights.set(lightId, lightsConfig[lightId])
+            }
+          })
+          if (roomLights.size > 0) {
+            newRoomStates.set(room.id, {
+              expanded: false,
+              lights: roomLights
+            })
+          }
+        }
+      })
+    } else {
+      // Legacy mode: Group lights by room (for configs saved before room tracking)
       rooms.forEach(room => {
         const roomLights = new Map<string, LightConfig>()
         room.lights.forEach(lightId => {
@@ -73,9 +99,9 @@ export function LightConfigModal({ isOpen, onClose, onSave, initialConfig }: Lig
           })
         }
       })
-
-      setRoomStates(newRoomStates)
     }
+
+    setRoomStates(newRoomStates)
   }, [isOpen, initialConfig, rooms])
 
   // Fetch rooms/lights when modal opens
@@ -97,7 +123,9 @@ export function LightConfigModal({ isOpen, onClose, onSave, initialConfig }: Lig
   const handleToggleRoom = (roomId: string, room: { lights: string[] }) => {
     setRoomStates(prev => {
       const newStates = new Map(prev)
-      if (newStates.has(roomId)) {
+      const wasChecked = newStates.has(roomId)
+      
+      if (wasChecked) {
         newStates.delete(roomId)
       } else {
         // Add all lights in room with default config
@@ -114,6 +142,7 @@ export function LightConfigModal({ isOpen, onClose, onSave, initialConfig }: Lig
           lights: roomLights
         })
       }
+      
       return newStates
     })
   }
@@ -210,17 +239,47 @@ export function LightConfigModal({ isOpen, onClose, onSave, initialConfig }: Lig
     }
   }
 
-  const handleSave = () => {
+  const handleSave = async () => {
     const config: Record<string, LightConfig> = {}
+    const selectedRoomIds: string[] = []
 
-    roomStates.forEach(roomState => {
+    roomStates.forEach((roomState, roomId) => {
+      selectedRoomIds.push(roomId)
+      
       roomState.lights.forEach((lightConfig, lightId) => {
-        config[lightId] = lightConfig
+        // If light already exists in config, merge by keeping the most specific config
+        // (prefer configs with hue/sat/ct over default configs)
+        if (config[lightId]) {
+          const existing = config[lightId]
+          const hasExistingColor = 'hue' in existing || 'ct' in existing
+          const hasNewColor = 'hue' in lightConfig || 'ct' in lightConfig
+          
+          // Keep whichever config has color data, or the one with non-default brightness
+          if (hasNewColor && !hasExistingColor) {
+            config[lightId] = lightConfig
+          } else if (!hasNewColor && hasExistingColor) {
+            // Keep existing
+          } else if (lightConfig.bri !== 254 && existing.bri === 254) {
+            config[lightId] = lightConfig
+          }
+          // else keep existing by default
+        } else {
+          config[lightId] = lightConfig
+        }
       })
     })
 
-    onSave({ lights: config })
-    onClose()
+    setIsSaving(true)
+    try {
+      await onSave({ lights: config, rooms: selectedRoomIds })
+      onClose()
+    } catch (error) {
+      console.error('Failed to save light configuration:', error)
+      // Don't close modal on error - let user retry
+      // Error toast is shown by the parent component
+    } finally {
+      setIsSaving(false)
+    }
   }
 
   const roomsArray = Array.from(rooms.values())
@@ -518,10 +577,10 @@ export function LightConfigModal({ isOpen, onClose, onSave, initialConfig }: Lig
             </button>
             <button
               onClick={handleSave}
-              disabled={totalLightsConfigured === 0}
+              disabled={totalLightsConfigured === 0 || isSaving}
               className="px-4 py-2 text-[14px] font-semibold bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-[8px] hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Save Configuration
+              {isSaving ? 'Saving...' : 'Save Configuration'}
             </button>
           </div>
         </div>

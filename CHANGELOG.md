@@ -8,9 +8,25 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Fixed
+- **Scene Light Configuration Persistence** - Complete fix for light management in session play view
+  - Light configurations now save to database correctly
+  - Previously saved configurations load when reopening modal
+  - Room selections persist (previously all rooms with shared lights would auto-check)
+  - Duplicate lights in multiple rooms handled correctly (prefers custom configs over defaults)
+  - Scene activation now applies light configurations to physical Hue lights
+  - Modal key optimization prevents unnecessary remounting
+
+### Added
+- Scene activation workflow documentation in technical PRD
+- Room tracking in light configurations (`rooms` array alongside `lights`)
+- Intelligent light config merging for shared lights across rooms
+
 ### Changed
 - Major documentation consolidation (22 files → 5 files)
 - Updated technical PRD with 3-tier architecture (Essential/Enhanced/Future)
+- LightConfigModal now async with loading states and error handling
+- SceneActivationService now implements light activation (was previously commented out)
 
 ---
 

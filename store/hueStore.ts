@@ -126,6 +126,7 @@ export const useHueStore = create<HueState>()(
 
       applyLightConfig: async (config) => {
         const { bridgeIp, username } = get()
+        
         if (!bridgeIp || !username) {
           throw new Error('Bridge not connected')
         }

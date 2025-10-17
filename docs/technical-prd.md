@@ -120,6 +120,21 @@ Features explicitly excluded from MVP scope:
   - Visual feedback on active scene
   - Smooth transitions between scenes
 
+#### Scene Activation Workflow (Audio + Lights Independence)
+
+**Correct Behavior:**
+- Scene activation → Loads audio into player + applies lighting → Audio plays automatically
+- Audio player pause/play → Audio stops/starts only, scene remains active, lights stay configured
+- Scene deactivation → Stops audio + scene marked inactive (lights may remain)
+- User can switch audio tracks independently while scene stays active
+- Scene name displayed in audio player when audio is scene-sourced
+
+**Known Issue (To Fix):**
+- Currently: Audio player pause triggers scene deactivation (incorrect)
+- Should be: Audio player is independent, only scene activation/deactivation should couple with lights
+
+**Priority:** Medium - Functional but not ideal UX
+
 ## Technical Architecture
 
 ### Technology Stack

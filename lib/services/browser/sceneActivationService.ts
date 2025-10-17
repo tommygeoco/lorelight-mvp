@@ -100,27 +100,23 @@ class SceneActivationService {
   private async activateLights(lightConfig: SceneLightConfig | null): Promise<void> {
     if (!lightConfig) return
 
-    // Note: Hue API integration pending - requires physical bridge connection
-    // Implementation ready but not connected to hardware
-    // Uncomment and integrate hueService when bridge is configured
-    // try {
-    //   if (lightConfig.groups) {
-    //     await Promise.all(
-    //       Object.entries(lightConfig.groups).map(([groupId, state]) =>
-    //         hueService.setGroupState(groupId, state)
-    //       )
-    //     )
-    //   }
-    //   if (lightConfig.lights) {
-    //     await Promise.all(
-    //       Object.entries(lightConfig.lights).map(([lightId, state]) =>
-    //         hueService.setLightState(lightId, state)
-    //       )
-    //     )
-    //   }
-    // } catch (error) {
-    //   console.error('Failed to activate lights:', error)
-    // }
+    try {
+      // Import hueStore dynamically to apply lights
+      const { useHueStore } = await import('@/store/hueStore')
+      const hueStore = useHueStore.getState()
+      
+      // Check if bridge is connected
+      if (!hueStore.isConnected) {
+        console.warn('Hue bridge not connected, skipping light activation')
+        return
+      }
+
+      // Apply the light configuration
+      await hueStore.applyLightConfig(lightConfig)
+    } catch (error) {
+      console.error('Failed to activate scene lights:', error)
+      // Don't throw - allow scene to activate even if lights fail
+    }
   }
 
   /**

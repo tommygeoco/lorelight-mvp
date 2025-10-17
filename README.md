@@ -227,6 +227,13 @@ TS2589: Type instantiation is excessively deep
 - **Impact**: None - runtime works perfectly
 - **Reason**: TypeScript limitation with recursive Immer types on Maps
 
+**Audio Player / Scene Coupling:**
+- **Status**: Known issue, documented in technical PRD
+- **Current Behavior**: Audio player pause triggers scene deactivation
+- **Expected Behavior**: Audio player should be independent; only scene activation/deactivation should control lights
+- **Impact**: Minor UX issue - scene deactivates when pausing audio
+- **Priority**: Medium (functional but not ideal)
+
 **Authentication:**
 - Server-side: Use `await getUser()` not `getSession()`
 - Client-side: Use `useAuthStore()` hook

@@ -22,7 +22,7 @@ export function SceneAmbienceSection({ scene, sessionId }: SceneAmbienceSectionP
   const audioFiles = useAudioFileStore((state) => state.audioFiles)
   const [isAudioLibraryOpen, setIsAudioLibraryOpen] = useState(false)
   const [isLightConfigOpen, setIsLightConfigOpen] = useState(false)
-
+  
   // Parse audio config
   const audioConfig = scene.audio_config as SceneAudioConfig | null
   const audioFile = audioConfig ? audioFiles.get(audioConfig.audio_id) : null
@@ -59,21 +59,25 @@ export function SceneAmbienceSection({ scene, sessionId }: SceneAmbienceSectionP
   const handleLightSave = async (config: unknown) => {
     const { useSceneStore } = await import('@/store/sceneStore')
     const { useSessionSceneStore } = await import('@/store/sessionSceneStore')
+    const { useToastStore } = await import('@/store/toastStore')
 
-    // Update sceneStore (DB)
     try {
+      // Update database
       await useSceneStore.getState().updateScene(scene.id, { light_config: config as Json })
-    } catch (error) {
-      console.error('[SceneAmbienceSection] Failed to save light config:', error)
-      throw error
-    }
 
-    // Update sessionSceneStore (UI) - use the action to increment _version
-    if (sessionId) {
-      useSessionSceneStore.getState().updateSceneInSession(sessionId, scene.id, {
-        light_config: config as unknown as Scene['light_config'],
-        updated_at: new Date().toISOString()
-      })
+      // Ensure sessionSceneStore is updated
+      if (sessionId) {
+        useSessionSceneStore.getState().updateSceneInSession(sessionId, scene.id, {
+          light_config: config as unknown as Scene['light_config'],
+          updated_at: new Date().toISOString()
+        })
+      }
+
+      useToastStore.getState().addToast('Lighting configuration saved', 'success')
+    } catch (error) {
+      console.error('Failed to save light config:', error)
+      useToastStore.getState().addToast('Failed to save lighting configuration', 'error')
+      throw error
     }
   }
 
@@ -163,7 +167,7 @@ export function SceneAmbienceSection({ scene, sessionId }: SceneAmbienceSectionP
       />
 
       <LightConfigModal
-        key={`light-config-${scene.id}-${scene.updated_at}`}
+        key={`light-config-${scene.id}`}
         isOpen={isLightConfigOpen}
         onClose={() => setIsLightConfigOpen(false)}
         onSave={handleLightSave}
