@@ -16,6 +16,28 @@ const nextConfig: NextConfig = {
     serverActions: {
       bodySizeLimit: '500mb',
     },
+    // Enable optimized package imports for better tree-shaking
+    optimizePackageImports: ['lucide-react', 'zustand', 'immer'],
+  },
+  // Compiler optimizations
+  compiler: {
+    // Remove console logs in production
+    removeConsole: process.env.NODE_ENV === 'production' ? {
+      exclude: ['error', 'warn'],
+    } : false,
+  },
+  // Performance optimizations
+  images: {
+    // Enable image optimization
+    formats: ['image/avif', 'image/webp'],
+    // Add remote patterns if needed
+    remotePatterns: [],
+  },
+  // Performance budgets
+  onDemandEntries: {
+    // Keep pages in memory for faster dev
+    maxInactiveAge: 60 * 1000,
+    pagesBufferLength: 5,
   },
 };
 

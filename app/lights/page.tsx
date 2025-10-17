@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, lazy, Suspense } from 'react'
 import { useRouter } from 'next/navigation'
 import { RefreshCw, Settings, Power, Edit2, Trash2 } from 'lucide-react'
 import { DashboardLayoutWithSidebar } from '@/components/layouts/DashboardLayoutWithSidebar'
@@ -8,13 +8,15 @@ import { DashboardSidebar } from '@/components/layouts/DashboardSidebar'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { SectionHeader } from '@/components/ui/SectionHeader'
-import { HueSetup } from '@/components/hue/HueSetup'
-import { AudioLibrary } from '@/components/audio/AudioLibrary'
 import { LightCard } from '@/components/hue/LightCard'
 import { RoomCard } from '@/components/hue/RoomCard'
 import { useHueStore } from '@/store/hueStore'
 import { useAuthStore } from '@/store/authStore'
 import { getSidebarButtons } from '@/lib/navigation/sidebarNavigation'
+
+// Lazy load heavy components
+const HueSetup = lazy(() => import('@/components/hue/HueSetup').then(m => ({ default: m.HueSetup })))
+const AudioLibrary = lazy(() => import('@/components/audio/AudioLibrary').then(m => ({ default: m.AudioLibrary })))
 
 export default function LightsPage() {
   const router = useRouter()
@@ -466,8 +468,16 @@ export default function LightsPage() {
         </div>
       )}
 
-      <HueSetup isOpen={isHueSetupOpen} onClose={() => setIsHueSetupOpen(false)} />
-      <AudioLibrary isOpen={isAudioLibraryOpen} onClose={() => setIsAudioLibraryOpen(false)} />
+      {isHueSetupOpen && (
+        <Suspense fallback={null}>
+          <HueSetup isOpen={isHueSetupOpen} onClose={() => setIsHueSetupOpen(false)} />
+        </Suspense>
+      )}
+      {isAudioLibraryOpen && (
+        <Suspense fallback={null}>
+          <AudioLibrary isOpen={isAudioLibraryOpen} onClose={() => setIsAudioLibraryOpen(false)} />
+        </Suspense>
+      )}
 
       {/* Context Menu */}
       {contextMenu && (
