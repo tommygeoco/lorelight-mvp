@@ -1635,13 +1635,392 @@ Consistent scrollbar appearance across the app.
 </div>
 ```
 
+### Loading Skeletons
+
+#### Skeleton Component
+Location: `/components/ui/Skeleton.tsx`
+
+Generic and specialized skeleton loaders for content that's being fetched.
+
+**Generic Skeleton:**
+```tsx
+import { Skeleton } from '@/components/ui/Skeleton'
+
+// Generic skeleton with custom dimensions
+<Skeleton className="h-4 w-full" />
+<Skeleton className="h-10 w-10 rounded-[8px]" />
+```
+
+**Specialized Skeletons:**
+```tsx
+import {
+  CampaignCardSkeleton,
+  SceneListItemSkeleton,
+  TableRowSkeleton,
+  CardSkeleton
+} from '@/components/ui/Skeleton'
+
+// Campaign card skeleton
+<CampaignCardSkeleton />
+
+// Scene list item skeleton
+<SceneListItemSkeleton />
+
+// Table row skeleton
+<TableRowSkeleton />
+
+// Generic card skeleton
+<CardSkeleton />
+```
+
+**Features:**
+- Consistent pulsing animation
+- Background: `bg-white/[0.05]`
+- Border radius: `rounded-[8px]`
+- Matches actual component dimensions
+- GPU-accelerated animation
+
+### Notifications
+
+#### Toast Component
+Location: `/components/ui/Toast.tsx`
+
+Non-blocking notifications for user feedback.
+
+**Usage:**
+```tsx
+import { useToastStore } from '@/store/toastStore'
+
+function MyComponent() {
+  const { addToast } = useToastStore()
+
+  const handleAction = () => {
+    addToast('Campaign created successfully!', 'success')
+  }
+
+  return <button onClick={handleAction}>Create</button>
+}
+
+// Toast types
+addToast('Success message', 'success')
+addToast('Error message', 'error')
+addToast('Warning message', 'warning')
+addToast('Info message', 'info')
+
+// With custom duration (default is 5000ms)
+addToast('Quick message', 'info', 2000)
+```
+
+**API:**
+```typescript
+addToast(message: string, type?: ToastType, duration?: number): void
+```
+
+**Visual Design:**
+- Background: `#191919`
+- Border with type-specific color (`green-400/20`, `red-400/20`, etc.)
+- Icon on left, message in center, close button on right
+- Auto-dismiss after 5 seconds
+- Slide-in animation from right
+- Fixed position: `bottom-4 right-4`
+- z-index: `z-[100]`
+
+**ToastContainer:**
+Add to root layout to enable toasts app-wide:
+```tsx
+import { ToastContainer } from '@/components/ui/Toast'
+
+export default function RootLayout({ children }) {
+  return (
+    <html>
+      <body>
+        {children}
+        <ToastContainer />
+      </body>
+    </html>
+  )
+}
+```
+
+### Advanced Components
+
+#### InlineEditor
+Location: `/components/ui/InlineEditor.tsx`
+
+Notion-like inline text editing with auto-save.
+
+**Props:**
+- `initialValue: string` - Starting text value
+- `onSave: (value: string) => Promise<void>` - Save handler
+- `onCancel?: () => void` - Cancel handler
+- `placeholder?: string` - Placeholder text
+- `autoFocus?: boolean` - Auto-focus on mount
+- `multiline?: boolean` - Enable textarea mode
+- `debounceMs?: number` - Debounce delay (default: 300ms)
+
+**Usage:**
+```tsx
+import { InlineEditor } from '@/components/ui/InlineEditor'
+
+<InlineEditor
+  initialValue={scene.name}
+  onSave={async (newName) => {
+    await updateScene({ name: newName })
+  }}
+  placeholder="Scene name..."
+  autoFocus
+/>
+
+// Multiline mode
+<InlineEditor
+  initialValue={scene.description}
+  onSave={handleSaveDescription}
+  multiline
+  placeholder="Add description..."
+/>
+```
+
+**Features:**
+- Auto-save on type (debounced)
+- Enter to blur (single-line), Shift+Enter for new line (multiline)
+- Escape to cancel and revert
+- Shows saving state with opacity
+- Auto-focus and select all text
+- Transparent background for seamless integration
+
+#### Tooltip
+Location: `/components/ui/Tooltip.tsx`
+
+Accessible tooltips with auto-positioning.
+
+**Props:**
+- `content: string` - Tooltip text
+- `position?: 'top' | 'bottom' | 'left' | 'right'` - Preferred position
+- `delay?: number` - Show delay in ms
+- `disabled?: boolean` - Disable tooltip
+- `children: React.ReactElement` - Trigger element
+
+**Usage:**
+```tsx
+import { Tooltip } from '@/components/ui/Tooltip'
+
+<Tooltip content="Create new scene" position="right">
+  <button className="w-8 h-8 rounded-[8px] hover:bg-white/5">
+    <Plus className="w-4 h-4" />
+  </button>
+</Tooltip>
+
+// With delay
+<Tooltip content="Advanced settings" delay={500}>
+  <Settings className="w-5 h-5" />
+</Tooltip>
+```
+
+**Features:**
+- Keyboard accessible (shows on focus)
+- Auto-repositions to stay in viewport
+- Customizable delay
+- White background with black text for contrast
+- Small font size: `text-xs`
+- Padding: `px-2 py-1.5`
+- Border radius: `rounded-[4px]`
+
+#### SidebarShell
+Location: `/components/ui/SidebarShell.tsx`
+
+Standardized sidebar container for consistent sidebar layouts.
+
+**Props:**
+- `title: string` - Sidebar title
+- `action?: { icon, onClick, label }` - Optional action button
+- `emptyState?: { message }` - Empty state message
+- `children?: ReactNode` - Sidebar content
+- `onContextMenu?: (e) => void` - Right-click handler
+
+**Usage:**
+```tsx
+import { SidebarShell } from '@/components/ui/SidebarShell'
+import { Plus } from 'lucide-react'
+
+<SidebarShell
+  title="Playlists"
+  action={{
+    icon: <Plus className="w-[18px] h-[18px] text-white/70" />,
+    onClick: handleCreatePlaylist,
+    label: 'Create playlist'
+  }}
+  emptyState={{
+    message: 'Your collection awaits...\nForge a playlist to begin'
+  }}
+>
+  <ul className="space-y-2">
+    {playlists.map(playlist => (
+      <li key={playlist.id}>
+        {/* Playlist item */}
+      </li>
+    ))}
+  </ul>
+</SidebarShell>
+```
+
+**Features:**
+- Fixed width: `320px`
+- Background: `#191919`
+- Border radius: `rounded-[8px]`
+- Header with title and optional action button
+- Scrollable content area with custom scrollbar
+- Automatic empty state handling
+- Consistent padding: `px-6 py-4`
+
+#### GradientBlob
+Location: `/components/ui/GradientBlob.tsx`
+
+Decorative gradient backgrounds for visual depth.
+
+**Props:**
+- `color: string` - Gradient color
+- `opacity?: number` - Blob opacity (default: 0.5)
+- `blur?: number` - Blur amount in px (default: 60)
+- `className?: string` - Additional CSS classes
+- `style?: React.CSSProperties` - Inline styles
+
+**Usage:**
+```tsx
+import { GradientBlob } from '@/components/ui/GradientBlob'
+
+// Purple blob in top-left
+<GradientBlob
+  color="rgb(147, 51, 234)"
+  className="top-0 left-0 w-96 h-96"
+  opacity={0.3}
+  blur={80}
+/>
+
+// Pink blob in top-right
+<GradientBlob
+  color="rgb(236, 72, 153)"
+  className="top-0 right-0 w-80 h-80"
+  opacity={0.2}
+/>
+```
+
+**Common Patterns:**
+```tsx
+// Dashboard header gradient
+<div className="relative overflow-hidden">
+  <GradientBlob
+    color="rgb(147, 51, 234)"
+    className="-top-20 -left-20 w-96 h-96"
+  />
+  <GradientBlob
+    color="rgb(236, 72, 153)"
+    className="-top-32 -right-16 w-80 h-80"
+  />
+  <div className="relative z-10">
+    {/* Content */}
+  </div>
+</div>
+```
+
+**Features:**
+- Radial gradient with smooth falloff
+- GPU-accelerated blur
+- Absolute positioning for layering
+- Customizable color, opacity, and blur
+- Non-interactive (pointer-events: none implied by position)
+
+## Shadcn UI Components
+
+The following components are from shadcn/ui and follow Lorelight's dark theme:
+
+### Button
+Location: `/components/ui/button.tsx`
+
+**Variants:**
+- `default` - White background, black text
+- `destructive` - Red background, white text
+- `outline` - Transparent with border
+- `secondary` - Dark gray background
+- `ghost` - Transparent, hover effect
+- `link` - Text with underline on hover
+
+**Sizes:**
+- `default` - `h-10 px-4 py-2`
+- `sm` - `h-9 px-3`
+- `lg` - `h-11 px-8`
+- `icon` - `h-10 w-10`
+
+```tsx
+import { Button } from '@/components/ui/button'
+
+<Button>Primary</Button>
+<Button variant="destructive">Delete</Button>
+<Button variant="ghost">Cancel</Button>
+<Button size="icon"><Plus /></Button>
+```
+
+### Input
+Location: `/components/ui/input.tsx`
+
+Standardized text input with dark theme.
+
+```tsx
+import { Input } from '@/components/ui/input'
+
+<Input
+  type="text"
+  placeholder="Enter text..."
+  value={value}
+  onChange={(e) => setValue(e.target.value)}
+/>
+```
+
+**Styling:**
+- Height: `h-10`
+- Border: `border-neutral-700`
+- Background: `bg-black`
+- Focus ring: `focus:ring-2 focus:ring-white`
+
+### Card Components
+Location: `/components/ui/card.tsx`
+
+Composable card components.
+
+```tsx
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+  CardFooter
+} from '@/components/ui/card'
+
+<Card>
+  <CardHeader>
+    <CardTitle>Card Title</CardTitle>
+    <CardDescription>Card description</CardDescription>
+  </CardHeader>
+  <CardContent>
+    Content here
+  </CardContent>
+  <CardFooter>
+    Footer actions
+  </CardFooter>
+</Card>
+```
+
 ## Future Enhancements
 
 - [x] Dropdown menu component
 - [x] Tag/badge component
-- [x] Tooltip pattern
+- [x] Tooltip component
 - [x] Context menu pattern
-- [ ] Add loading skeleton components
-- [ ] Create toast notification component
-- [ ] Create progress bar component
-- [ ] Add tab navigation component
+- [x] Loading skeleton components
+- [x] Toast notification component
+- [x] Inline editor component
+- [x] Gradient blob component
+- [ ] Progress bar component
+- [ ] Tab navigation component
+- [ ] Combobox/Select component
+- [ ] Command palette component
