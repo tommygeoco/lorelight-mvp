@@ -577,7 +577,7 @@ export function LightConfigModal({ isOpen, onClose, onSave, initialConfig }: Lig
             </button>
             <button
               onClick={handleSave}
-              disabled={totalLightsConfigured === 0 || isSaving}
+              disabled={isSaving}
               className="px-4 py-2 text-[14px] font-semibold bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-[8px] hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSaving ? 'Saving...' : 'Save Configuration'}
