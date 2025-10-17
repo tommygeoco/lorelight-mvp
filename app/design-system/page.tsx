@@ -9,11 +9,18 @@ import { PageHeader } from '@/components/ui/PageHeader'
 import { SectionHeader } from '@/components/ui/SectionHeader'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card'
+import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell, TableCaption, TableFooter } from '@/components/ui/table'
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'
+import { Tooltip } from '@/components/ui/Tooltip'
 
 export default function DesignSystemPage() {
   const [showBaseModal, setShowBaseModal] = useState(false)
   const [showConfirmDialog, setShowConfirmDialog] = useState(false)
   const [showInputModal, setShowInputModal] = useState(false)
+  const [uiDialogOpen, setUiDialogOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [copiedCode, setCopiedCode] = useState<string | null>(null)
   const [contextMenu, setContextMenu] = useState<{
@@ -138,14 +145,16 @@ export default function DesignSystemPage() {
   )
 
   return (
-    <div className="min-h-screen bg-[#111111] p-8">
+    <div className="min-h-screen bg-[var(--background)] p-8">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
-        <div className="mb-12">
-          <h1 className="text-[32px] font-bold text-white mb-2">Lorelight Design System</h1>
-          <p className="text-[16px] text-white/60">
-            Interactive documentation of reusable UI components, patterns, and guidelines.
-          </p>
+        <div className="mb-8">
+          <PageHeader
+            title="Lorelight Design System"
+            description={
+              'Reusable UI components, tokens, and patterns.\nBuilt with React, TypeScript, and Tailwind.'
+            }
+          />
         </div>
 
         {/* Navigation */}
@@ -156,12 +165,16 @@ export default function DesignSystemPage() {
               <li><a href="#colors" className="text-white/60 hover:text-white transition-colors">Colors</a></li>
               <li><a href="#typography" className="text-white/60 hover:text-white transition-colors">Typography</a></li>
               <li><a href="#spacing" className="text-white/60 hover:text-white transition-colors">Spacing</a></li>
+              <li><a href="#radii" className="text-white/60 hover:text-white transition-colors">Radii</a></li>
+              <li><a href="#shadows" className="text-white/60 hover:text-white transition-colors">Shadows</a></li>
               <li><a href="#buttons" className="text-white/60 hover:text-white transition-colors">Buttons</a></li>
-              <li><a href="#modals" className="text-white/60 hover:text-white transition-colors">Modals</a></li>
-              <li><a href="#headers" className="text-white/60 hover:text-white transition-colors">Headers</a></li>
               <li><a href="#inputs" className="text-white/60 hover:text-white transition-colors">Inputs</a></li>
               <li><a href="#cards" className="text-white/60 hover:text-white transition-colors">Cards</a></li>
+              <li><a href="#tabs" className="text-white/60 hover:text-white transition-colors">Tabs</a></li>
               <li><a href="#tables" className="text-white/60 hover:text-white transition-colors">Tables</a></li>
+              <li><a href="#modals" className="text-white/60 hover:text-white transition-colors">Modals</a></li>
+              <li><a href="#dialog" className="text-white/60 hover:text-white transition-colors">Dialog</a></li>
+              <li><a href="#headers" className="text-white/60 hover:text-white transition-colors">Headers</a></li>
               <li><a href="#dropdowns" className="text-white/60 hover:text-white transition-colors">Dropdowns</a></li>
               <li><a href="#sidebars" className="text-white/60 hover:text-white transition-colors">Sidebars</a></li>
               <li><a href="#tags" className="text-white/60 hover:text-white transition-colors">Tags</a></li>
@@ -265,6 +278,12 @@ export default function DesignSystemPage() {
                   </div>
                 </div>
               </Example>
+              <Example title="Font Families">
+                <div className="space-y-3">
+                  <p className="text-white" style={{ fontFamily: 'PP Mondwest, system-ui, sans-serif' }}>PP Mondwest (Headings)</p>
+                  <p className="text-white/80" style={{ fontFamily: 'var(--font-inter), system-ui, sans-serif' }}>Inter (Body)</p>
+                </div>
+              </Example>
             </div>
           </Section>
 
@@ -294,6 +313,44 @@ export default function DesignSystemPage() {
                       <span className="text-[13px] text-white/60 font-mono w-16">{className}</span>
                     </div>
                   ))}
+                </div>
+              </Example>
+            </div>
+          </Section>
+
+          {/* Radii */}
+          <Section title="Radii">
+            <div id="radii" className="space-y-6">
+              <Example title="Border Radius Scale" description="4px, 8px, 12px, 16px per guidelines">
+                <div className="grid grid-cols-4 gap-4">
+                  {[4, 8, 12, 16].map((r) => (
+                    <div key={r} className="text-center">
+                      <div className="h-16 bg-[#191919] border border-white/10 mb-2" style={{ borderRadius: r }} />
+                      <div className="text-[12px] text-white/60 font-mono">rounded-[{r}px]</div>
+                    </div>
+                  ))}
+                </div>
+              </Example>
+            </div>
+          </Section>
+
+          {/* Shadows */}
+          <Section title="Shadows">
+            <div id="shadows" className="space-y-6">
+              <Example title="Subtle Elevations">
+                <div className="grid grid-cols-3 gap-4">
+                  <div>
+                    <div className="h-20 bg-[#191919] border border-white/10 rounded-[8px] shadow-sm" />
+                    <p className="mt-2 text-[12px] text-white/60 font-mono">shadow-sm</p>
+                  </div>
+                  <div>
+                    <div className="h-20 bg-[#191919] border border-white/10 rounded-[8px] shadow-lg" />
+                    <p className="mt-2 text-[12px] text-white/60 font-mono">shadow-lg</p>
+                  </div>
+                  <div>
+                    <div className="h-20 bg-[#191919] border border-white/10 rounded-[8px] shadow-2xl" />
+                    <p className="mt-2 text-[12px] text-white/60 font-mono">shadow-2xl</p>
+                  </div>
                 </div>
               </Example>
             </div>
@@ -401,6 +458,36 @@ export default function DesignSystemPage() {
             </div>
           </Section>
 
+          {/* Dialog (UI primitives) */}
+          <Section title="Dialog">
+            <div id="dialog" className="space-y-6">
+              <Example title="Dialog Primitives" description="Lightweight dialog with escape/overlay close">
+                <div className="flex items-center gap-3">
+                  <Button onClick={() => setUiDialogOpen(true)}>Open Dialog</Button>
+                </div>
+              </Example>
+              <CodeBlock
+                id="dialog-primitive"
+                code={`import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'
+
+const [open, setOpen] = useState(false)
+
+<Dialog open={open} onOpenChange={setOpen}>
+  <DialogContent>
+    <DialogHeader>
+      <DialogTitle>Dialog Title</DialogTitle>
+      <DialogDescription>Optional helper text</DialogDescription>
+    </DialogHeader>
+    <div className=\"mt-4\">Dialog body</div>
+    <DialogFooter className=\"mt-6\">
+      <button className=\"px-3 py-1.5 rounded-[8px] hover:bg-white/5\" onClick={() => setOpen(false)}>Close</button>
+    </DialogFooter>
+  </DialogContent>
+</Dialog>`}
+              />
+            </div>
+          </Section>
+
           {/* Headers */}
           <Section title="Headers">
             <div id="headers" className="space-y-6">
@@ -453,20 +540,18 @@ export default function DesignSystemPage() {
           <Section title="Inputs">
             <div id="inputs" className="space-y-6">
               <Example title="Text Input">
-                <input
-                  type="text"
-                  placeholder="Enter text..."
-                  className="w-full px-4 py-3 bg-[rgba(255,255,255,0.07)] border border-[#3a3a3a] rounded-[8px] text-[14px] text-white placeholder:text-[#606060] focus:outline-none focus:border-white/20 transition-colors"
-                />
+                <div className="space-y-3">
+                  <Input placeholder="Enter text..." />
+                  <Input placeholder="Disabled input" disabled />
+                </div>
               </Example>
 
               <CodeBlock
                 id="input-text"
-                code={`<input
-  type="text"
-  placeholder="Enter text..."
-  className="w-full px-4 py-3 bg-[rgba(255,255,255,0.07)] border border-[#3a3a3a] rounded-[8px] text-[14px] text-white placeholder:text-[#606060] focus:outline-none focus:border-white/20 transition-colors"
-/>`}
+                code={`import { Input } from '@/components/ui/input'
+
+<Input placeholder="Enter text..." />
+<Input placeholder="Disabled input" disabled />`}
               />
             </div>
           </Section>
@@ -475,34 +560,48 @@ export default function DesignSystemPage() {
           <Section title="Cards">
             <div id="cards" className="space-y-6">
               <Example title="Standard Card">
-                <div className="bg-[#191919] rounded-[8px] p-4 border border-white/10">
-                  <h3 className="text-[14px] font-semibold text-white mb-2">Card Title</h3>
-                  <p className="text-[13px] text-white/60">Card content goes here</p>
-                </div>
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-white text-[16px]">Card Title</CardTitle>
+                    <CardDescription>Card description goes here</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-[13px] text-white/80">Body content with our neutral borders and backgrounds.</p>
+                  </CardContent>
+                  <CardFooter>
+                    <Button size="sm">Action</Button>
+                  </CardFooter>
+                </Card>
               </Example>
 
               <Example title="Interactive Card">
-                <div className="bg-[#191919] rounded-[8px] p-4 border border-white/10 hover:bg-white/5 cursor-pointer transition-colors">
-                  <div className="flex items-center gap-3">
-                    <Music className="w-5 h-5 text-white/60" />
-                    <div>
-                      <h3 className="text-[14px] font-semibold text-white">Interactive Card</h3>
-                      <p className="text-[13px] text-white/60">Hover to see effect</p>
+                <Card className="hover:bg-white/5 cursor-pointer transition-colors">
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-3">
+                      <Music className="w-5 h-5 text-white/60" />
+                      <div>
+                        <h3 className="text-[14px] font-semibold text-white">Interactive Card</h3>
+                        <p className="text-[13px] text-white/60">Hover to see effect</p>
+                      </div>
                     </div>
-                  </div>
-                </div>
+                  </CardContent>
+                </Card>
               </Example>
 
               <CodeBlock
                 id="card-standard"
-                code={`<div className="bg-[#191919] rounded-[8px] p-4 border border-white/10">
-  {/* Card content */}
-</div>
+                code={`import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card'
 
-// Interactive variant
-<div className="bg-[#191919] rounded-[8px] p-4 border border-white/10 hover:bg-white/5 cursor-pointer transition-colors">
-  {/* Card content */}
-</div>`}
+<Card>
+  <CardHeader>
+    <CardTitle>Card Title</CardTitle>
+    <CardDescription>Card description</CardDescription>
+  </CardHeader>
+  <CardContent>Body content</CardContent>
+  <CardFooter>
+    <button className="px-3 py-1.5 rounded-[8px] hover:bg-white/5">Action</button>
+  </CardFooter>
+</Card>`}
               />
             </div>
           </Section>
@@ -512,41 +611,50 @@ export default function DesignSystemPage() {
             <div id="tables" className="space-y-6">
               <Example title="Data Table" description="Standard table structure with hover states and actions">
                 <div className="flex flex-col">
-                  {/* Table Header */}
-                  <div className="flex items-center gap-4 px-6 py-3 border-b border-white/10 text-[13px] text-white/60 font-medium">
-                    <div className="flex-1">Name</div>
-                    <div className="w-24">Duration</div>
-                    <div className="w-32">Type</div>
-                    <div className="w-12"></div>
-                  </div>
-
-                  {/* Table Rows */}
-                  {sampleTableData.map((item) => (
-                    <div
-                      key={item.id}
-                      className="group flex items-center gap-4 px-6 py-3 hover:bg-white/5 border-b border-white/5 cursor-pointer transition-colors"
-                      onContextMenu={(e) => {
-                        e.preventDefault()
-                        setContextMenu({
-                          x: e.clientX,
-                          y: e.clientY,
-                          item: { id: item.id, name: item.name }
-                        })
-                      }}
-                    >
-                      <div className="flex-1 flex items-center gap-3">
-                        <Music className="w-4 h-4 text-white/40" />
-                        <span className="text-[14px] text-white truncate">{item.name}</span>
-                      </div>
-                      <div className="w-24 text-[13px] text-white/60">{item.duration}</div>
-                      <div className="w-32 text-[13px] text-white/60">{item.type}</div>
-                      <div className="w-12">
-                        <button className="opacity-0 group-hover:opacity-100 w-8 h-8 flex items-center justify-center hover:bg-white/10 rounded transition-all">
-                          <MoreVertical className="w-4 h-4 text-white/60" />
-                        </button>
-                      </div>
-                    </div>
-                  ))}
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-[50%]">Name</TableHead>
+                        <TableHead className="w-24">Duration</TableHead>
+                        <TableHead className="w-32">Type</TableHead>
+                        <TableHead className="w-12"></TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {sampleTableData.map((item) => (
+                        <TableRow
+                          key={item.id}
+                          onContextMenu={(e) => {
+                            e.preventDefault()
+                            setContextMenu({
+                              x: e.clientX,
+                              y: e.clientY,
+                              item: { id: item.id, name: item.name }
+                            })
+                          }}
+                        >
+                          <TableCell>
+                            <div className="flex items-center gap-3">
+                              <Music className="w-4 h-4 text-white/40" />
+                              <span className="text-[14px] text-white truncate">{item.name}</span>
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-white/60">{item.duration}</TableCell>
+                          <TableCell className="text-white/60">{item.type}</TableCell>
+                          <TableCell>
+                            <button className="opacity-0 group-hover:opacity-100 w-8 h-8 flex items-center justify-center hover:bg-white/10 rounded transition-all">
+                              <MoreVertical className="w-4 h-4 text-white/60" />
+                            </button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                    <TableFooter>
+                      <TableRow>
+                        <TableCell colSpan={4} className="text-white/60">{sampleTableData.length} items</TableCell>
+                      </TableRow>
+                    </TableFooter>
+                  </Table>
                 </div>
                 <p className="text-[13px] text-white/60 mt-4">Try right-clicking on a row to see context menu</p>
               </Example>
@@ -732,6 +840,43 @@ useEffect(() => {
     </div>
   )}
 </div>`}
+              />
+            </div>
+          </Section>
+
+          {/* Tabs */}
+          <Section title="Tabs">
+            <div id="tabs" className="space-y-6">
+              <Example title="Tab Navigation" description="Radix-based tabs styled to our theme">
+                <Tabs defaultValue="account" className="w-full">
+                  <TabsList>
+                    <TabsTrigger value="account">Account</TabsTrigger>
+                    <TabsTrigger value="password">Password</TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="account">
+                    <div className="mt-4 rounded-[8px] border border-white/10 p-4">
+                      <p className="text-[13px] text-white/80">Account tab content</p>
+                    </div>
+                  </TabsContent>
+                  <TabsContent value="password">
+                    <div className="mt-4 rounded-[8px] border border-white/10 p-4">
+                      <p className="text-[13px] text-white/80">Password tab content</p>
+                    </div>
+                  </TabsContent>
+                </Tabs>
+              </Example>
+              <CodeBlock
+                id="tabs-usage"
+                code={`import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
+
+<Tabs defaultValue="account">
+  <TabsList>
+    <TabsTrigger value="account">Account</TabsTrigger>
+    <TabsTrigger value="password">Password</TabsTrigger>
+  </TabsList>
+  <TabsContent value="account">...</TabsContent>
+  <TabsContent value="password">...</TabsContent>
+</Tabs>`}
               />
             </div>
           </Section>
@@ -1184,39 +1329,37 @@ useEffect(() => {
           {/* Tooltips */}
           <Section title="Tooltips">
             <div id="tooltips" className="space-y-6">
-              <Example title="Hover Tooltip" description="Hover over the info icon to see tooltip">
+              <Example title="Hover Tooltip" description="Hover or focus the icons">
                 <div className="flex gap-6 p-8">
-                  <button className="relative group">
-                    <Info className="w-5 h-5 text-white/60" />
-                    <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 bg-[#191919] border border-white/10 rounded-[6px] text-[13px] text-white whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                      This is a tooltip
-                    </span>
-                  </button>
+                  <Tooltip content="This is a tooltip" position="top">
+                    <button>
+                      <Info className="w-5 h-5 text-white/60" />
+                    </button>
+                  </Tooltip>
 
-                  <button className="relative group">
-                    <AlertCircle className="w-5 h-5 text-yellow-500" />
-                    <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 bg-[#191919] border border-white/10 rounded-[6px] text-[13px] text-white whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                      Warning: This action is irreversible
-                    </span>
-                  </button>
+                  <Tooltip content="Warning: This action is irreversible" position="top">
+                    <button>
+                      <AlertCircle className="w-5 h-5 text-yellow-500" />
+                    </button>
+                  </Tooltip>
 
-                  <button className="relative group">
-                    <Play className="w-5 h-5 text-white/60" />
-                    <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 bg-[#191919] border border-white/10 rounded-[6px] text-[13px] text-white whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                      Play audio track
-                    </span>
-                  </button>
+                  <Tooltip content="Play audio track" position="top">
+                    <button>
+                      <Play className="w-5 h-5 text-white/60" />
+                    </button>
+                  </Tooltip>
                 </div>
               </Example>
 
               <CodeBlock
                 id="tooltip-pattern"
-                code={`<button className="relative group">
-  <Info className="w-5 h-5 text-white/60" />
-  <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 bg-[#191919] border border-white/10 rounded-[6px] text-[13px] text-white whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-    This is a tooltip
-  </span>
-</button>`}
+                code={`import { Tooltip } from '@/components/ui/Tooltip'
+
+<Tooltip content="This is a tooltip" position="top">
+  <button>
+    <Info className="w-5 h-5" />
+  </button>
+</Tooltip>`}
               />
             </div>
           </Section>
@@ -1925,6 +2068,21 @@ const getSceneGradient = (trackId: string) => {
         placeholder="Enter playlist name..."
         submitText="Create"
       />
+
+      {/* UI Dialog Example */}
+      <Dialog open={uiDialogOpen} onOpenChange={setUiDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Dialog Title</DialogTitle>
+            <DialogDescription>Optional helper text</DialogDescription>
+          </DialogHeader>
+          <div className="mt-4 text-white/80 text-sm">Dialog body content matching theme tokens.</div>
+          <DialogFooter className="mt-6">
+            <Button variant="ghost" onClick={() => setUiDialogOpen(false)}>Close</Button>
+            <Button onClick={() => setUiDialogOpen(false)}>Confirm</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
