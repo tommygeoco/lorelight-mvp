@@ -100,6 +100,8 @@ class SceneActivationService {
   private async activateLights(lightConfig: SceneLightConfig | null): Promise<void> {
     if (!lightConfig) return
 
+    console.log('[sceneActivation] Activating lights with config:', lightConfig)
+
     try {
       // Import hueStore dynamically to apply lights
       const { useHueStore } = await import('@/store/hueStore')
@@ -113,6 +115,7 @@ class SceneActivationService {
 
       // Apply the light configuration
       await hueStore.applyLightConfig(lightConfig)
+      console.log('[sceneActivation] Lights applied successfully')
     } catch (error) {
       console.error('Failed to activate scene lights:', error)
       // Don't throw - allow scene to activate even if lights fail

@@ -138,10 +138,17 @@ class HueService {
   ): Promise<void> {
     const url = `http://${bridgeIp}/api/${username}/lights/${lightId}/state`
     
+    // Filter out unsupported effects before sending to API
+    const cleanState = { ...state }
+    if (cleanState.effect && cleanState.effect !== 'none' && cleanState.effect !== 'colorloop') {
+      console.warn(`Unsupported effect "${cleanState.effect}" removed (Hue API only supports "none" and "colorloop")`)
+      delete cleanState.effect
+    }
+    
     const response = await fetch(url, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(state),
+      body: JSON.stringify(cleanState),
     })
 
     if (!response.ok) {

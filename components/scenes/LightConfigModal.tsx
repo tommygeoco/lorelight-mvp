@@ -470,7 +470,7 @@ export function LightConfigModal({ isOpen, onClose, onSave, initialConfig }: Lig
 
                               {/* Effects */}
                               <div className="space-y-1.5">
-                                <span className="text-[12px] text-white/50">Effects</span>
+                                <span className="text-[12px] text-white/50">Effects (colorloop only - others coming soon)</span>
                                 <div className="grid grid-cols-2 gap-1.5">
                                   <button
                                     onClick={() => handleLightEffect(room.id, light.id, 'none')}
@@ -494,56 +494,41 @@ export function LightConfigModal({ isOpen, onClose, onSave, initialConfig }: Lig
                                     Color Loop
                                   </button>
                                   <button
-                                    onClick={() => handleLightEffect(room.id, light.id, 'fireplace')}
-                                    className={`px-2 py-2 rounded-[6px] text-[11px] font-medium transition-colors inline-flex items-center justify-center gap-1 ${
-                                      lightConfig.effect === 'fireplace'
-                                        ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
-                                        : 'bg-white/5 text-white/50 hover:bg-white/10'
-                                    }`}
+                                    disabled
+                                    title="Coming soon - requires custom implementation"
+                                    className="px-2 py-2 rounded-[6px] text-[11px] font-medium transition-colors inline-flex items-center justify-center gap-1 bg-white/5 text-white/30 cursor-not-allowed opacity-50"
                                   >
                                     <Flame className="w-3 h-3" />
                                     Fireplace
                                   </button>
                                   <button
-                                    onClick={() => handleLightEffect(room.id, light.id, 'candle')}
-                                    className={`px-2 py-2 rounded-[6px] text-[11px] font-medium transition-colors inline-flex items-center justify-center gap-1 ${
-                                      lightConfig.effect === 'candle'
-                                        ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
-                                        : 'bg-white/5 text-white/50 hover:bg-white/10'
-                                    }`}
+                                    disabled
+                                    title="Coming soon - requires custom implementation"
+                                    className="px-2 py-2 rounded-[6px] text-[11px] font-medium transition-colors inline-flex items-center justify-center gap-1 bg-white/5 text-white/30 cursor-not-allowed opacity-50"
                                   >
                                     <Flame className="w-3 h-3" />
                                     Candle
                                   </button>
                                   <button
-                                    onClick={() => handleLightEffect(room.id, light.id, 'lightning')}
-                                    className={`px-2 py-2 rounded-[6px] text-[11px] font-medium transition-colors inline-flex items-center justify-center gap-1 ${
-                                      lightConfig.effect === 'lightning'
-                                        ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
-                                        : 'bg-white/5 text-white/50 hover:bg-white/10'
-                                    }`}
+                                    disabled
+                                    title="Coming soon - requires custom implementation"
+                                    className="px-2 py-2 rounded-[6px] text-[11px] font-medium transition-colors inline-flex items-center justify-center gap-1 bg-white/5 text-white/30 cursor-not-allowed opacity-50"
                                   >
                                     <Zap className="w-3 h-3" />
                                     Lightning
                                   </button>
                                   <button
-                                    onClick={() => handleLightEffect(room.id, light.id, 'pulse')}
-                                    className={`px-2 py-2 rounded-[6px] text-[11px] font-medium transition-colors inline-flex items-center justify-center gap-1 ${
-                                      lightConfig.effect === 'pulse'
-                                        ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
-                                        : 'bg-white/5 text-white/50 hover:bg-white/10'
-                                    }`}
+                                    disabled
+                                    title="Coming soon - requires custom implementation"
+                                    className="px-2 py-2 rounded-[6px] text-[11px] font-medium transition-colors inline-flex items-center justify-center gap-1 bg-white/5 text-white/30 cursor-not-allowed opacity-50"
                                   >
                                     <Activity className="w-3 h-3" />
                                     Pulse
                                   </button>
                                   <button
-                                    onClick={() => handleLightEffect(room.id, light.id, 'breath')}
-                                    className={`px-2 py-2 rounded-[6px] text-[11px] font-medium transition-colors inline-flex items-center justify-center gap-1 ${
-                                      lightConfig.effect === 'breath'
-                                        ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
-                                        : 'bg-white/5 text-white/50 hover:bg-white/10'
-                                    }`}
+                                    disabled
+                                    title="Coming soon - requires custom implementation"
+                                    className="px-2 py-2 rounded-[6px] text-[11px] font-medium transition-colors inline-flex items-center justify-center gap-1 bg-white/5 text-white/30 cursor-not-allowed opacity-50"
                                   >
                                     <Wind className="w-3 h-3" />
                                     Breath

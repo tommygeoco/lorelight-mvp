@@ -106,6 +106,7 @@ Features explicitly excluded from MVP scope:
   - Color temperature or RGB color
   - Transition duration
   - Save/recall light configurations
+  - Effects: `colorloop` supported (fireplace, candle, lightning, pulse, breath planned for future)
 
 ### 4. Scene Management
 - **Scene Creator**: Combine audio + lighting

@@ -29,7 +29,8 @@ export function SceneAmbienceSection({ scene, sessionId }: SceneAmbienceSectionP
 
   // Parse light config
   const lightConfig = scene.light_config as SceneLightConfig | null
-  const hasLights = !!(lightConfig?.groups || lightConfig?.lights)
+  const configWithFlag = lightConfig as { lights?: Record<string, unknown>, lightsOff?: boolean } | null
+  const hasLights = !!(lightConfig?.groups || lightConfig?.lights || configWithFlag?.lightsOff)
 
   const handleAudioSelect = async (audioFile: AudioFile) => {
     const { useSceneStore } = await import('@/store/sceneStore')
@@ -115,7 +116,7 @@ export function SceneAmbienceSection({ scene, sessionId }: SceneAmbienceSectionP
                 Lighting
               </h3>
               <p className="font-['Inter'] text-[14px] font-medium leading-[20px] text-white/60">
-                {hasLights ? 'Custom preset' : 'No lighting configured'}
+                {configWithFlag?.lightsOff ? 'Lights off' : hasLights ? 'Custom preset' : 'No lighting configured'}
               </p>
             </div>
 
