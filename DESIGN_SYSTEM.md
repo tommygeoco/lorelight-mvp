@@ -73,6 +73,9 @@ Provides the foundation for all modals with consistent styling and behavior.
 
 **Usage:**
 ```tsx
+import { BaseModal } from '@/components/ui/BaseModal'
+import { Button } from '@/components/ui/button'
+
 <BaseModal
   isOpen={isOpen}
   onClose={handleClose}
@@ -86,27 +89,17 @@ Provides the foundation for all modals with consistent styling and behavior.
 #### ConfirmDialog
 Location: `/components/ui/ConfirmDialog.tsx`
 
-Built on BaseModal, provides a confirmation dialog for destructive actions.
+Built on BaseModal. Use `variant="destructive"` for destructive actions.
 
-**Props:**
-- `isOpen: boolean`
-- `onClose: () => void`
-- `onConfirm: () => void` - Confirm action handler
-- `title: string`
-- `description: string`
-- `confirmText?: string` - Confirm button text (default: "Confirm")
-- `cancelText?: string` - Cancel button text (default: "Cancel")
-- `variant?: 'default' | 'destructive'` - Visual variant
-- `isLoading?: boolean` - Shows loading state
-
-**Usage:**
 ```tsx
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
+
 <ConfirmDialog
-  isOpen={isDeleteDialogOpen}
-  onClose={() => setIsDeleteDialogOpen(false)}
+  isOpen={isOpen}
+  onClose={handleClose}
   onConfirm={handleDelete}
   title="Delete Item"
-  description="Are you sure you want to delete this item? This action cannot be undone."
+  description="Are you sure? This action cannot be undone."
   confirmText="Delete"
   variant="destructive"
   isLoading={isDeleting}
@@ -116,25 +109,12 @@ Built on BaseModal, provides a confirmation dialog for destructive actions.
 #### InputModal
 Location: `/components/ui/InputModal.tsx`
 
-Built on BaseModal, provides a text input dialog for user input.
-
-**Props:**
-- `isOpen: boolean`
-- `onClose: () => void`
-- `onSubmit: (value: string) => void` - Submit handler with input value
-- `title: string`
-- `label: string` - Input field label
-- `placeholder?: string` - Input placeholder
-- `defaultValue?: string` - Initial input value
-- `submitText?: string` - Submit button text (default: "Create")
-- `cancelText?: string` - Cancel button text (default: "Cancel")
-- `isLoading?: boolean` - Shows loading state
-
-**Usage:**
 ```tsx
+import { InputModal } from '@/components/ui/InputModal'
+
 <InputModal
-  isOpen={isCreateModalOpen}
-  onClose={() => setIsCreateModalOpen(false)}
+  isOpen={isOpen}
+  onClose={handleClose}
   onSubmit={handleCreate}
   title="Create Playlist"
   label="Playlist Name"
@@ -146,31 +126,29 @@ Built on BaseModal, provides a text input dialog for user input.
 
 ### Buttons
 
-#### Primary Button
+#### Button Component (variants and sizes)
+Location: `/components/ui/button.tsx`
+
+```tsx
+import { Button } from '@/components/ui/button'
+
+// Variants: default | destructive | outline | secondary | ghost | link
+// Sizes: default | sm | lg | icon
+
+<Button variant="default">Primary</Button>
+<Button variant="ghost">Ghost</Button>
+<Button variant="destructive">Delete</Button>
+<Button disabled>Disabled</Button>
+<Button size="icon" aria-label="Play">
+  <Play className="w-[18px] h-[18px]" />
+  <span className="sr-only">Play</span>
+</Button>
+```
+
+#### Raw button styles (reference)
 ```tsx
 <button className="px-4 py-2 text-[14px] font-semibold text-black bg-white rounded-[8px] hover:bg-white/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
   Primary Action
-</button>
-```
-
-#### Ghost Button
-```tsx
-<button className="px-4 py-2 text-[14px] font-medium text-white/70 hover:text-white hover:bg-white/5 rounded-[8px] transition-colors">
-  Secondary Action
-</button>
-```
-
-#### Destructive Button
-```tsx
-<button className="px-4 py-2 text-[14px] font-semibold text-white bg-red-500 rounded-[8px] hover:bg-red-600 disabled:opacity-50 transition-colors">
-  Delete
-</button>
-```
-
-#### Icon Button
-```tsx
-<button className="w-10 h-10 rounded-[8px] hover:bg-white/5 flex items-center justify-center transition-colors">
-  <Icon className="w-[18px] h-[18px] text-white/70" />
 </button>
 ```
 
@@ -179,29 +157,19 @@ Built on BaseModal, provides a text input dialog for user input.
 #### PageHeader
 Location: `/components/ui/PageHeader.tsx`
 
-**Props:**
-- `title: string`
-- `description?: string`
-
-**Usage:**
 ```tsx
-<PageHeader
-  title="Scene Name"
-  description="Scene description text"
-/>
+import { PageHeader } from '@/components/ui/PageHeader'
+
+<PageHeader title="Scene Name" description="Scene description text" />
 ```
 
 #### SectionHeader
 Location: `/components/ui/SectionHeader.tsx`
 
-**Props:**
-- `title: string`
-- `id?: string` - For ARIA labeling
-- `variant?: 'default' | 'sidebar'`
-- `action?: { icon, onClick, variant, ariaLabel }`
-
-**Usage:**
 ```tsx
+import { SectionHeader } from '@/components/ui/SectionHeader'
+import { Plus } from 'lucide-react'
+
 <SectionHeader
   title="Playlists"
   variant="sidebar"
@@ -211,46 +179,54 @@ Location: `/components/ui/SectionHeader.tsx`
     variant: 'icon-only',
     ariaLabel: 'Create playlist'
   }}
-/>
+/> 
 ```
 
 ### Cards
 
-#### Standard Card
-```tsx
-<div className="bg-[#191919] rounded-[8px] p-4 border border-white/10">
-  {/* Card content */}
-</div>
-```
+#### Card Component
+Location: `/components/ui/card.tsx`
 
-#### Interactive Card
 ```tsx
-<div className="bg-[#191919] rounded-[8px] p-4 border border-white/10 hover:bg-white/5 cursor-pointer transition-colors">
-  {/* Card content */}
-</div>
+import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card'
+
+<Card>
+  <CardHeader>
+    <CardTitle>Card Title</CardTitle>
+    <CardDescription>Card description goes here</CardDescription>
+  </CardHeader>
+  <CardContent>
+    Content...
+  </CardContent>
+  <CardFooter>
+    Footer actions
+  </CardFooter>
+</Card>
+
+// Interactive variant
+<Card className="hover:bg-white/5 cursor-pointer transition-colors">
+  <CardContent>Hover to see effect</CardContent>
+</Card>
 ```
 
 ### Inputs
 
-#### Text Input
+#### Input Component
+Location: `/components/ui/input.tsx`
+
 ```tsx
-<input
-  type="text"
-  className="w-full px-4 py-3 bg-[rgba(255,255,255,0.07)] border border-[#3a3a3a] rounded-[8px] text-[14px] text-white placeholder:text-[#606060] focus:outline-none focus:border-white/20 transition-colors"
-  placeholder="Enter text..."
-/>
+import { Input } from '@/components/ui/input'
+
+<Input placeholder="Enter text..." />
 ```
 
-#### Search Input
+#### Textarea Component
+Location: `/components/ui/textarea.tsx`
+
 ```tsx
-<div className="relative">
-  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
-  <input
-    type="text"
-    className="w-full pl-10 pr-4 py-2 bg-white/5 border border-white/10 rounded-[8px] text-sm text-white placeholder:text-white/40 focus:outline-none focus:border-white/20 transition-colors"
-    placeholder="Search..."
-  />
-</div>
+import { Textarea } from '@/components/ui/textarea'
+
+<Textarea placeholder="Write something..." />
 ```
 
 ### Context Menus
@@ -354,40 +330,37 @@ Provides consistent empty state messaging across the application with variant-sp
 
 ### Tables
 
-#### Table Pattern
-Standard table structure used in audio library and data views.
+#### Table Components
+Location: `/components/ui/table.tsx`
 
 ```tsx
-<div className="flex flex-col">
-  {/* Table Header */}
-  <div className="flex items-center gap-4 px-6 py-3 border-b border-white/10 text-[13px] text-white/60 font-medium">
-    <div className="flex-1">Name</div>
-    <div className="w-24">Duration</div>
-    <div className="w-32">Type</div>
-    <div className="w-12"></div>
-  </div>
+import {
+  Table, TableHeader, TableRow, TableHead, TableBody, TableCell,
+} from '@/components/ui/table'
 
-  {/* Table Rows */}
-  {items.map((item) => (
-    <div
-      key={item.id}
-      className="group flex items-center gap-4 px-6 py-3 hover:bg-white/5 border-b border-white/5 cursor-pointer transition-colors"
-      data-table-row
-    >
-      <div className="flex-1 flex items-center gap-3">
-        <Music className="w-4 h-4 text-white/40" />
-        <span className="text-[14px] text-white truncate">{item.name}</span>
-      </div>
-      <div className="w-24 text-[13px] text-white/60">{item.duration}</div>
-      <div className="w-32 text-[13px] text-white/60">{item.type}</div>
-      <div className="w-12">
-        <button className="opacity-0 group-hover:opacity-100 w-8 h-8 flex items-center justify-center hover:bg-white/10 rounded transition-all">
-          <MoreVertical className="w-4 h-4 text-white/60" />
-        </button>
-      </div>
-    </div>
-  ))}
-</div>
+<Table>
+  <TableHeader>
+    <TableRow>
+      <TableHead>Name</TableHead>
+      <TableHead className="w-24">Duration</TableHead>
+      <TableHead className="w-32">Type</TableHead>
+      <TableHead className="w-12" />
+    </TableRow>
+  </TableHeader>
+  <TableBody>
+    {items.map(item => (
+      <TableRow key={item.id}>
+        <TableCell className="flex items-center gap-3">
+          <Music className="w-4 h-4 text-white/40" />
+          <span className="text-[14px] text-white truncate">{item.name}</span>
+        </TableCell>
+        <TableCell className="w-24 text-[13px] text-white/60">{item.duration}</TableCell>
+        <TableCell className="w-32 text-[13px] text-white/60">{item.type}</TableCell>
+        <TableCell className="w-12 text-right">…</TableCell>
+      </TableRow>
+    ))}
+  </TableBody>
+</Table>
 ```
 
 #### Sortable Table Headers
@@ -445,13 +418,12 @@ const sortedItems = [...items].sort((a, b) => {
 #### Component Overview
 Location: `/components/dashboard/AudioPlayerFooter.tsx`
 
-The audio player footer provides persistent audio playback controls across all dashboard views with subtle Dark Fantasy Charm accents.
+Persistent audio playback controls using `useAudioStore`, `Tooltip`, and scene-aware gradients.
 
 **Layout Structure:**
-- Three-column layout: Track Info (256px) | Playback Controls (flex-1) | Volume (128px)
-- Natural height with padding: `pt-5 pb-6` (20px top, 24px bottom)
-- Background: `#111111` with subtle purple vignette radial gradient
-- Always sits flush against bottom of viewport (no gaps)
+- Track Info (w-80) | Controls (flex-1) | Volume (w-80)
+- Padding: `pt-5 pb-5` with subtle vignette
+- Always flush against viewport bottom
 
 **Visual Features:**
 - **Purple-Pink Gradient**: Progress bar and volume slider use `linear-gradient(90deg, #8b5cf6 0%, #ec4899 100%)`
@@ -601,70 +573,7 @@ The audio player footer provides persistent audio playback controls across all d
 ```
 
 **CSS Animations:**
-```css
-/* Equalizer bars - staggered timing for organic feel */
-@keyframes equalizer-1 {
-  0%, 100% { height: 8px; }
-  50% { height: 14px; }
-}
-@keyframes equalizer-2 {
-  0%, 100% { height: 12px; }
-  50% { height: 6px; }
-}
-@keyframes equalizer-3 {
-  0%, 100% { height: 6px; }
-  50% { height: 12px; }
-}
-
-.animate-equalizer-1 {
-  animation: equalizer-1 0.8s ease-in-out infinite;
-}
-.animate-equalizer-2 {
-  animation: equalizer-2 0.9s ease-in-out infinite;
-  animation-delay: 0.2s;
-}
-.animate-equalizer-3 {
-  animation: equalizer-3 0.7s ease-in-out infinite;
-  animation-delay: 0.4s;
-}
-
-/* Shimmer effect on progress bar */
-@keyframes shimmer {
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(400%); }
-}
-.shimmer-effect {
-  animation: shimmer 3s linear infinite;
-}
-
-/* Volume slider with purple-pink gradient */
-.volume-slider {
-  background: linear-gradient(
-    to right,
-    #8b5cf6 0%,
-    #ec4899 ${volume * 50}%,
-    #ec4899 ${volume * 100}%,
-    rgba(255, 255, 255, 0.2) ${volume * 100}%,
-    rgba(255, 255, 255, 0.2) 100%
-  );
-}
-
-.volume-slider::-webkit-slider-thumb {
-  appearance: none;
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  background: white;
-  cursor: pointer;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
-  transition: all 0.2s ease;
-}
-
-.volume-slider::-webkit-slider-thumb:hover {
-  transform: scale(1.2);
-  box-shadow: 0 0 8px 2px rgba(139, 92, 246, 0.5);
-}
-```
+Defined in `app/globals.css` using classes: `.animate-equalizer-*`, `.shimmer-effect`, `.volume-slider`.
 
 **Scene-Aware Gradient Function:**
 ```tsx
@@ -861,20 +770,18 @@ const handleContextMenu = (e: React.MouseEvent, item?: ItemType) => {
 
 ### Tooltips
 
-Simple tooltip pattern using CSS and data attributes.
+Use the `Tooltip` component for accessible tooltips.
 
-**Pattern:**
+Location: `/components/ui/Tooltip.tsx`
+
 ```tsx
-// Component with tooltip
-<button
-  data-tooltip="This is a tooltip"
-  className="relative group"
->
-  <Info className="w-4 h-4" />
-  <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-[#191919] border border-white/10 rounded text-xs text-white whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-    This is a tooltip
-  </span>
-</button>
+import { Tooltip } from '@/components/ui/Tooltip'
+
+<Tooltip content="This is a tooltip" position="top">
+  <button aria-label="Info">
+    <Info className="w-4 h-4" />
+  </button>
+</Tooltip>
 ```
 
 ## Animation & Transitions
@@ -894,6 +801,22 @@ className="hover:bg-white/5 transition-colors"
 
 // Transform on hover
 className="hover:scale-105 transition-transform"
+```
+
+### Toasts
+
+Location: `/components/ui/Toast.tsx`
+
+```tsx
+import { ToastContainer } from '@/components/ui/Toast'
+import { useToastStore } from '@/store/toastStore'
+
+// Mount once near the app root (e.g., in layout)
+<ToastContainer />
+
+// Trigger a toast
+const { addToast } = useToastStore()
+addToast('Saved successfully', 'success')
 ```
 
 ### Playing Track Animation
@@ -1261,57 +1184,25 @@ useEffect(() => {
 320px wide sidebar for playlists, scenes, or navigation.
 
 **Structure:**
-- `w-[320px] h-full bg-[#191919] rounded-[8px]` - Consistent with nav sidebar and main content
-- No `border-r` - 2px gap in layout provides visual separation
-- Header: `px-6 py-4` with h2 title + icon button (NO border)
-- Scrollable area: `flex-1 overflow-y-auto scrollbar-custom px-6 py-4`
+- `w-[320px] h-full bg-[#191919] rounded-[8px]`
+- Header: `px-6 py-4` with h2 title + icon button (no border)
+- Scroll area: `flex-1 overflow-y-auto scrollbar-custom px-6 py-4`
 
-**List Item Typography (CRITICAL - MUST MATCH):**
-- **Primary Text**: `text-[13px] font-medium text-white` (selected) / `text-white/70` (default)
-- **Secondary Text**: `text-[11px] text-white/50`
-- **List Item Padding**: `px-3 py-2`
-- **Selected State**: `bg-white/10`
-- **Hover State**: `hover:bg-white/5`
+**List Item Typography:**
+- Primary: `text-[13px] font-medium` (`text-white` selected, `text-white/70` default)
+- Secondary: `text-[11px] text-white/50`
+- Padding: `px-3 py-2`
+- Selected: `bg-white/10`
+- Hover: `hover:bg-white/5`
 
-**Inline Edit Input (CRITICAL - MUST MATCH):**
-- **Classes**: `bg-white/[0.07] border border-white/10 rounded-[8px] px-3 py-1.5 text-[13px] text-white placeholder:text-white/40 focus:outline-none focus:border-white/20`
-- Used for: Creating playlists, renaming rooms/lights, any inline text input
-- **Never use**: `bg-white/10` or `border-white/20` (too bright)
+**Inline Edit Input:**
+- `bg-white/[0.07] border border-white/10 rounded-[8px] px-3 py-1.5 text-[13px] text-white placeholder:text-white/40 focus:outline-none focus:border-white/20`
 
-**Context Menu (CRITICAL - MUST MATCH):**
-- **Trigger**: Right-click on sidebar items (NOT left-click)
-- **Container**: `bg-[#191919] border border-white/10 rounded-[8px] py-1 shadow-lg z-50 min-w-[140px]`
-- **Positioning**: `fixed` with `style={{ left: x, top: y }}` from click coordinates
-- **Item**: `px-4 py-2 text-[13px] gap-2`
-- **Icon**: `w-3.5 h-3.5`
-- **Copy**: Concise ("Rename", "Delete") - NO entity type suffix
-- **Divider**: `<div className="h-px bg-white/10 my-1" />` between items
-- **Delete Hover**: `hover:bg-red-500/10` with `text-red-400`
-- **Click Outside**: Close menu when clicking anywhere outside
-
-**Action Button Tooltips:**
-- Settings icon: `title="Configure [feature]"`
-- Plus (inline): `title="Create [item]"`
-- Plus (modal): `title="Create [item]..."` (ellipsis indicates complex form)
-
-**Creation Patterns:**
-- **Inline Creation** (for simple items like playlists): Click Plus → inline input appears in list → Enter to save, Escape to cancel
-- **Modal Creation** (for complex items like scenes): Click Plus → modal opens with full form
-
-**Ellipsis Menu Pattern (Main Content Cards):**
-- **Location**: Top-right corner of RoomCard/LightCard/etc.
-- **Trigger**: Left-click the MoreVertical (⋮) icon button
-- **Component**: Use `HueContextMenu` wrapper with `triggerButton` prop
-- **Button Style**: `w-8 h-8 rounded-[8px] hover:bg-white/10`
-- **Menu Actions**: Rename (with `onStartEdit`), Delete (with `onDelete`)
-- **Important**: Left-click opens menu; do NOT use right-click/onContextMenu for card menus
-
-**Empty State Typography:**
-- Font size: `text-[0.875rem]` (14px) - compact for sidebar
-- Color: `text-white/40` - single color, no opacity variation
-- Line breaks: Use `<br />` not separate `<p>` tags
-- Pattern: "No [items] discovered..." for consistency
-- Example: `<p className="text-white/40 text-[0.875rem]">No playlists discovered...<br />Create a playlist to begin</p>`
+**Context Menu:**
+- Container: `bg-[#191919] border border-white/10 rounded-[8px] py-1`
+- Items: `px-4 py-2 text-[13px] gap-2` with `w-3.5 h-3.5` icons
+- Divider: `h-px bg-white/10 my-1` before destructive actions
+- Delete hover: `hover:bg-red-500/10 text-red-400`
 
 ```tsx
 <div className="w-[320px] h-full bg-[#191919] rounded-[8px] flex flex-col">
@@ -1474,23 +1365,16 @@ Tags in dropdowns with hover-revealed ellipsis menu for rename/delete.
 
 ### Checkboxes
 
-#### Custom Checkbox Styling
-Checkboxes with purple gradient when checked.
+Use native `<input type="checkbox" />` styled via `app/globals.css` for consistency.
 
 ```tsx
-<input
-  type="checkbox"
-  checked={isChecked}
-  onChange={handleChange}
-  className="w-3.5 h-3.5 cursor-pointer"
-/>
+<input type="checkbox" checked={isChecked} onChange={handleChange} />
 ```
 
-**Styling** (in globals.css):
-- Unchecked: Transparent with white border
-- Hover: Subtle white background
-- Checked: Purple gradient background with white checkmark
-- Gradient: `linear-gradient(135deg, #9333ea 0%, #a855f7 100%)`
+Styling is applied globally:
+- Unchecked: transparent with white border
+- Hover: subtle white background
+- Checked: purple gradient with white checkmark
 
 ### Bulk Actions
 
