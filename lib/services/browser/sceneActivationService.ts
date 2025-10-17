@@ -83,8 +83,8 @@ class SceneActivationService {
       audioStore.toggleLoop()
     }
 
-    // Start playback (skip scene activation to prevent circular loop)
-    audioStore.play({ skipSceneActivation: true })
+    // Start playback
+    audioStore.play()
 
     // Seek to start time if specified
     if (start_time && start_time > 0) {
@@ -143,10 +143,15 @@ class SceneActivationService {
   async deactivateScene(sceneId: string): Promise<void> {
     const startTime = performance.now()
 
-    // Stop audio playback (skip scene deactivation to prevent circular loop)
+    // Stop audio playback if it's playing this scene's audio
     const { useAudioStore } = await import('@/store/audioStore')
     const audioStore = useAudioStore.getState()
-    audioStore.pause({ skipSceneDeactivation: true })
+    const { sourceContext } = audioStore
+    
+    // Only stop audio if it's from this scene
+    if (sourceContext?.type === 'scene' && sourceContext.id === sceneId) {
+      audioStore.pause()
+    }
 
     // Update database - set scene as inactive
     await this.supabase

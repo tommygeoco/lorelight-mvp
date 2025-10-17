@@ -16,6 +16,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Duplicate lights in multiple rooms handled correctly (prefers custom configs over defaults)
   - Scene activation now applies light configurations to physical Hue lights
   - Modal key optimization prevents unnecessary remounting
+  - Empty light configs can now be saved (lights-off preference)
+- **Audio Player Independence** - Fixed incorrect scene coupling
+  - Audio player pause/play/stop no longer affects scene state
+  - Scenes remain active when audio is paused
+  - Scene deactivation still stops audio properly (only if audio is from that scene)
+  - Users can now control audio independently while scenes stay active
 
 ### Added
 - Scene activation workflow documentation in technical PRD
@@ -27,6 +33,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Updated technical PRD with 3-tier architecture (Essential/Enhanced/Future)
 - LightConfigModal now async with loading states and error handling
 - SceneActivationService now implements light activation (was previously commented out)
+- AudioStore simplified - removed scene coupling from play/pause/stop actions
 
 ---
 

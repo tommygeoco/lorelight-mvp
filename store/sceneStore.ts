@@ -83,10 +83,8 @@ export const useSceneStore = create<SceneState>()(
       },
 
       updateScene: async (id, updates) => {
-        console.log('[sceneStore] updateScene called:', { id, updates })
         set({ error: null })
         const original = get().scenes.get(id)
-        console.log('[sceneStore] Original scene exists in sceneStore:', !!original)
 
         // Only do optimistic update if scene exists in sceneStore
         if (original) {
@@ -94,62 +92,47 @@ export const useSceneStore = create<SceneState>()(
           set(state => {
             state.scenes.set(id, castDraft(optimisticUpdate))
           })
-          console.log('[sceneStore] Optimistic update applied to sceneStore')
 
           // Also update sessionSceneStore to keep sessions in sync
           import('@/store/sessionSceneStore').then(({ useSessionSceneStore }) => {
             const sessionStore = useSessionSceneStore.getState()
-            console.log('[sceneStore] Syncing optimistic update to sessionSceneStore')
-            let updatedCount = 0
             sessionStore.sessionScenes.forEach((scenes, sessionId) => {
               const sceneIndex = scenes.findIndex(s => s.id === id)
               if (sceneIndex !== -1) {
                 sessionStore.updateSceneInSession(sessionId, id, optimisticUpdate)
-                updatedCount++
               }
             })
-            console.log('[sceneStore] Updated scene in', updatedCount, 'sessions (optimistic)')
           }).catch(console.error)
         }
 
         try {
           // Always update database, even if scene not in local store
-          console.log('[sceneStore] Calling sceneService.update...')
           const updated = await sceneService.update(id, updates)
-          console.log('[sceneStore] Database update successful, returned scene:', updated)
 
           // Update sceneStore if scene exists there
           if (original) {
             set(state => {
               state.scenes.set(id, castDraft(updated))
             })
-            console.log('[sceneStore] Updated sceneStore with DB response')
           }
 
           // Sync final update to sessionSceneStore
           import('@/store/sessionSceneStore').then(({ useSessionSceneStore }) => {
             const sessionStore = useSessionSceneStore.getState()
-            console.log('[sceneStore] Syncing final DB update to sessionSceneStore')
-            let updatedCount = 0
             sessionStore.sessionScenes.forEach((scenes, sessionId) => {
               const sceneIndex = scenes.findIndex(s => s.id === id)
               if (sceneIndex !== -1) {
                 sessionStore.updateSceneInSession(sessionId, id, updated)
-                updatedCount++
-                console.log('[sceneStore] Updated scene in session:', sessionId)
               }
             })
-            console.log('[sceneStore] Updated scene in', updatedCount, 'sessions (final)')
           }).catch(console.error)
         } catch (error) {
-          console.error('[sceneStore] Update failed:', error)
           // Only rollback if we did an optimistic update
           if (original) {
             set(state => {
               state.scenes.set(id, castDraft(original))
               state.error = error instanceof Error ? error.message : 'Failed to update scene'
             })
-            console.log('[sceneStore] Rolled back optimistic update')
           } else {
             set({ error: error instanceof Error ? error.message : 'Failed to update scene' })
           }
