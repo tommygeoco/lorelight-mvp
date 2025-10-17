@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { Plus, Music, Trash2, Edit2, Play, Pause, AlertCircle, MoreVertical, Info, X, Tag, ChevronDown, SlidersHorizontal, ChevronUp } from 'lucide-react'
+import { Plus, Music, Trash2, Edit2, Play, Pause, AlertCircle, MoreVertical, Info, X, Tag, ChevronDown, SlidersHorizontal, ChevronUp, Settings, Home, Upload } from 'lucide-react'
 import { BaseModal } from '@/components/ui/BaseModal'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { InputModal } from '@/components/ui/InputModal'
@@ -9,6 +9,13 @@ import { PageHeader } from '@/components/ui/PageHeader'
 import { SectionHeader } from '@/components/ui/SectionHeader'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { Button } from '@/components/ui/button'
+import { Skeleton, CampaignCardSkeleton, SceneListItemSkeleton, CardSkeleton } from '@/components/ui/Skeleton'
+import { ToastContainer } from '@/components/ui/Toast'
+import { useToastStore } from '@/store/toastStore'
+import { InlineEditor } from '@/components/ui/InlineEditor'
+import { Tooltip } from '@/components/ui/Tooltip'
+import { GradientBlob } from '@/components/ui/GradientBlob'
+import { SidebarShell } from '@/components/ui/SidebarShell'
 
 export default function DesignSystemPage() {
   const [showBaseModal, setShowBaseModal] = useState(false)
@@ -28,8 +35,10 @@ export default function DesignSystemPage() {
   const [playingTrackId, setPlayingTrackId] = useState<string | null>('demo-track-2')
   const [sortField, setSortField] = useState<'name' | 'duration'>('name')
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc')
+  const [inlineValue, setInlineValue] = useState('Click to edit this text')
   const editInputRef = useRef<HTMLInputElement>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)
+  const { addToast } = useToastStore()
 
   // Close context menu on click outside
   useEffect(() => {
@@ -176,6 +185,12 @@ export default function DesignSystemPage() {
               <li><a href="#playing-track-animation" className="text-white/60 hover:text-white transition-colors">Playing Track Animation</a></li>
               <li><a href="#audio-player-footer" className="text-white/60 hover:text-white transition-colors">Audio Player Footer</a></li>
               <li><a href="#dark-fantasy-charm" className="text-white/60 hover:text-white transition-colors">Dark Fantasy Charm</a></li>
+              <li><a href="#skeletons" className="text-white/60 hover:text-white transition-colors">Loading Skeletons</a></li>
+              <li><a href="#toasts" className="text-white/60 hover:text-white transition-colors">Toast Notifications</a></li>
+              <li><a href="#inline-editor" className="text-white/60 hover:text-white transition-colors">Inline Editor</a></li>
+              <li><a href="#tooltips-advanced" className="text-white/60 hover:text-white transition-colors">Advanced Tooltips</a></li>
+              <li><a href="#gradient-blob" className="text-white/60 hover:text-white transition-colors">Gradient Blobs</a></li>
+              <li><a href="#sidebar-shell" className="text-white/60 hover:text-white transition-colors">Sidebar Shell</a></li>
             </ul>
           </div>
         </nav>
@@ -1754,6 +1769,380 @@ const getSceneGradient = (trackId: string) => {
             </div>
           </Section>
 
+          {/* Loading Skeletons */}
+          <Section title="Loading Skeletons">
+            <div id="skeletons" className="space-y-6">
+              <Example title="Generic Skeleton" description="Flexible skeleton loader with custom dimensions">
+                <div className="space-y-4">
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-3/4" />
+                  <Skeleton className="h-4 w-1/2" />
+                  <div className="flex gap-2">
+                    <Skeleton className="h-10 w-10 rounded-[8px]" />
+                    <Skeleton className="h-10 flex-1" />
+                  </div>
+                </div>
+              </Example>
+
+              <Example title="Specialized Skeletons" description="Pre-built skeletons for common components">
+                <div className="space-y-6">
+                  <div>
+                    <p className="text-[13px] text-white/60 mb-3">Campaign Card Skeleton</p>
+                    <CampaignCardSkeleton />
+                  </div>
+                  <div>
+                    <p className="text-[13px] text-white/60 mb-3">Scene List Item Skeleton</p>
+                    <SceneListItemSkeleton />
+                  </div>
+                  <div>
+                    <p className="text-[13px] text-white/60 mb-3">Card Skeleton</p>
+                    <CardSkeleton />
+                  </div>
+                </div>
+              </Example>
+
+              <CodeBlock
+                id="skeleton-usage"
+                code={`import { Skeleton, CampaignCardSkeleton } from '@/components/ui/Skeleton'
+
+// Generic skeleton
+<Skeleton className="h-4 w-full" />
+<Skeleton className="h-10 w-10 rounded-[8px]" />
+
+// Specialized skeleton
+{isLoading ? <CampaignCardSkeleton /> : <CampaignCard campaign={data} />}`}
+              />
+            </div>
+          </Section>
+
+          {/* Toast Notifications */}
+          <Section title="Toast Notifications">
+            <div id="toasts" className="space-y-6">
+              <Example title="Toast Types" description="Click buttons to trigger toast notifications">
+                <div className="flex flex-wrap gap-3">
+                  <Button
+                    onClick={() => addToast('Campaign created successfully!', 'success')}
+                    variant="default"
+                  >
+                    Success Toast
+                  </Button>
+                  <Button
+                    onClick={() => addToast('Failed to delete item. Please try again.', 'error')}
+                    variant="destructive"
+                  >
+                    Error Toast
+                  </Button>
+                  <Button
+                    onClick={() => addToast('This action will affect all scenes.', 'warning')}
+                    variant="secondary"
+                  >
+                    Warning Toast
+                  </Button>
+                  <Button
+                    onClick={() => addToast('Your session has been auto-saved.', 'info')}
+                    variant="ghost"
+                  >
+                    Info Toast
+                  </Button>
+                </div>
+              </Example>
+
+              <CodeBlock
+                id="toast-usage"
+                code={`import { useToastStore } from '@/store/toastStore'
+
+function MyComponent() {
+  const { addToast } = useToastStore()
+
+  const handleSave = async () => {
+    try {
+      await saveData()
+      addToast('Saved successfully!', 'success')
+    } catch (error) {
+      addToast('Failed to save', 'error')
+    }
+  }
+}
+
+// API: addToast(message: string, type?: ToastType, duration?: number)
+addToast('Quick message', 'info', 2000)
+
+// Add ToastContainer to layout
+import { ToastContainer } from '@/components/ui/Toast'
+
+<body>
+  {children}
+  <ToastContainer />
+</body>`}
+              />
+            </div>
+          </Section>
+
+          {/* Inline Editor */}
+          <Section title="Inline Editor">
+            <div id="inline-editor" className="space-y-6">
+              <Example title="Single Line Editor" description="Click the text below to edit it. Auto-saves on type.">
+                <div className="bg-black/20 rounded-[8px] p-6">
+                  <div className="text-[16px] font-medium">
+                    <InlineEditor
+                      initialValue={inlineValue}
+                      onSave={async (newValue) => {
+                        await new Promise(resolve => setTimeout(resolve, 300))
+                        setInlineValue(newValue)
+                        addToast('Text saved!', 'success')
+                      }}
+                      placeholder="Enter text..."
+                      autoFocus={false}
+                    />
+                  </div>
+                </div>
+              </Example>
+
+              <Example title="Multiline Editor" description="Notion-like multiline editing with auto-resize">
+                <div className="bg-black/20 rounded-[8px] p-6">
+                  <InlineEditor
+                    initialValue="This is a multiline editor.&#10;Press Enter for new lines.&#10;Escape to cancel."
+                    onSave={async () => {
+                      await new Promise(resolve => setTimeout(resolve, 300))
+                    }}
+                    multiline
+                    placeholder="Enter description..."
+                  />
+                </div>
+              </Example>
+
+              <CodeBlock
+                id="inline-editor-usage"
+                code={`import { InlineEditor } from '@/components/ui/InlineEditor'
+
+// Single line
+<InlineEditor
+  initialValue={scene.name}
+  onSave={async (newName) => {
+    await updateScene({ name: newName })
+  }}
+  placeholder="Scene name..."
+  autoFocus
+/>
+
+// Multiline
+<InlineEditor
+  initialValue={scene.description}
+  onSave={handleSaveDescription}
+  multiline
+  placeholder="Add description..."
+  debounceMs={500}
+/>`}
+              />
+            </div>
+          </Section>
+
+          {/* Advanced Tooltips */}
+          <Section title="Advanced Tooltips">
+            <div id="tooltips-advanced" className="space-y-6">
+              <Example title="All Positions" description="Tooltips auto-position to stay in viewport">
+                <div className="flex items-center justify-center gap-12 p-12">
+                  <Tooltip content="Top position" position="top">
+                    <button className="w-10 h-10 rounded-[8px] bg-white/5 hover:bg-white/10 flex items-center justify-center transition-colors">
+                      ↑
+                    </button>
+                  </Tooltip>
+                  <Tooltip content="Right position" position="right">
+                    <button className="w-10 h-10 rounded-[8px] bg-white/5 hover:bg-white/10 flex items-center justify-center transition-colors">
+                      →
+                    </button>
+                  </Tooltip>
+                  <Tooltip content="Bottom position" position="bottom">
+                    <button className="w-10 h-10 rounded-[8px] bg-white/5 hover:bg-white/10 flex items-center justify-center transition-colors">
+                      ↓
+                    </button>
+                  </Tooltip>
+                  <Tooltip content="Left position" position="left">
+                    <button className="w-10 h-10 rounded-[8px] bg-white/5 hover:bg-white/10 flex items-center justify-center transition-colors">
+                      ←
+                    </button>
+                  </Tooltip>
+                </div>
+              </Example>
+
+              <Example title="Keyboard Accessible" description="Tooltips show on focus for keyboard navigation">
+                <div className="flex gap-4">
+                  <Tooltip content="Home" position="bottom">
+                    <button className="w-10 h-10 rounded-[8px] bg-white/5 hover:bg-white/10 flex items-center justify-center transition-colors">
+                      <Home className="w-5 h-5 text-white/70" />
+                    </button>
+                  </Tooltip>
+                  <Tooltip content="Settings" position="bottom">
+                    <button className="w-10 h-10 rounded-[8px] bg-white/5 hover:bg-white/10 flex items-center justify-center transition-colors">
+                      <Settings className="w-5 h-5 text-white/70" />
+                    </button>
+                  </Tooltip>
+                  <Tooltip content="Upload" position="bottom" delay={300}>
+                    <button className="w-10 h-10 rounded-[8px] bg-white/5 hover:bg-white/10 flex items-center justify-center transition-colors">
+                      <Upload className="w-5 h-5 text-white/70" />
+                    </button>
+                  </Tooltip>
+                </div>
+                <p className="text-[13px] text-white/60 mt-4">Try tabbing through these buttons</p>
+              </Example>
+
+              <CodeBlock
+                id="tooltip-advanced"
+                code={`import { Tooltip } from '@/components/ui/Tooltip'
+
+// Basic tooltip
+<Tooltip content="Create new scene" position="right">
+  <button><Plus /></button>
+</Tooltip>
+
+// With delay
+<Tooltip content="Advanced settings" delay={500}>
+  <Settings />
+</Tooltip>
+
+// Keyboard accessible (automatically)
+<Tooltip content="Home">
+  <button tabIndex={0}><Home /></button>
+</Tooltip>`}
+              />
+            </div>
+          </Section>
+
+          {/* Gradient Blobs */}
+          <Section title="Gradient Blobs">
+            <div id="gradient-blob" className="space-y-6">
+              <Example title="Decorative Gradients" description="Add depth and atmosphere to headers and sections">
+                <div className="relative h-64 bg-black/20 rounded-[8px] overflow-hidden">
+                  <GradientBlob
+                    color="rgb(147, 51, 234)"
+                    className="top-0 left-0 w-64 h-64"
+                    opacity={0.3}
+                    blur={80}
+                  />
+                  <GradientBlob
+                    color="rgb(236, 72, 153)"
+                    className="top-0 right-0 w-48 h-48"
+                    opacity={0.2}
+                    blur={60}
+                  />
+                  <div className="relative z-10 flex items-center justify-center h-full">
+                    <p className="text-white text-[16px] font-medium">Content sits above blobs</p>
+                  </div>
+                </div>
+              </Example>
+
+              <Example title="Dashboard Header Pattern" description="Purple and pink blobs create magical atmosphere">
+                <div className="relative bg-[#111111] rounded-[8px] overflow-hidden">
+                  <GradientBlob
+                    color="rgb(147, 51, 234)"
+                    className="-top-20 -left-20 w-96 h-96"
+                    opacity={0.4}
+                  />
+                  <GradientBlob
+                    color="rgb(236, 72, 153)"
+                    className="-top-32 -right-16 w-80 h-80"
+                    opacity={0.3}
+                  />
+                  <div className="relative z-10 p-8">
+                    <h2 className="text-[24px] font-bold text-white mb-2">Your Campaigns</h2>
+                    <p className="text-[14px] text-white/60">Manage your D&D adventures</p>
+                  </div>
+                </div>
+              </Example>
+
+              <CodeBlock
+                id="gradient-blob-usage"
+                code={`import { GradientBlob } from '@/components/ui/GradientBlob'
+
+// Dashboard header pattern
+<div className="relative overflow-hidden">
+  <GradientBlob
+    color="rgb(147, 51, 234)"
+    className="-top-20 -left-20 w-96 h-96"
+    opacity={0.4}
+  />
+  <GradientBlob
+    color="rgb(236, 72, 153)"
+    className="-top-32 -right-16 w-80 h-80"
+    opacity={0.3}
+  />
+  <div className="relative z-10">
+    {/* Content */}
+  </div>
+</div>`}
+              />
+            </div>
+          </Section>
+
+          {/* Sidebar Shell */}
+          <Section title="Sidebar Shell">
+            <div id="sidebar-shell" className="space-y-6">
+              <Example title="Standardized Sidebar Container" description="Consistent sidebar pattern with header, scrollable content, and empty state">
+                <div className="h-[400px] bg-black/20 rounded-[8px] overflow-hidden flex">
+                  <SidebarShell
+                    title="Playlists"
+                    action={{
+                      icon: <Plus className="w-[18px] h-[18px] text-white/70" />,
+                      onClick: () => addToast('Create playlist clicked', 'info'),
+                      label: 'Create playlist'
+                    }}
+                  >
+                    <ul role="list" className="space-y-2">
+                      {['All Files', 'Battle Music', 'Tavern Ambience', 'Forest Sounds'].map((item, i) => (
+                        <li key={i}>
+                          <button className="w-full flex items-center gap-2 px-3 py-2 rounded-[8px] text-[14px] text-white/70 hover:text-white hover:bg-white/5 transition-colors">
+                            <Music className="w-4 h-4 flex-shrink-0" />
+                            <span className="flex-1 truncate text-left">{item}</span>
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  </SidebarShell>
+
+                  <div className="flex-1 flex items-center justify-center text-white/40 bg-[#191919] rounded-[8px] ml-2">
+                    Main content area
+                  </div>
+                </div>
+              </Example>
+
+              <Example title="Empty State" description="Automatic empty state handling">
+                <div className="h-[300px]">
+                  <SidebarShell
+                    title="Scenes"
+                    emptyState={{
+                      message: 'The stage is dark and empty...\\nCreate a scene to begin'
+                    }}
+                  />
+                </div>
+              </Example>
+
+              <CodeBlock
+                id="sidebar-shell-usage"
+                code={`import { SidebarShell } from '@/components/ui/SidebarShell'
+
+<SidebarShell
+  title="Playlists"
+  action={{
+    icon: <Plus className="w-[18px] h-[18px] text-white/70" />,
+    onClick: handleCreate,
+    label: 'Create playlist'
+  }}
+  emptyState={{
+    message: 'Your collection awaits...\\nForge a playlist to begin'
+  }}
+>
+  <ul className="space-y-2">
+    {items.map(item => (
+      <li key={item.id}>
+        {/* Item content */}
+      </li>
+    ))}
+  </ul>
+</SidebarShell>`}
+              />
+            </div>
+          </Section>
+
           {/* Dark Fantasy Charm */}
           <Section title="Dark Fantasy Charm">
             <div id="dark-fantasy-charm" className="space-y-6">
@@ -1925,6 +2314,9 @@ const getSceneGradient = (trackId: string) => {
         placeholder="Enter playlist name..."
         submitText="Create"
       />
+
+      {/* Toast Container for demo */}
+      <ToastContainer />
     </div>
   )
 }
