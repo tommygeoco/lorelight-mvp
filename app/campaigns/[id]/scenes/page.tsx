@@ -1,6 +1,6 @@
 'use client'
 
-import { use, useEffect, useState } from 'react'
+import { use, useEffect, useState, lazy, Suspense } from 'react'
 import { useRouter } from 'next/navigation'
 import { useCampaignStore } from '@/store/campaignStore'
 import { useSceneStore } from '@/store/sceneStore'
@@ -11,10 +11,12 @@ import { Plus, Edit2, Copy, Trash2, Music, Lightbulb, Play } from 'lucide-react'
 import { DashboardLayoutWithSidebar } from '@/components/layouts/DashboardLayoutWithSidebar'
 import { DashboardSidebar } from '@/components/layouts/DashboardSidebar'
 import { EmptyState } from '@/components/ui/EmptyState'
-import { SceneModal } from '@/components/scenes/SceneModal'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { getSidebarButtons } from '@/lib/navigation/sidebarNavigation'
 import type { Scene } from '@/types'
+
+// Lazy load heavy modal for better performance
+const SceneModal = lazy(() => import('@/components/scenes/SceneModal').then(m => ({ default: m.SceneModal })))
 
 export default function ScenesPage({
   params,
@@ -475,12 +477,16 @@ export default function ScenesPage({
         )}
       </DashboardLayoutWithSidebar>
 
-      <SceneModal
-        isOpen={isSceneModalOpen}
-        onClose={handleCloseModal}
-        campaignId={resolvedParams.id}
-        sceneId={editingSceneId || undefined}
-      />
+      {isSceneModalOpen && (
+        <Suspense fallback={null}>
+          <SceneModal
+            isOpen={isSceneModalOpen}
+            onClose={handleCloseModal}
+            campaignId={resolvedParams.id}
+            sceneId={editingSceneId || undefined}
+          />
+        </Suspense>
+      )}
 
       {/* Context Menu */}
       {contextMenu && (

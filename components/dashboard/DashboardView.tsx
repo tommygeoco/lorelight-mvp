@@ -1,18 +1,20 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, lazy, Suspense } from 'react'
 import { useRouter } from 'next/navigation'
 import { useCampaignStore } from '@/store/campaignStore'
 import { DashboardLayoutWithSidebar } from '@/components/layouts/DashboardLayoutWithSidebar'
 import { DashboardSidebar } from '@/components/layouts/DashboardSidebar'
 import { CampaignDisplayCard } from './CampaignDisplayCard'
-import { CampaignModal } from '@/components/campaigns/CampaignModal'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { SectionHeader } from '@/components/ui/SectionHeader'
 import { Plus } from 'lucide-react'
 import { getSidebarButtons } from '@/lib/navigation/sidebarNavigation'
 import type { Campaign } from '@/types'
+
+// Lazy load modal for better initial load performance
+const CampaignModal = lazy(() => import('@/components/campaigns/CampaignModal').then(m => ({ default: m.CampaignModal })))
 
 export function DashboardView() {
   const router = useRouter()
@@ -81,14 +83,18 @@ export function DashboardView() {
         </div>
       </div>
 
-      <CampaignModal
-        isOpen={isCampaignModalOpen}
-        onClose={() => {
-          setIsCampaignModalOpen(false)
-          setEditingCampaign(undefined)
-        }}
-        campaign={editingCampaign}
-      />
+      {isCampaignModalOpen && (
+        <Suspense fallback={null}>
+          <CampaignModal
+            isOpen={isCampaignModalOpen}
+            onClose={() => {
+              setIsCampaignModalOpen(false)
+              setEditingCampaign(undefined)
+            }}
+            campaign={editingCampaign}
+          />
+        </Suspense>
+      )}
     </DashboardLayoutWithSidebar>
   )
 }
