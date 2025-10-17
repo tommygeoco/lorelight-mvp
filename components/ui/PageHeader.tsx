@@ -95,44 +95,48 @@ export function PageHeader({ title, description, onTitleChange, onDescriptionCha
           </h1>
         )}
 
-        {isEditable && isEditingDesc ? (
-          <textarea
-            ref={(el) => {
-              handleDescMount(el)
-              if (el) {
-                // Match exact height of content
-                el.style.height = 'auto'
-                el.style.height = el.scrollHeight + 'px'
-              }
-            }}
-            defaultValue={description || ''}
-            onBlur={handleDescSave}
-            onInput={(e) => {
-              const target = e.target as HTMLTextAreaElement
-              target.style.height = 'auto'
-              target.style.height = target.scrollHeight + 'px'
-            }}
-            onKeyDown={(e) => {
-              if (e.key === 'Escape') {
-                e.preventDefault()
-                setIsEditingDesc(false)
-              }
-            }}
-            className="w-full p-0 m-0 bg-transparent border-none outline-none text-[#eeeeee] font-normal mt-1 leading-normal placeholder:text-white/40 resize-none overflow-hidden"
-            placeholder="Add a description..."
-            data-1p-ignore="true"
-            data-lpignore="true"
-          />
-        ) : description || isEditable ? (
-          <p 
-            onClick={() => isEditable && setIsEditingDesc(true)}
-            className={`p-0 m-0 text-[#eeeeee] font-normal mt-1 leading-normal whitespace-pre-wrap ${isEditable ? 'cursor-text' : ''}`}
-            data-1p-ignore="true"
-            data-lpignore="true"
-          >
-            {description || (isEditable && <span className="text-white/40">Add a description...</span>)}
-          </p>
-        ) : null}
+        <div className="mt-1">
+          {isEditable && isEditingDesc ? (
+            <textarea
+              ref={(el) => {
+                handleDescMount(el)
+                if (el) {
+                  // Match exact height of content
+                  el.style.height = 'auto'
+                  el.style.height = el.scrollHeight + 'px'
+                }
+              }}
+              defaultValue={description || ''}
+              onBlur={handleDescSave}
+              onInput={(e) => {
+                const target = e.target as HTMLTextAreaElement
+                target.style.height = 'auto'
+                target.style.height = target.scrollHeight + 'px'
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Escape') {
+                  e.preventDefault()
+                  setIsEditingDesc(false)
+                }
+              }}
+              className="block w-full p-0 m-0 bg-transparent border-none outline-none text-[#eeeeee] font-normal placeholder:text-white/40 resize-none overflow-hidden"
+              style={{ lineHeight: '1.5' }}
+              placeholder="Add a description..."
+              data-1p-ignore="true"
+              data-lpignore="true"
+            />
+          ) : description || isEditable ? (
+            <p 
+              onClick={() => isEditable && setIsEditingDesc(true)}
+              className={`block p-0 m-0 text-[#eeeeee] font-normal whitespace-pre-wrap ${isEditable ? 'cursor-text' : ''}`}
+              style={{ lineHeight: '1.5' }}
+              data-1p-ignore="true"
+              data-lpignore="true"
+            >
+              {description || (isEditable && <span className="text-white/40">Add a description...</span>)}
+            </p>
+          ) : null}
+        </div>
       </div>
     </header>
   )

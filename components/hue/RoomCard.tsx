@@ -16,7 +16,7 @@ interface RoomCardProps {
 }
 
 export function RoomCard({ room, lights }: RoomCardProps) {
-  const { applyLightConfig, fetchLightsAndRooms, deleteRoom } = useHueStore()
+  const { applyLightConfig, fetchLightsAndRooms, deleteRoom, activeRoomIds, setRoomActive } = useHueStore()
   const [isColorPickerOpen, setIsColorPickerOpen] = useState(false)
 
   // Get lights in this room
@@ -24,7 +24,7 @@ export function RoomCard({ room, lights }: RoomCardProps) {
     .map(lightId => lights.get(lightId))
     .filter((light): light is HueLight => !!light)
 
-  const anyLightOn = roomLights.some(light => light.state.on)
+  const isRoomActive = activeRoomIds.has(room.id)
   const lightsOnCount = roomLights.filter(light => light.state.on).length
 
   // Calculate average brightness of lights that are on
@@ -44,7 +44,7 @@ export function RoomCard({ room, lights }: RoomCardProps) {
     Math.max(...lightsOnBrightness) - Math.min(...lightsOnBrightness) > 10
 
   // Optimistic local state
-  const [localAnyOn, setLocalAnyOn] = useState(anyLightOn)
+  const [localRoomActive, setLocalRoomActive] = useState(isRoomActive)
   const [localBrightness, setLocalBrightness] = useState(actualAvgBrightness)
   const [isDragging, setIsDragging] = useState(false)
 
@@ -55,13 +55,13 @@ export function RoomCard({ room, lights }: RoomCardProps) {
   const isUpdating = useRef(false)
   const hasUserSetBrightness = useRef(false) // Track if user has manually set brightness
 
-  // Sync on/off state but DON'T sync brightness from props after initial mount
+  // Sync room active state but DON'T sync brightness from props after initial mount
   // This prevents individual light changes from affecting the room slider
   useEffect(() => {
     if (!isDragging && !isUpdating.current) {
-      setLocalAnyOn(anyLightOn)
+      setLocalRoomActive(isRoomActive)
     }
-  }, [anyLightOn, isDragging])
+  }, [isRoomActive, isDragging])
 
   // Only sync brightness on initial mount or when explicitly toggled
   useEffect(() => {
@@ -72,16 +72,17 @@ export function RoomCard({ room, lights }: RoomCardProps) {
   }, []) // Empty dependency - only run on mount
 
   const handleTogglePower = async () => {
-    const newOnState = !localAnyOn
+    const newActiveState = !localRoomActive
 
     // Optimistic update
-    setLocalAnyOn(newOnState)
+    setLocalRoomActive(newActiveState)
+    setRoomActive(room.id, newActiveState)
 
     // API call in background
     try {
       const promise = applyLightConfig({
         groups: {
-          [room.id]: { on: newOnState, transitiontime: 2 },
+          [room.id]: { on: newActiveState, transitiontime: 2 },
         },
       })
       lastApiCall.current = promise
@@ -90,9 +91,37 @@ export function RoomCard({ room, lights }: RoomCardProps) {
       // CRITICAL: Immediately fetch actual state after power toggle
       // Hue lights restore to their saved state, which may differ from UI
       await fetchLightsAndRooms()
+
+      // Update gradient system with full light states
+      if (newActiveState && roomLights.length > 0) {
+        // Get fresh light states after fetch
+        const updatedRoomLights = room.lights
+          .map(lightId => useHueStore.getState().lights.get(lightId))
+          .filter((light): light is HueLight => !!light)
+        
+        const fullConfig = {
+          lights: Object.fromEntries(
+            updatedRoomLights.map(light => [
+              light.id,
+              {
+                on: light.state.on,
+                bri: light.state.bri,
+                hue: light.state.hue,
+                sat: light.state.sat,
+                xy: light.state.xy,
+              }
+            ])
+          )
+        }
+        useHueStore.getState().setActiveLightConfig(fullConfig as any)
+      } else if (!newActiveState) {
+        // Clear gradient when turning off
+        useHueStore.getState().setActiveLightConfig(null)
+      }
     } catch {
       // Revert on error
-      setLocalAnyOn(anyLightOn)
+      setLocalRoomActive(isRoomActive)
+      setRoomActive(room.id, isRoomActive)
     }
   }
 
@@ -117,6 +146,8 @@ export function RoomCard({ room, lights }: RoomCardProps) {
     debounceTimer.current = setTimeout(async () => {
       try {
         // When user adjusts room brightness, set ALL lights to this value (resets mixed state)
+        // Also mark room as active since we're turning on lights
+        setRoomActive(room.id, true)
         const promise = applyLightConfig({
           groups: {
             [room.id]: { bri: brightness, on: true, transitiontime: 1 },
@@ -128,6 +159,29 @@ export function RoomCard({ room, lights }: RoomCardProps) {
         // Fetch to get updated light states
         await fetchLightsAndRooms()
 
+        // Update gradient system with full light states
+        const updatedRoomLights = room.lights
+          .map(lightId => useHueStore.getState().lights.get(lightId))
+          .filter((light): light is HueLight => !!light)
+        
+        if (updatedRoomLights.length > 0) {
+          const fullConfig = {
+            lights: Object.fromEntries(
+              updatedRoomLights.map(light => [
+                light.id,
+                {
+                  on: light.state.on,
+                  bri: light.state.bri,
+                  hue: light.state.hue,
+                  sat: light.state.sat,
+                  xy: light.state.xy,
+                }
+              ])
+            )
+          }
+          useHueStore.getState().setActiveLightConfig(fullConfig as any)
+        }
+
         // Allow prop sync again after a delay
         setTimeout(() => {
           isUpdating.current = false
@@ -138,7 +192,7 @@ export function RoomCard({ room, lights }: RoomCardProps) {
         isUpdating.current = false
       }
     }, 300) // 300ms debounce
-  }, [room.id, actualAvgBrightness, applyLightConfig, fetchLightsAndRooms])
+  }, [room.id, actualAvgBrightness, applyLightConfig, fetchLightsAndRooms, setRoomActive])
 
   const handleMouseDown = () => {
     setIsDragging(true)
@@ -179,6 +233,9 @@ export function RoomCard({ room, lights }: RoomCardProps) {
       // Apply color to each RGB-capable light individually to preserve brightness
       const rgbLights = roomLights.filter(light => hueService.hasColorSupport(light))
 
+      // Mark room as active since we're turning on lights
+      setRoomActive(room.id, true)
+
       await applyLightConfig({
         lights: Object.fromEntries(
           rgbLights.map(light => [
@@ -195,9 +252,30 @@ export function RoomCard({ room, lights }: RoomCardProps) {
       })
 
       // Sync after color change
-      setTimeout(() => {
-        fetchLightsAndRooms()
-      }, 500)
+      await fetchLightsAndRooms()
+
+      // Update gradient system with full light states
+      const updatedRoomLights = room.lights
+        .map(lightId => useHueStore.getState().lights.get(lightId))
+        .filter((light): light is HueLight => !!light)
+      
+      if (updatedRoomLights.length > 0) {
+        const fullConfig = {
+          lights: Object.fromEntries(
+            updatedRoomLights.map(light => [
+              light.id,
+              {
+                on: light.state.on,
+                bri: light.state.bri,
+                hue: light.state.hue,
+                sat: light.state.sat,
+                xy: light.state.xy,
+              }
+            ])
+          )
+        }
+        useHueStore.getState().setActiveLightConfig(fullConfig as any)
+      }
     } catch {
       // Handle error silently
     }
@@ -210,10 +288,10 @@ export function RoomCard({ room, lights }: RoomCardProps) {
         <div className="flex items-start justify-between mb-4">
           <div className="flex items-center gap-3 flex-1">
             <div className={`w-10 h-10 rounded-[8px] flex items-center justify-center transition-colors ${
-              localAnyOn ? 'bg-purple-500/20' : 'bg-white/5'
+              localRoomActive ? 'bg-purple-500/20' : 'bg-white/5'
             }`}>
               <HomeIcon className={`w-5 h-5 transition-colors ${
-                localAnyOn ? 'text-purple-400' : 'text-white/40'
+                localRoomActive ? 'text-purple-400' : 'text-white/40'
               }`} />
             </div>
             <div className="flex-1 min-w-0">
@@ -229,14 +307,14 @@ export function RoomCard({ room, lights }: RoomCardProps) {
             {hasAnyRgbLight && (
               <button
                 onClick={() => setIsColorPickerOpen(true)}
-                disabled={!localAnyOn}
+                disabled={!localRoomActive}
                 className={`w-8 h-8 rounded-[8px] flex items-center justify-center transition-colors ${
-                  localAnyOn
+                  localRoomActive
                     ? 'bg-white/10 hover:bg-white/20 text-white'
                     : 'bg-white/5 text-white/30 cursor-not-allowed'
                 }`}
                 aria-label="Change color"
-                title={localAnyOn ? 'Change color' : 'Turn on lights to change color'}
+                title={localRoomActive ? 'Change color' : 'Turn on lights to change color'}
               >
                 <Palette className="w-4 h-4" />
               </button>
@@ -245,11 +323,11 @@ export function RoomCard({ room, lights }: RoomCardProps) {
             <button
               onClick={handleTogglePower}
               className={`w-8 h-8 rounded-[8px] flex items-center justify-center transition-colors ${
-                localAnyOn
+                localRoomActive
                   ? 'bg-purple-500/20 hover:bg-purple-500/30 text-purple-400'
                   : 'bg-white/10 hover:bg-white/20 text-white'
               }`}
-              aria-label={localAnyOn ? 'Turn off all' : 'Turn on all'}
+              aria-label={localRoomActive ? 'Turn off all' : 'Turn on all'}
             >
               <Power className="w-4 h-4" />
             </button>
@@ -278,14 +356,14 @@ export function RoomCard({ room, lights }: RoomCardProps) {
       <div className="space-y-2 mb-4">
         <div className="flex items-center justify-between text-xs">
           <div className="flex items-center gap-2">
-            <span className={localAnyOn ? 'text-white/50' : 'text-white/30'}>Brightness</span>
+            <span className={localRoomActive ? 'text-white/50' : 'text-white/30'}>Brightness</span>
             {hasMixedBrightness && hasUserSetBrightness.current && (
               <span className="text-[10px] px-1.5 py-0.5 rounded bg-white/5 text-white/40 border border-white/10">
                 Mixed
               </span>
             )}
           </div>
-          <span className={localAnyOn ? 'text-white font-medium' : 'text-white/40 font-medium'}>{brightnessPercent}%</span>
+          <span className={localRoomActive ? 'text-white font-medium' : 'text-white/40 font-medium'}>{brightnessPercent}%</span>
         </div>
         <input
           ref={sliderRef}
@@ -298,9 +376,9 @@ export function RoomCard({ room, lights }: RoomCardProps) {
           onMouseUp={handleMouseUp}
           onTouchStart={handleMouseDown}
           onTouchEnd={handleMouseUp}
-          disabled={!localAnyOn}
+          disabled={!localRoomActive}
           className={`w-full h-2 rounded-full appearance-none slider ${
-            !localAnyOn
+            !localRoomActive
               ? 'cursor-not-allowed opacity-40'
               : hasMixedBrightness && hasUserSetBrightness.current
               ? 'cursor-pointer opacity-60'

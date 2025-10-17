@@ -9,6 +9,7 @@ import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { PlaylistsSidebar } from '@/components/audio/PlaylistsSidebar'
 import { AudioContextMenu } from '@/components/audio/AudioContextMenu'
 import { UploadQueue } from '@/components/audio/UploadQueue'
+import { LorelightGradient } from '@/components/ui/LorelightGradient'
 import { useAudioFileStore } from '@/store/audioFileStore'
 import { useAudioPlaylistStore } from '@/store/audioPlaylistStore'
 import { useAuthStore } from '@/store/authStore'
@@ -821,33 +822,8 @@ function AudioPageContent() {
       <div className="h-full flex flex-col">
         {/* Header with gradient blur - full width */}
         <div className="relative h-[88px] flex items-center justify-between px-6 border-b border-white/10">
-          {/* Radial Gradient Background */}
-          <div className="absolute left-0 right-0 pointer-events-none" style={{ top: '-100px', height: '200px' }}>
-            {/* Pink gradient - left side */}
-            <div
-              className="absolute"
-              style={{
-                left: '25%',
-                top: '0',
-                width: '100%',
-                height: '100%',
-                background: 'radial-gradient(ellipse 1200px 300px at center top, rgba(236, 72, 153, 0.4) 0%, transparent 70%)',
-                filter: 'blur(60px)',
-              }}
-            />
-            {/* Purple gradient - right side */}
-            <div
-              className="absolute"
-              style={{
-                left: '50%',
-                top: '0',
-                width: '100%',
-                height: '100%',
-                background: 'radial-gradient(ellipse 1200px 300px at center top, rgba(139, 92, 246, 0.4) 0%, transparent 70%)',
-                filter: 'blur(60px)',
-              }}
-            />
-          </div>
+          {/* Lorelight Gradient - Responds to active scene lights */}
+          <LorelightGradient />
 
           <h1 className="relative font-extrabold text-[20px] text-white">Audio Library</h1>
         </div>

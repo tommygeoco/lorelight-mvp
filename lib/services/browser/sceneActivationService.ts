@@ -111,6 +111,9 @@ class SceneActivationService {
         return
       }
 
+      // Clear standalone active light config (scene takes priority)
+      hueStore.setActiveLightConfig(null)
+
       // Apply the light configuration
       await hueStore.applyLightConfig(lightConfig)
     } catch (error) {
@@ -138,7 +141,7 @@ class SceneActivationService {
 
   /**
    * Deactivate a specific scene
-   * Stops audio playback and deactivates lights
+   * Stops audio playback and clears standalone light config
    */
   async deactivateScene(sceneId: string): Promise<void> {
     const startTime = performance.now()
@@ -152,6 +155,11 @@ class SceneActivationService {
     if (sourceContext?.type === 'scene' && sourceContext.id === sceneId) {
       audioStore.pause()
     }
+
+    // Clear standalone active light config on deactivation
+    const { useHueStore } = await import('@/store/hueStore')
+    const hueStore = useHueStore.getState()
+    hueStore.setActiveLightConfig(null)
 
     // Update database - set scene as inactive
     await this.supabase

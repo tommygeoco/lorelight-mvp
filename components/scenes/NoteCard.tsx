@@ -11,7 +11,7 @@ export function NoteCard({ title, content, className = '' }: NoteCardProps) {
     <div
       className={`bg-[var(--card-surface)] rounded-[8px] p-4 h-[169px] shadow-lg overflow-hidden ${className}`}
     >
-      <div className="font-bold text-white text-base mb-2 line-clamp-2">
+      <div className="font-bold text-white text-sm mb-2 line-clamp-2">
         {title}
       </div>
       <div className="text-xs text-[#b4b4b4] font-medium line-clamp-6">

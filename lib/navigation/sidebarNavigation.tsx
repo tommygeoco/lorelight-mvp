@@ -2,7 +2,7 @@ import { ChevronLeft, CirclePlay, Settings, Music, Flame } from 'lucide-react'
 import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime'
 import type { SidebarButton } from '@/types'
 
-export type NavigationView = 'dashboard' | 'campaigns' | 'sessions' | 'scenes' | 'sessionScene' | 'lights' | 'audio'
+export type NavigationView = 'dashboard' | 'campaigns' | 'sessions' | 'scenes' | 'sessionScene' | 'lights' | 'audio' | 'settings'
 
 interface NavigationContext {
   view: NavigationView
@@ -56,6 +56,11 @@ export function getSidebarButtons(context: NavigationContext): SidebarButton[] {
       backLabel = 'Back to campaigns'
       backAction = () => router.push('/campaigns')
       break
+    case 'settings':
+      // Settings -> Campaigns
+      backLabel = 'Back to campaigns'
+      backAction = () => router.push('/campaigns')
+      break
     case 'dashboard':
     case 'campaigns':
     default:
@@ -96,7 +101,8 @@ export function getSidebarButtons(context: NavigationContext): SidebarButton[] {
     {
       icon: <Settings className="w-[18px] h-[18px] text-white/70" />,
       label: 'Settings',
-      onClick: () => {},
+      onClick: () => router.push('/settings'),
+      isActive: view === 'settings',
     },
   ]
 }

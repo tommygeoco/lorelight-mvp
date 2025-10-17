@@ -19,7 +19,7 @@ import { getSidebarButtons } from '@/lib/navigation/sidebarNavigation'
 export default function LightsPage() {
   const router = useRouter()
   const { user } = useAuthStore()
-  const { isConnected, lights, rooms, fetchLightsAndRooms, renameRoom, deleteRoom, renameLight, applyLightConfig } = useHueStore()
+  const { isConnected, lights, rooms, activeRoomIds, fetchLightsAndRooms, renameRoom, deleteRoom, renameLight, applyLightConfig, setRoomActive } = useHueStore()
 
   const [isHueSetupOpen, setIsHueSetupOpen] = useState(false)
   const [isAudioLibraryOpen, setIsAudioLibraryOpen] = useState(false)
@@ -152,7 +152,7 @@ export default function LightsPage() {
     <div className="w-[320px] h-full bg-[#191919] rounded-[8px] flex flex-col" aria-label="Lights list">
       {/* Header */}
       <div className="px-6 py-4 flex items-center justify-between">
-        <h2 className="text-base font-semibold text-white">Lights</h2>
+        <h2 className="text-sm font-semibold text-white">Lights</h2>
         <button
           onClick={() => setIsHueSetupOpen(true)}
           className="w-8 h-8 rounded-[8px] hover:bg-white/5 flex items-center justify-center transition-colors"
@@ -217,7 +217,7 @@ export default function LightsPage() {
                       const roomLightsArray = room.lights
                         .map(lightId => lights.get(lightId))
                         .filter((light): light is NonNullable<typeof light> => !!light)
-                      const anyLightOn = roomLightsArray.some(light => light.state.on)
+                      const isRoomActive = activeRoomIds.has(room.id)
                       const lightsOnCount = roomLightsArray.filter(light => light.state.on).length
 
                       return (
@@ -253,7 +253,7 @@ export default function LightsPage() {
                               <div className="flex items-start gap-2">
                                 {/* Color indicator */}
                                 <div className={`w-2 h-2 rounded-full flex-shrink-0 mt-[5px] ${
-                                  anyLightOn ? 'bg-purple-400' : 'bg-white/20'
+                                  isRoomActive ? 'bg-purple-400' : 'bg-white/20'
                                 }`} />
                                 <div className="flex-1 min-w-0">
                                   <div className="font-medium text-[13px]">{room.name}</div>
@@ -265,21 +265,63 @@ export default function LightsPage() {
                                 <button
                                   onClick={async (e) => {
                                     e.stopPropagation()
-                                    const newOnState = !anyLightOn
-                                    await applyLightConfig({
-                                      groups: {
-                                        [room.id]: { on: newOnState, transitiontime: 2 },
-                                      },
-                                    })
-                                    setTimeout(() => fetchLightsAndRooms(), 500)
+                                    const newActiveState = !isRoomActive
+                                    // Update room activation state
+                                    setRoomActive(room.id, newActiveState)
+                                    
+                                    if (newActiveState) {
+                                      // Turn room lights on
+                                      await applyLightConfig({
+                                        groups: {
+                                          [room.id]: { on: newActiveState, transitiontime: 2 },
+                                        },
+                                      })
+                                      // Fetch updated states and build full light config for gradient
+                                      await fetchLightsAndRooms()
+                                      
+                                      // Build full light config with actual states for gradient system
+                                      // Use getState() to get fresh lights after fetch
+                                      const freshLights = useHueStore.getState().lights
+                                      const roomLightsArray = room.lights
+                                        .map(lightId => freshLights.get(lightId))
+                                        .filter((light): light is NonNullable<typeof light> => !!light)
+                                      
+                                      if (roomLightsArray.length > 0) {
+                                        const fullConfig = {
+                                          lights: Object.fromEntries(
+                                            roomLightsArray.map(light => [
+                                              light.id,
+                                              {
+                                                on: light.state.on,
+                                                bri: light.state.bri,
+                                                hue: light.state.hue,
+                                                sat: light.state.sat,
+                                                xy: light.state.xy,
+                                              }
+                                            ])
+                                          )
+                                        }
+                                        useHueStore.getState().setActiveLightConfig(fullConfig as any)
+                                      }
+                                    } else {
+                                      // Turn room lights off
+                                      await applyLightConfig({
+                                        groups: {
+                                          [room.id]: { on: newActiveState, transitiontime: 2 },
+                                        },
+                                      })
+                                      // Clear gradient when turning off
+                                      useHueStore.getState().setActiveLightConfig(null)
+                                      setTimeout(() => fetchLightsAndRooms(), 500)
+                                    }
                                   }}
                                   className={`w-6 h-6 flex-shrink-0 rounded flex items-center justify-center transition-colors ${
-                                    anyLightOn
+                                    isRoomActive
                                       ? 'bg-purple-500/20 text-purple-400 hover:bg-purple-500/30'
                                       : 'bg-white/10 text-white/50 hover:bg-white/20'
                                   }`}
-                                  aria-label={anyLightOn ? 'Turn off' : 'Turn on'}
-                                  title={anyLightOn ? 'Turn off' : 'Turn on'}
+                                  aria-label={isRoomActive ? 'Turn off' : 'Turn on'}
+                                  title={isRoomActive ? 'Turn off' : 'Turn on'}
                                 >
                                   <Power className="w-3 h-3" />
                                 </button>

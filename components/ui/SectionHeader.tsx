@@ -81,7 +81,7 @@ export function SectionHeader({
   if (variant === 'sidebar') {
     return (
       <header className={`flex items-center justify-between p-2 mb-2 ${className}`}>
-        <h2 id={id} className="text-[#b4b4b4] font-semibold text-base">
+        <h2 id={id} className="text-[#b4b4b4] font-semibold text-sm">
           {title}
         </h2>
         {action && (
@@ -115,7 +115,7 @@ export function SectionHeader({
   // Default variant (content area header)
   return (
     <header className={`h-[48px] pt-[24px] flex items-center ${action ? 'justify-between' : ''} ${className}`}>
-      <h2 id={id} className="text-base font-semibold text-white">
+      <h2 id={id} className="text-sm font-semibold text-white">
         {title}
       </h2>
       {action && (

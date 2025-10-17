@@ -65,6 +65,7 @@ class SceneBlockService {
       .from('scene_blocks')
       .insert({
         ...blockData,
+        order_index: Math.floor(blockData.order_index), // Floor for DB integer column
         user_id: user.user.id,
       })
       .select()

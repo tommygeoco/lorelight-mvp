@@ -66,24 +66,48 @@ export const useSceneBlockStore = create<SceneBlockState>()(
         },
 
         addBlock: async (blockData: Omit<SceneBlockInsert, 'user_id'>) => {
-          try {
-            const newBlock = await sceneBlockService.create(blockData as SceneBlockInsert)
-            set(state => {
-              state.blocks.set(newBlock.id, newBlock)
-              state._version++ // Force re-render
-            })
-            return newBlock
-          } catch (error) {
-            const errorMessage = error instanceof Error
-              ? error.message
-              : typeof error === 'object' && error !== null && 'message' in error
-              ? String((error as { message: unknown }).message)
-              : 'Failed to create block'
-
-            console.error('Failed to create block:', errorMessage, error)
-            set({ error: errorMessage })
-            throw new Error(errorMessage)
+          // INSTANT: Generate client-side UUID
+          const clientId = crypto.randomUUID()
+          const now = new Date().toISOString()
+          
+          // INSTANT: Create optimistic block
+          const optimisticBlock: SceneBlock = {
+            id: clientId,
+            scene_id: blockData.scene_id,
+            type: blockData.type,
+            content: blockData.content,
+            order_index: blockData.order_index, // Keep fractional for UI sorting
+            created_at: now,
+            updated_at: now,
+            user_id: '', // Will be set by server
           }
+          
+          // INSTANT: Update UI immediately
+          set(state => {
+            state.blocks.set(clientId, optimisticBlock)
+            state._version++
+          })
+          
+          // BACKGROUND: Save to database (fire and forget)
+          sceneBlockService.create({
+            ...blockData,
+            order_index: Math.floor(blockData.order_index)
+          } as SceneBlockInsert)
+            .then(serverBlock => {
+              // Swap client ID with server ID
+              set(state => {
+                state.blocks.delete(clientId)
+                state.blocks.set(serverBlock.id, serverBlock)
+                state._version++
+              })
+            })
+            .catch(error => {
+              console.error('Failed to save block to database:', error)
+              // TODO: Add to offline queue for retry
+              // For now, block stays in UI with client ID
+            })
+          
+          return optimisticBlock
         },
 
         updateBlock: async (id, updates) => {

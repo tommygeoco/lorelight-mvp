@@ -3,6 +3,7 @@ import { persist } from 'zustand/middleware'
 import { immer } from 'zustand/middleware/immer'
 import { hueService, type HueLight, type HueRoom } from '@/lib/services/browser/hueService'
 import { logger } from '@/lib/utils/logger'
+import type { SceneLightConfig } from '@/types'
 
 interface HueState {
   // Bridge settings
@@ -15,6 +16,12 @@ interface HueState {
   rooms: Map<string, HueRoom>
   error: string | null
 
+  // Active light config (for gradient system)
+  activeLightConfig: SceneLightConfig | null
+
+  // Active room IDs (tracks which rooms have been explicitly activated)
+  activeRoomIds: Set<string>
+
   // Actions
   discoverBridge: () => Promise<void>
   connectBridge: (bridgeIp: string) => Promise<void>
@@ -25,6 +32,8 @@ interface HueState {
     lights?: Record<string, { on?: boolean; bri?: number; hue?: number; sat?: number; ct?: number; xy?: [number, number]; transitiontime?: number }>
     groups?: Record<string, { on?: boolean; bri?: number; hue?: number; sat?: number; ct?: number; xy?: [number, number]; transitiontime?: number }>
   }) => Promise<void>
+  setActiveLightConfig: (config: SceneLightConfig | null) => void
+  setRoomActive: (roomId: string, active: boolean) => void
   createRoom: (name: string, lightIds: string[], roomClass?: string) => Promise<string>
   renameRoom: (groupId: string, newName: string) => Promise<void>
   deleteRoom: (groupId: string) => Promise<void>
@@ -44,6 +53,8 @@ export const useHueStore = create<HueState>()(
       lights: new Map(),
       rooms: new Map(),
       error: null,
+      activeLightConfig: null,
+      activeRoomIds: new Set(),
 
       discoverBridge: async () => {
         try {
@@ -83,6 +94,7 @@ export const useHueStore = create<HueState>()(
           isConnected: false,
           lights: new Map(),
           rooms: new Map(),
+          activeRoomIds: new Set(),
         })
       },
 
@@ -124,8 +136,25 @@ export const useHueStore = create<HueState>()(
         set({ error: null })
       },
 
+      setActiveLightConfig: (config) => {
+        set({ activeLightConfig: config })
+      },
+
+      setRoomActive: (roomId, active) => {
+        set(state => {
+          if (active) {
+            state.activeRoomIds.add(roomId)
+          } else {
+            state.activeRoomIds.delete(roomId)
+          }
+        })
+      },
+
       applyLightConfig: async (config) => {
         const { bridgeIp, username, lights: availableLights } = get()
+        
+        console.log('[hueStore] applyLightConfig - config received:', config)
+        console.log('[hueStore] availableLights count:', availableLights.size)
         
         if (!bridgeIp || !username) {
           throw new Error('Bridge not connected')
@@ -133,9 +162,12 @@ export const useHueStore = create<HueState>()(
 
         try {
           // Check if this is an explicit "lights off" config
-          const configWithFlag = config as { lights?: Record<string, any>, lightsOff?: boolean }
+          const configWithFlag = config as { lights?: Record<string, unknown>, lightsOff?: boolean }
+          
+          console.log('[hueStore] lightsOff flag:', configWithFlag.lightsOff)
           
           if (configWithFlag.lightsOff === true) {
+            console.log('[hueStore] LIGHTS OFF MODE - turning off all lights')
             // Turn off all available lights
             const offConfig = {
               lights: Array.from(availableLights.keys()).reduce((acc, lightId) => {
@@ -143,12 +175,20 @@ export const useHueStore = create<HueState>()(
                 return acc
               }, {} as Record<string, { on: boolean, transitiontime: number }>)
             }
+            console.log('[hueStore] Sending off config for', Object.keys(offConfig.lights).length, 'lights')
             await hueService.applyLightConfig(bridgeIp, username, offConfig)
+            console.log('[hueStore] All lights turned off successfully')
+            // Set active config for gradient system
+            set({ activeLightConfig: offConfig as unknown as SceneLightConfig })
           } else {
+            console.log('[hueStore] Normal config mode')
             // Normal config application
             await hueService.applyLightConfig(bridgeIp, username, config)
+            // Set active config for gradient system
+            set({ activeLightConfig: config as SceneLightConfig })
           }
         } catch (error) {
+          console.error('[hueStore] Failed to apply config:', error)
           logger.error('Failed to apply light config', error)
           throw error
         }
