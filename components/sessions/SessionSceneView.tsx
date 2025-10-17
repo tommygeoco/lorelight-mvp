@@ -254,16 +254,25 @@ export function SessionSceneView({ campaignId, sessionId }: SessionSceneViewProp
 
     setIsDeleting(true)
     try {
+      // Optimistically remove from UI immediately
+      useSessionSceneStore.getState().removeSceneFromSession(sessionId, sceneToDelete.id)
+      
+      // Delete from database
       await deleteScene(sceneToDelete.id)
+      
       if (selectedSceneId === sceneToDelete.id) {
         setSelectedSceneId(null)
       }
+      
       addToast(`Deleted "${sceneToDelete.name}"`, 'success')
       setIsDeleteDialogOpen(false)
       setSceneToDelete(null)
     } catch (error) {
       console.error('Failed to delete scene:', error)
       addToast('Failed to delete scene', 'error')
+      
+      // Refetch to restore on error
+      fetchScenesForSession(sessionId)
     } finally {
       setIsDeleting(false)
     }
@@ -285,7 +294,7 @@ export function SessionSceneView({ campaignId, sessionId }: SessionSceneViewProp
     <div className="w-[320px] h-full bg-[#191919] rounded-[8px] flex flex-col" aria-label="Scenes list">
       {/* Header */}
       <div className="px-6 py-4 flex items-center justify-between">
-        <h2 className="text-base font-semibold text-white">Scenes</h2>
+        <h2 className="text-sm font-semibold text-white">Scenes</h2>
         <button
           onClick={() => {
             setEditingScene(undefined)

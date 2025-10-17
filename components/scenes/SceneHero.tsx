@@ -201,25 +201,40 @@ export function SceneHero({ scene, sessionId }: SceneHeroProps) {
         )}
 
         {/* Editable description */}
-        <div className="relative h-[60px]">
+        <div className="relative min-h-[60px]">
           {isEditingDesc ? (
             <textarea
-              ref={handleDescMount}
+              ref={(el) => {
+                handleDescMount(el)
+                if (el) {
+                  el.style.height = 'auto'
+                  el.style.height = el.scrollHeight + 'px'
+                }
+              }}
               defaultValue={scene.description || ''}
               onBlur={handleDescSave}
+              onInput={(e) => {
+                const target = e.target as HTMLTextAreaElement
+                target.style.height = 'auto'
+                target.style.height = target.scrollHeight + 'px'
+              }}
               onKeyDown={(e) => {
                 if (e.key === 'Escape') {
                   e.preventDefault()
                   setIsEditingDesc(false)
                 }
               }}
-              className="absolute inset-0 w-full h-full p-0 m-0 bg-transparent border-none outline-none font-['Inter'] text-[14px] leading-[20px] text-[#eeeeee] placeholder:text-white/40 resize-none overflow-hidden"
+              className="w-full p-0 m-0 bg-transparent border-none outline-none font-['Inter'] text-[14px] leading-normal text-[#eeeeee] placeholder:text-white/40 resize-none overflow-hidden"
               placeholder="Add a description..."
+              data-1p-ignore="true"
+              data-lpignore="true"
             />
           ) : (
             <div
               onClick={() => setIsEditingDesc(true)}
-              className="absolute inset-0 w-full h-full p-0 m-0 font-['Inter'] text-[14px] leading-[20px] text-[#eeeeee] cursor-text overflow-hidden"
+              className="w-full p-0 m-0 font-['Inter'] text-[14px] leading-normal text-[#eeeeee] cursor-text whitespace-pre-wrap"
+              data-1p-ignore="true"
+              data-lpignore="true"
             >
               {scene.description || (
                 <span className="text-white/40">Add a description...</span>

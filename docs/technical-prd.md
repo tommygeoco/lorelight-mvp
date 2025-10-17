@@ -519,10 +519,14 @@ interface BlockContent {
 - Optimistic updates with rollback on error
 - Block type conversion (text → heading, list → checkbox, etc.)
 
-**Current Status:** ✅ Implemented
-- Store: `sceneBlockStore.ts` (198 lines)
-- Service: `sceneBlockService.ts` (137 lines)
-- Components: `SceneBlockEditor.tsx`, `SceneNotesSection.tsx`
+**Current Status:** ⏸️ Paused - UI Reverted (Infrastructure Remains)
+- Store: `sceneBlockStore.ts` ✅ (220 lines, working)
+- Service: `sceneBlockService.ts` ✅ (140 lines, working)
+- Migration: `015_add_scene_blocks_and_npcs.sql` ✅ (applied)
+- UI Components: ❌ Removed due to contentEditable limitations
+- **Issue**: Multiple contentEditable elements prevent reliable cross-block selection and cursor management
+- **Future**: Requires single contentEditable container with styled child elements (Notion/Google Docs architecture)
+- **Note**: Database tables and services remain for future implementation
 
 ---
 

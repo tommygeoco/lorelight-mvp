@@ -23,7 +23,7 @@ export default function SessionsPage({
 }) {
   const resolvedParams = use(params)
   const router = useRouter()
-  const { campaigns, fetchCampaigns } = useCampaignStore()
+  const { campaigns, fetchCampaigns, updateCampaign } = useCampaignStore()
   const { sessions, fetchSessionsForCampaign, createSession, deleteSession, fetchedCampaigns, isLoading } = useSessionStore()
   const [isCreating, setIsCreating] = useState(false)
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null)
@@ -95,6 +95,18 @@ export default function SessionsPage({
     }
   }
 
+  const handleCampaignTitleChange = (newTitle: string) => {
+    updateCampaign(resolvedParams.id, { name: newTitle }).catch(error => {
+      console.error('Failed to update campaign title:', error)
+    })
+  }
+
+  const handleCampaignDescChange = (newDesc: string | null) => {
+    updateCampaign(resolvedParams.id, { description: newDesc }).catch(error => {
+      console.error('Failed to update campaign description:', error)
+    })
+  }
+
   const sidebarButtons = getSidebarButtons({
     view: 'sessions',
     campaignId: resolvedParams.id,
@@ -106,7 +118,9 @@ export default function SessionsPage({
       <div className="w-[640px] mx-auto">
         <PageHeader
           title={campaign.name}
-          description={campaign.description || 'Select a session to begin playing'}
+          description={campaign.description || undefined}
+          onTitleChange={handleCampaignTitleChange}
+          onDescriptionChange={handleCampaignDescChange}
         />
 
         {/* Quick Links */}
@@ -155,7 +169,7 @@ export default function SessionsPage({
                     className="bg-white/[0.02] hover:bg-white/[0.05] transition-all rounded-[8px] p-4 cursor-pointer group flex items-center justify-between"
                     onClick={() => handlePlaySession(session)}
                   >
-                    <h3 className="text-base font-semibold text-white">
+                    <h3 className="text-sm font-semibold text-white">
                       {session.title}
                     </h3>
                     <div className="flex items-center gap-2">

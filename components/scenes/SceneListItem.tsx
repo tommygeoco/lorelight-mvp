@@ -102,11 +102,6 @@ export function SceneListItem({
           }`}>
             {scene.name}
           </div>
-          {scene.description && (
-            <div className="text-[11px] text-white/40 truncate mt-0.5">
-              {scene.description}
-            </div>
-          )}
         </div>
       )}
 

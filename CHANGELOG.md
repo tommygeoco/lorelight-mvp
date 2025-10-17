@@ -8,7 +8,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Added
+- **Editable Campaign Headers** - Click-to-edit campaign titles and descriptions on sessions page
+- **Auto-Growing Description Fields** - Textareas automatically expand to fit content without layout jumps
+- **Hover Delete Buttons** - Scene sidebar items now show delete button on hover for quick access
+- **Browser Extension Blocking** - All title/description fields ignore password managers (1Password, LastPass)
+
+### Removed
+- **Block-Based Note Editor** - Reverted experimental WYSIWYG editor due to contentEditable focus issues
+  - Attempted: Client-side UUID generation, hierarchical selection, slash commands
+  - Issue: Multiple contentEditable elements prevent reliable cross-block selection and focus management
+  - Future: Will require single contentEditable container architecture (like Notion/Google Docs)
+  - Files cleaned: MinimalBlockEditor, SceneNotesEditor, MinimalBlockMenu, RichTextToolbar
+
 ### Fixed
+- **Description Field Height Jumps** - PageHeader and SceneHero descriptions no longer shift layout when editing
+- **Scene Sidebar Descriptions Removed** - Cleaner sidebar with titles only
 - **Scene Light Configuration Persistence** - Complete fix for light management in session play view
   - Light configurations now save to database correctly
   - Previously saved configurations load when reopening modal

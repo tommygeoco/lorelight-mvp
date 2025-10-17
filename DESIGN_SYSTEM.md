@@ -182,14 +182,40 @@ Location: `/components/ui/PageHeader.tsx`
 **Props:**
 - `title: string`
 - `description?: string`
+- `onTitleChange?: (title: string) => void` - Makes title editable
+- `onDescriptionChange?: (description: string | null) => void` - Makes description editable
+
+**Features:**
+- Click-to-edit when callbacks provided
+- Auto-select text on edit start
+- Auto-growing textarea for descriptions
+- Escape to cancel, Enter to save (title only)
+- Blur saves changes
+- Browser extension blocking (1Password, LastPass)
 
 **Usage:**
 ```tsx
+// Read-only (default)
 <PageHeader
-  title="Scene Name"
-  description="Scene description text"
+  title="Campaign Name"
+  description="Campaign description"
+/>
+
+// Editable
+<PageHeader
+  title={campaign.name}
+  description={campaign.description}
+  onTitleChange={(newTitle) => updateCampaign(id, { name: newTitle })}
+  onDescriptionChange={(newDesc) => updateCampaign(id, { description: newDesc })}
 />
 ```
+
+**Implementation Details:**
+- Title uses `<input>` when editing, `<h1>` when readonly
+- Description uses auto-growing `<textarea>` when editing, `<p>` when readonly
+- Both states use `p-0 m-0 mt-1 leading-normal` for zero layout shift
+- Textarea grows via `scrollHeight` on input
+- All fields have `data-1p-ignore="true"` and `data-lpignore="true"` to prevent browser extensions
 
 #### SectionHeader
 Location: `/components/ui/SectionHeader.tsx`
@@ -252,6 +278,39 @@ Location: `/components/ui/SectionHeader.tsx`
   />
 </div>
 ```
+
+#### Auto-Growing Textarea
+Textarea that expands to fit content without layout jumps.
+
+```tsx
+const [value, setValue] = useState('')
+
+<textarea
+  ref={(el) => {
+    if (el) {
+      el.style.height = 'auto'
+      el.style.height = el.scrollHeight + 'px'
+    }
+  }}
+  value={value}
+  onChange={(e) => setValue(e.target.value)}
+  onInput={(e) => {
+    const target = e.target as HTMLTextAreaElement
+    target.style.height = 'auto'
+    target.style.height = target.scrollHeight + 'px'
+  }}
+  className="w-full p-0 m-0 bg-transparent border-none outline-none text-white placeholder:text-white/40 resize-none overflow-hidden leading-normal"
+  placeholder="Type here..."
+/>
+```
+
+**Key Points:**
+- Use `p-0 m-0` to match surrounding text exactly
+- `leading-normal` ensures consistent line height
+- `overflow-hidden` prevents scrollbars during auto-grow
+- `resize-none` disables manual resize handle
+- Height calculation on both `ref` callback and `onInput`
+- Pair with `<p className="p-0 m-0 leading-normal">` for read-only view to prevent layout shift
 
 ### Context Menus
 
@@ -1188,6 +1247,43 @@ During development, we experimented with several Dark Fantasy Charm elements tha
 8. **Loading States**: Always show loading indicators for async operations
 9. **Error Handling**: Display user-friendly error messages via toast notifications
 10. **Responsive**: Design mobile-first, use responsive utilities as needed
+11. **Browser Extension Blocking**: Add `data-1p-ignore="true"` and `data-lpignore="true"` to non-form text fields (titles, descriptions, contentEditable)
+
+### Browser Extension Blocking
+
+**Problem**: Password managers (1Password, LastPass) detect text inputs and titles as form fields, showing autofill icons
+
+**Solution**: Add these data attributes to non-form fields:
+
+```tsx
+<h1 
+  data-1p-ignore="true"
+  data-lpignore="true"
+>
+  {title}
+</h1>
+
+<div
+  contentEditable
+  data-1p-ignore="true"
+  data-lpignore="true"
+  data-form-type="other"
+>
+  Content
+</div>
+```
+
+**When to use:**
+- Page titles and headings
+- Editable text that's not a login/password field
+- ContentEditable elements
+- Any text field where browser extensions shouldn't trigger
+
+**When NOT to use:**
+- Actual login forms
+- Password fields
+- Email inputs
+- Any security-related forms
 
 ## File Organization
 
@@ -1368,16 +1464,36 @@ useEffect(() => {
       {/* Regular items */}
       {items.map(item => (
         <li key={item.id}>
-          <button className="w-full flex items-center gap-2 px-3 py-2 rounded-[8px] text-sm text-white/60 hover:text-white hover:bg-white/5 transition-colors">
+          <div className="group w-full flex items-center gap-2 px-3 py-2 rounded-[8px] text-sm text-white/60 hover:text-white hover:bg-white/5 transition-colors">
             <Music className="w-4 h-4 flex-shrink-0" />
             <span className="flex-1 truncate">{item.name}</span>
-          </button>
+            
+            {/* Hover delete button (optional) */}
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                handleDelete(item.id)
+              }}
+              className="opacity-0 group-hover:opacity-100 w-5 h-5 flex items-center justify-center rounded hover:bg-red-500/10 text-white/30 hover:text-red-400 transition-all flex-shrink-0"
+              title="Delete item"
+            >
+              <Trash2 className="w-3 h-3" />
+            </button>
+          </div>
         </li>
       ))}
     </ul>
   </div>
 </div>
 ```
+
+**Hover Delete Button Pattern:**
+- Only visible on row hover (`opacity-0 group-hover:opacity-100`)
+- Small size: `w-5 h-5` with `w-3 h-3` icon
+- Red on hover: `text-white/30 hover:text-red-400`
+- Red background on hover: `hover:bg-red-500/10`
+- Prevents click propagation with `stopPropagation()`
+- Used in: Scene sidebars, anywhere quick delete is needed
 
 **Key Features:**
 - Direct header with h2 + button (no SectionHeader component in sidebars)
