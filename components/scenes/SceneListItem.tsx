@@ -31,7 +31,7 @@ const SceneListItemComponent = ({
   onClick,
   onPlay,
   onContextMenu
-}: SceneListItemProps) {
+}: SceneListItemProps) => {
   const gradientColors = getSceneGradientColors(scene.scene_type)
 
   return (
