@@ -1,5 +1,6 @@
 'use client'
 
+import { memo } from 'react'
 import { Play, Music as MusicIcon, Lightbulb, Edit2 } from 'lucide-react'
 import type { Scene } from '@/types'
 import { getSceneGradientColors } from '@/lib/utils/gradients'
@@ -16,7 +17,7 @@ interface SceneCardProps {
  * SceneCard - Grid card for scene library
  * Follows campaign card design pattern with gradient thumbnails
  */
-export function SceneCard({ scene, isSelected = false, onClick, onPlay, onEdit }: SceneCardProps) {
+const SceneCardComponent = ({ scene, isSelected = false, onClick, onPlay, onEdit }: SceneCardProps) => {
   const gradientColors = getSceneGradientColors(scene.scene_type)
 
   return (
@@ -112,3 +113,6 @@ export function SceneCard({ scene, isSelected = false, onClick, onPlay, onEdit }
     </article>
   )
 }
+
+// Memoize to prevent re-renders when parent state changes
+export const SceneCard = memo(SceneCardComponent)

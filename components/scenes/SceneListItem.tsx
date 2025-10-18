@@ -1,5 +1,6 @@
 'use client'
 
+import { memo } from 'react'
 import { Play, Pause } from 'lucide-react'
 import type { Scene } from '@/types'
 import { getSceneGradientColors } from '@/lib/utils/gradients'
@@ -18,7 +19,7 @@ interface SceneListItemProps {
   onContextMenu?: (e: React.MouseEvent) => void
 }
 
-export function SceneListItem({
+const SceneListItemComponent = ({
   scene,
   isActive = false,
   isSelected = false,
@@ -136,3 +137,7 @@ export function SceneListItem({
     </div>
   )
 }
+
+// Memoize to prevent re-renders when parent re-renders
+// Only re-render if props actually change
+export const SceneListItem = memo(SceneListItemComponent)

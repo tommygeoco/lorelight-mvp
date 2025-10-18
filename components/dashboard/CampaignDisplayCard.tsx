@@ -1,5 +1,6 @@
 'use client'
 
+import { memo } from 'react'
 import Link from 'next/link'
 import { ChevronRight, Settings } from 'lucide-react'
 import type { Campaign } from '@/types'
@@ -15,7 +16,7 @@ interface CampaignCardProps {
  * CampaignDisplayCard - Used in dashboard for campaign selection
  * Shows gradient thumbnail and navigation to campaign play view
  */
-export function CampaignDisplayCard({ campaign, onEdit }: CampaignCardProps) {
+const CampaignDisplayCardComponent = ({ campaign, onEdit }: CampaignCardProps) => {
   const { fetchScenesForCampaign } = useSceneStore()
 
   const handleMouseEnter = () => {
@@ -69,3 +70,6 @@ export function CampaignDisplayCard({ campaign, onEdit }: CampaignCardProps) {
     </article>
   )
 }
+
+// Memoize to prevent unnecessary re-renders
+export const CampaignDisplayCard = memo(CampaignDisplayCardComponent)
