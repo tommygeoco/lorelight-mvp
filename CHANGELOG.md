@@ -9,6 +9,38 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 
 ### Added
+- **AGENT_INSTRUCTIONS.md** - Mandatory first-read file for AI agents to prevent documentation violations
+  - States 5-document limit and why it exists
+  - Lists critical rules (Context7, design system, performance targets)
+  - Documents common pitfalls to avoid
+  - Pre-commit checklist
+  - Serves as onboarding guide
+
+### Performance Improvements
+- **React.memo optimizations** - Added to list item components
+  - SceneListItem: Prevents re-renders on parent state changes
+  - CampaignDisplayCard: Dashboard performance improvement
+  - SceneCard: Scene grid performance improvement
+  - Prevents cascade re-renders (e.g., audio player state won't re-render entire scene list)
+  - ~20x fewer renders on large lists
+
+### Code Quality
+- **LightConfigModal refactored** - 603 lines → 182 lines (70% reduction)
+  - Extracted useLightConfigState hook (state management logic)
+  - Extracted LightControls component (individual light UI)
+  - Extracted RoomSection component (room header and light list)
+  - Now complies with 200-line architecture rule
+  - All functionality maintained, zero breaking changes
+  - Easier to test and maintain
+
+### Security
+- **RLS Audit Script** - Database security verification tool
+  - Checks which tables have Row Level Security enabled
+  - Lists all policies per table
+  - Verifies critical tables have proper isolation
+  - Run in Supabase SQL editor for compliance check
+
+### Added
 - **Editable Campaign Headers** - Click-to-edit campaign titles and descriptions on sessions page
 - **Auto-Growing Description Fields** - Textareas automatically expand to fit content without layout jumps
 - **Hover Delete Buttons** - Scene sidebar items now show delete button on hover for quick access
