@@ -46,11 +46,44 @@ export interface SceneNPC {
   name: string
   description?: string | null
   stats?: Record<string, unknown> | null
-  image_url?: string | null
   order_index: number
   created_at: string
   updated_at: string
   user_id: string
+}
+
+// New multi-config ambience types
+export interface SceneLightConfig {
+  id: string
+  scene_id: string
+  light_config_id: string
+  user_id: string
+  is_selected: boolean
+  order_index: number
+  created_at: string
+  updated_at: string
+}
+
+export interface SceneAudioFile {
+  id: string
+  scene_id: string
+  audio_file_id: string
+  user_id: string
+  is_selected: boolean
+  volume: number
+  loop: boolean
+  order_index: number
+  created_at: string
+  updated_at: string
+}
+
+export interface SceneBlockTag {
+  id: string
+  scene_id: string
+  block_id: string
+  user_id: string
+  tag_name: string
+  created_at: string
 }
 
 // Insert types
@@ -68,6 +101,9 @@ export type PlaylistAudioInsert = Inserts<'playlist_audio'>
 // Temporary placeholder insert types
 export type SceneBlockInsert = Omit<SceneBlock, 'id' | 'created_at' | 'updated_at'>
 export type SceneNPCInsert = Omit<SceneNPC, 'id' | 'created_at' | 'updated_at'>
+export type SceneLightConfigInsert = Omit<SceneLightConfig, 'id' | 'created_at' | 'updated_at'>
+export type SceneAudioFileInsert = Omit<SceneAudioFile, 'id' | 'created_at' | 'updated_at'>
+export type SceneBlockTagInsert = Omit<SceneBlockTag, 'id' | 'created_at'>
 
 // Update types
 export type CampaignUpdate = Updates<'campaigns'>
@@ -84,6 +120,9 @@ export type PlaylistAudioUpdate = Updates<'playlist_audio'>
 // Temporary placeholder update types
 export type SceneBlockUpdate = Partial<Omit<SceneBlock, 'id' | 'created_at' | 'user_id'>>
 export type SceneNPCUpdate = Partial<Omit<SceneNPC, 'id' | 'created_at' | 'user_id'>>
+export type SceneLightConfigUpdate = Partial<Omit<SceneLightConfig, 'id' | 'created_at' | 'user_id'>>
+export type SceneAudioFileUpdate = Partial<Omit<SceneAudioFile, 'id' | 'created_at' | 'user_id'>>
+export type SceneBlockTagUpdate = Partial<Omit<SceneBlockTag, 'id' | 'created_at' | 'user_id'>>
 
 // Session status enum
 export type SessionStatus = 'planning' | 'active' | 'completed'

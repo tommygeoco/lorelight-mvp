@@ -950,8 +950,8 @@ export default function DesignSystemPage() {
 
           {/* Layouts Section */}
           <Section title="Layouts" id="layouts">
-            <Example title="Two Sidebar Layout" description="Navigation sidebar + content sidebar + main content (Audio Library pattern)">
-              <div className="h-64 bg-black/20 rounded-[8px] p-2 flex gap-2">
+            <Example title="1. Single Sidebar Layout" description="Navigation sidebar + main content (Dashboard, Settings pattern)">
+              <div className="h-48 bg-black/20 rounded-[8px] p-2 flex gap-2">
                 <div className="w-12 bg-[#191919] rounded-[4px] flex flex-col items-center gap-2 p-2">
                   <div className="w-8 h-8 bg-white/10 rounded-[4px] flex items-center justify-center">
                     <Music className="w-4 h-4 text-white/40" />
@@ -959,11 +959,26 @@ export default function DesignSystemPage() {
                   <div className="w-8 h-8 bg-white/10 rounded-[4px] flex items-center justify-center">
                     <Folder className="w-4 h-4 text-white/40" />
                   </div>
-                  <div className="w-8 h-8 bg-white/10 rounded-[4px] flex items-center justify-center">
-                    <Settings className="w-4 h-4 text-white/40" />
+                </div>
+                <div className="flex-1 bg-[#191919] rounded-[4px] p-2">
+                  <div className="text-xs text-white/60 mb-2 font-medium">Main Content</div>
+                  <div className="grid grid-cols-3 gap-2">
+                    <div className="h-20 bg-white/5 rounded-[4px]"></div>
+                    <div className="h-20 bg-white/5 rounded-[4px]"></div>
+                    <div className="h-20 bg-white/5 rounded-[4px]"></div>
                   </div>
                 </div>
-                <div className="w-48 bg-[#191919] rounded-[4px] p-2 border-r border-white/10">
+              </div>
+            </Example>
+
+            <Example title="2. Two Sidebar Layout" description="Navigation + content sidebar + main content (Audio Library, Lights pattern)">
+              <div className="h-48 bg-black/20 rounded-[8px] p-2 flex gap-2">
+                <div className="w-12 bg-[#191919] rounded-[4px] flex flex-col items-center gap-2 p-2">
+                  <div className="w-8 h-8 bg-white/10 rounded-[4px] flex items-center justify-center">
+                    <Music className="w-4 h-4 text-white/40" />
+                  </div>
+                </div>
+                <div className="w-48 bg-[#191919] rounded-[4px] p-2">
                   <div className="text-xs text-white/60 mb-2 font-medium">Playlists</div>
                   <div className="space-y-1">
                     <div className="h-6 bg-white/10 rounded-[4px]"></div>
@@ -976,8 +991,55 @@ export default function DesignSystemPage() {
                   <div className="space-y-1">
                     <div className="h-6 bg-white/5 rounded-[4px]"></div>
                     <div className="h-6 bg-white/5 rounded-[4px]"></div>
+                  </div>
+                </div>
+              </div>
+            </Example>
+
+            <Example title="3. Three Column Layout" description="Navigation + scenes sidebar + main content (Session Play basic)">
+              <div className="h-48 bg-black/20 rounded-[8px] p-2 flex gap-2">
+                <div className="w-12 bg-[#191919] rounded-[4px] flex flex-col items-center gap-2 p-2">
+                  <div className="w-8 h-8 bg-white/10 rounded-[4px]"></div>
+                </div>
+                <div className="w-48 bg-[#191919] rounded-[4px] p-2">
+                  <div className="text-xs text-white/60 mb-2 font-medium">Scenes</div>
+                  <div className="space-y-1">
+                    <div className="h-6 bg-purple-500/20 rounded-[4px]"></div>
+                    <div className="h-6 bg-white/5 rounded-[4px]"></div>
                     <div className="h-6 bg-white/5 rounded-[4px]"></div>
                   </div>
+                </div>
+                <div className="flex-1 bg-[#191919] rounded-[4px] p-2">
+                  <div className="text-xs text-white/60 mb-2 font-medium">Scene Editor</div>
+                  <div className="space-y-2">
+                    <div className="h-8 bg-white/5 rounded-[4px]"></div>
+                    <div className="h-16 bg-white/5 rounded-[4px]"></div>
+                  </div>
+                </div>
+              </div>
+            </Example>
+
+            <Example title="4. Four Column Layout (Animated)" description="Navigation + scenes + content + expanded note (Session Play with expansion)">
+              <div className="h-48 bg-black/20 rounded-[8px] p-2 flex gap-2">
+                <div className="w-12 bg-[#191919] rounded-[4px]"></div>
+                <div className="w-48 bg-[#191919] rounded-[4px] p-2">
+                  <div className="text-xs text-white/60 mb-1 font-medium">Scenes</div>
+                  <div className="space-y-1">
+                    <div className="h-6 bg-purple-500/20 rounded-[4px]"></div>
+                    <div className="h-6 bg-white/5 rounded-[4px]"></div>
+                  </div>
+                </div>
+                <div className="flex-1 bg-[#191919] rounded-[4px] p-2">
+                  <div className="text-xs text-white/60 mb-1 font-medium">Scene Editor</div>
+                  <div className="space-y-1">
+                    <div className="h-6 bg-white/5 rounded-[4px]"></div>
+                    <div className="h-10 bg-white/5 rounded-[4px]"></div>
+                  </div>
+                </div>
+                <div className="w-48 bg-[#191919] rounded-[4px] p-2 border-l-2 border-purple-500/30">
+                  <div className="text-xs text-white/60 mb-1 font-medium">Note Details</div>
+                  <div className="h-8 bg-purple-500/10 rounded-[4px]"></div>
+                  <div className="text-[10px] text-white/40 mt-2">Animates: w-0 → w-[320px]</div>
                 </div>
               </div>
             </Example>
@@ -986,7 +1048,16 @@ export default function DesignSystemPage() {
               id="layout-code"
               code={`import { DashboardLayoutWithSidebar } from '@/components/layouts/DashboardLayoutWithSidebar'
 
-// Two Sidebar Layout (Audio Library)
+// 1. Single Sidebar Layout (Dashboard, Settings)
+<DashboardLayoutWithSidebar
+  navSidebar={<DashboardSidebar buttons={[...]} />}
+>
+  <div className="p-6">
+    {/* Main content */}
+  </div>
+</DashboardLayoutWithSidebar>
+
+// 2. Two Sidebar Layout (Audio Library, Lights)
 <DashboardLayoutWithSidebar
   navSidebar={<DashboardSidebar buttons={[...]} />}
   contentSidebar={<PlaylistsSidebar />}
@@ -996,12 +1067,26 @@ export default function DesignSystemPage() {
   </div>
 </DashboardLayoutWithSidebar>
 
-// Single Sidebar Layout (Dashboard)
+// 3. Three Column Layout (Session Play - Basic)
 <DashboardLayoutWithSidebar
-  navSidebar={<DashboardSidebar buttons={[...]} />}
+  navSidebar={<DashboardSidebar />}
+  contentSidebar={<ScenesSidebar />}
 >
-  <div className="p-6">
-    {/* Main content with campaign cards */}
+  <SceneEditor scene={selectedScene} />
+</DashboardLayoutWithSidebar>
+
+// 4. Four Column Layout (Session Play - With Expanded Note)
+<DashboardLayoutWithSidebar
+  navSidebar={<DashboardSidebar />}
+  contentSidebar={<ScenesSidebar />}
+>
+  <div className="flex h-full gap-2 bg-[#111111] -m-px p-px">
+    <SceneEditor />
+    <div className={\`transition-all duration-300 \${expanded ? 'w-[320px]' : 'w-0 opacity-0'}\`}>
+      <div className="w-[320px] h-full bg-[#191919] rounded-[8px]">
+        {/* Expanded panel */}
+      </div>
+    </div>
   </div>
 </DashboardLayoutWithSidebar>`}
             />

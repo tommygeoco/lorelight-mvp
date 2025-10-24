@@ -15,7 +15,7 @@ export function DashboardLayoutWithSidebar({
   return (
     <div className="h-screen w-full flex flex-col overflow-hidden">
       {/* Padded wrapper for sidebars and main */}
-      <div className="flex-1 bg-[#111111] pt-2 px-2 flex gap-2 overflow-hidden">
+      <div className="flex-1 bg-[#111111] p-2 flex gap-2 overflow-hidden">
         {/* Left nav sidebar - 56px wide */}
         <div style={{ width: '56px' }} className="h-full">
           {navSidebar}

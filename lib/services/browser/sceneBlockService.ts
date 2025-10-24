@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/auth/supabase'
 import type { SupabaseClient } from '@supabase/supabase-js'
-import type { SceneBlock, SceneBlockInsert, SceneBlockUpdate } from '@/types'
+import type { SceneBlock, SceneBlockInsert, SceneBlockUpdate, SceneBlockTag } from '@/types'
 
 /**
  * Scene Block service for Notion-like content blocks
@@ -130,6 +130,94 @@ class SceneBlockService {
     const { error } = await this.supabase
       .from('scene_blocks')
       .upsert(updates, { onConflict: 'id' })
+
+    if (error) {
+      throw error
+    }
+  }
+
+  /**
+   * Get all tags for a scene
+   */
+  async getTagsForScene(sceneId: string): Promise<SceneBlockTag[]> {
+    const { data, error } = await this.supabase
+      .from('scene_block_tags')
+      .select('*')
+      .eq('scene_id', sceneId)
+
+    if (error) {
+      throw error
+    }
+
+    return data || []
+  }
+
+  /**
+   * Get tags for a specific block
+   */
+  async getTagsForBlock(blockId: string): Promise<SceneBlockTag[]> {
+    const { data, error } = await this.supabase
+      .from('scene_block_tags')
+      .select('*')
+      .eq('block_id', blockId)
+
+    if (error) {
+      throw error
+    }
+
+    return data || []
+  }
+
+  /**
+   * Add a tag to a block
+   */
+  async addTag(sceneId: string, blockId: string, tagName: string): Promise<SceneBlockTag> {
+    const { data: user } = await this.supabase.auth.getUser()
+    if (!user.user) {
+      throw new Error('User not authenticated')
+    }
+
+    const { data, error } = await this.supabase
+      .from('scene_block_tags')
+      .insert({
+        scene_id: sceneId,
+        block_id: blockId,
+        tag_name: tagName,
+        user_id: user.user.id,
+      })
+      .select()
+      .single()
+
+    if (error) {
+      throw error
+    }
+
+    return data
+  }
+
+  /**
+   * Remove a tag from a block
+   */
+  async removeTag(blockId: string, tagName: string): Promise<void> {
+    const { error } = await this.supabase
+      .from('scene_block_tags')
+      .delete()
+      .eq('block_id', blockId)
+      .eq('tag_name', tagName)
+
+    if (error) {
+      throw error
+    }
+  }
+
+  /**
+   * Remove all tags from a block
+   */
+  async removeAllTagsFromBlock(blockId: string): Promise<void> {
+    const { error } = await this.supabase
+      .from('scene_block_tags')
+      .delete()
+      .eq('block_id', blockId)
 
     if (error) {
       throw error

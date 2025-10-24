@@ -163,6 +163,8 @@ export interface Database {
           tags: string[]
           is_global: boolean
           is_active: boolean
+          is_favorite: boolean
+          last_viewed_at: string | null
           scene_type: string
           order_index: number
           created_at: string | null
@@ -184,6 +186,8 @@ export interface Database {
           tags?: string[]
           is_global?: boolean
           is_active?: boolean
+          is_favorite?: boolean
+          last_viewed_at?: string | null
           scene_type: string
           order_index?: number
           created_at?: string | null
@@ -205,6 +209,8 @@ export interface Database {
           tags?: string[]
           is_global?: boolean
           is_active?: boolean
+          is_favorite?: boolean
+          last_viewed_at?: string | null
           scene_type?: string
           order_index?: number
           created_at?: string | null

@@ -36,6 +36,13 @@ export function useLightConfigState(
 ) {
   const [roomStates, setRoomStates] = useState<Map<string, RoomState>>(new Map())
 
+  // Reset state when modal opens without initialConfig
+  useEffect(() => {
+    if (isOpen && !initialConfig) {
+      setRoomStates(new Map())
+    }
+  }, [isOpen, initialConfig])
+
   // Load initial configuration
   useEffect(() => {
     if (!isOpen || !initialConfig || typeof initialConfig !== 'object' || !('lights' in initialConfig)) {

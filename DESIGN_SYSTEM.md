@@ -795,42 +795,93 @@ Main application layout with navigation sidebar, optional content sidebar, and m
 
 ### Layout Combinations
 
-#### Two Sidebar Layout (Audio Library Pattern)
+All layouts use `DashboardLayoutWithSidebar` with consistent spacing:
+- Outer container: `p-2` (8px padding all sides)
+- Column gaps: `gap-2` (8px between columns)
+- Background: `bg-[#111111]` (dark) with panels at `bg-[#191919]` (lighter)
+
+#### 1. Single Sidebar Layout (Dashboard, Settings)
+**Structure:** Nav (56px) | Content (flex-1)
+
+```tsx
+<DashboardLayoutWithSidebar
+  navSidebar={<DashboardSidebar buttons={[...]} />}
+>
+  <div className="p-6">
+    {/* Main content - campaign cards, settings, etc. */}
+  </div>
+</DashboardLayoutWithSidebar>
+```
+
+**Used in:** `/campaigns`, `/settings`
+
+#### 2. Two Sidebar Layout (Audio Library, Lights)
+**Structure:** Nav (56px) | Content Sidebar (320px) | Content (flex-1)
+
 ```tsx
 <DashboardLayoutWithSidebar
   navSidebar={<DashboardSidebar buttons={[...]} />}
   contentSidebar={<PlaylistsSidebar />}
 >
   <div className="p-6">
-    {/* Main content with table */}
+    {/* Main content - audio table, light controls, etc. */}
   </div>
 </DashboardLayoutWithSidebar>
 ```
 
-#### Single Sidebar Layout (Dashboard Pattern)
+**Used in:** `/audio`, `/lights`
+
+**Content Sidebar Pattern:**
+- Width: `320px`
+- Background: `bg-[#191919] rounded-[8px]`
+- Header: `px-6 py-4` with title + action button
+- List: `overflow-y-auto scrollbar-custom px-6 py-4`
+
+#### 3. Three Column Layout (Session Play View - Basic)
+**Structure:** Nav (56px) | Scenes (320px) | Content (flex-1)
+
 ```tsx
 <DashboardLayoutWithSidebar
   navSidebar={<DashboardSidebar buttons={[...]} />}
+  contentSidebar={<ScenesSidebar />}
 >
-  <div className="p-6">
-    {/* Main content with campaign cards */}
-  </div>
+  <SceneEditor scene={selectedScene} />
 </DashboardLayoutWithSidebar>
 ```
 
-#### Three Column Layout (Session View Pattern)
+**Used in:** `/campaigns/[id]/sessions/[sessionId]/play`
+
+#### 4. Four Column Layout (Session Play View - With Expanded Note)
+**Structure:** Nav (56px) | Scenes (320px) | Content (flex-1) | Expanded Note (320px)
+
 ```tsx
 <DashboardLayoutWithSidebar
   navSidebar={<DashboardSidebar buttons={[...]} />}
-  contentSidebar={<ScenesList />}
+  contentSidebar={<ScenesSidebar />}
 >
-  <div className="p-6">
-    <div className="grid grid-cols-2 gap-4">
-      {/* Two column content */}
+  <div className="flex h-full gap-2 bg-[#111111] -m-px p-px">
+    <SceneEditor scene={selectedScene} />
+    
+    {/* Animated 4th column */}
+    <div className={`transition-all duration-300 ease-in-out overflow-hidden flex-shrink-0 ${
+      expanded ? 'w-[320px] opacity-100' : 'w-0 opacity-0'
+    }`}>
+      <div className="w-[320px] h-full bg-[#191919] rounded-[8px] flex flex-col">
+        {/* Expanded content */}
+      </div>
     </div>
   </div>
 </DashboardLayoutWithSidebar>
 ```
+
+**Key Techniques:**
+- Wrapper matches outer background: `bg-[#111111]`
+- Negative margin trick: `-m-px p-px` to extend to edges
+- `gap-2` creates visible dark gap between panels
+- Smooth animation: `transition-all duration-300 ease-in-out`
+- Collapse to `w-0 opacity-0` (hidden but still in DOM)
+
+**Used in:** `/campaigns/[id]/sessions/[sessionId]/play` (when note expanded)
 
 ## Interactive States
 
@@ -842,6 +893,13 @@ Main application layout with navigation sidebar, optional content sidebar, and m
 ### Active/Selected States
 - Background: `bg-white/10`
 - Text: `text-white`
+
+### Selection States (Scene Manager)
+- Selected items (subtle): `bg-white/5 hover:bg-white/[0.07]`
+- Selected with purple accent: `bg-purple-500/5`
+- Expanded note highlight: `bg-purple-500/10 border border-purple-500/20`
+- First item added: Auto-selected
+- Click row: Activates AND selects
 
 ### Disabled States
 - Opacity: `opacity-50`
@@ -1952,6 +2010,122 @@ Collection-based audio organization with many-to-many relationships.
 
 ---
 
+### Scene Manager (Multi-Config Ambience)
+
+Enhanced scene management with multiple audio tracks and lighting configurations per scene.
+
+**Components:**
+- `SceneEditor.tsx` - Main scene editing container
+- `SceneHero.tsx` - Title, description, page-level play button
+- `SceneAmbienceSection.tsx` - Lighting and audio multi-config management
+- `SceneNotesSection.tsx` - Notes with tags and filtering
+- `SceneNoteCard.tsx` - Individual note card with expand capability
+- `light-config/LightingRow.tsx` - Lighting configuration row
+- `light-config/AudioRow.tsx` - Audio file row
+
+**Key Patterns:**
+
+#### Section Headers with Badges
+```tsx
+<div className="flex items-center gap-2 mb-2">
+  <h2 className="font-['Inter'] text-[16px] font-semibold leading-[24px] text-white">
+    Lighting
+  </h2>
+  {items.length > 0 && (
+    <span className="px-2 py-0.5 bg-purple-500/20 border border-purple-500/30 rounded-[6px] text-[11px] text-white/70">
+      {items.length}
+    </span>
+  )}
+</div>
+```
+
+#### Multi-Config Tables
+Table pattern for audio/lighting configurations with selection states:
+
+```tsx
+<div className="border border-white/10 rounded-[8px] overflow-hidden">
+  {items.map(item => (
+    <div className={`group transition-colors cursor-pointer border-b border-white/5 last:border-b-0 ${
+      item.is_selected ? 'bg-white/5 hover:bg-white/[0.07]' : 'hover:bg-white/5'
+    }`}>
+      <div className="flex items-center px-3 py-2">
+        {/* Row content */}
+      </div>
+    </div>
+  ))}
+</div>
+```
+
+#### Hover Remove Button
+```tsx
+<button
+  onClick={(e) => {
+    e.stopPropagation()
+    onRemove()
+  }}
+  className="opacity-0 group-hover:opacity-100 w-6 h-6 rounded-[6px] hover:bg-white/10 flex items-center justify-center transition-all"
+>
+  <X className="w-4 h-4 text-white/60 hover:text-white" />
+</button>
+```
+
+#### Page-Level Play Button
+Circular gradient button positioned off-grid to the left of title:
+
+```tsx
+<button
+  disabled={!hasSelection}
+  className={`w-[48px] h-[48px] rounded-full transition-all flex items-center justify-center shadow-lg ${
+    hasSelection
+      ? 'bg-gradient-to-br from-purple-500 to-pink-500 hover:from-purple-400 hover:to-pink-400 hover:shadow-xl hover:scale-105'
+      : 'bg-gradient-to-br from-purple-500/30 to-pink-500/30 opacity-50 cursor-not-allowed'
+  }`}
+>
+  {isPlaying ? <Pause /> : <Play />}
+</button>
+```
+
+#### Four-Column Layout (Session Play View)
+```
+Nav (56px) | Scenes (320px) | Content (flex-1) | Expanded Note (320px, animated)
+```
+
+Layout structure:
+```tsx
+<DashboardLayoutWithSidebar
+  navSidebar={<DashboardSidebar />}
+  contentSidebar={<ScenesSidebar />}
+>
+  <div className="flex h-full gap-2 bg-[#111111] -m-px p-px">
+    <SceneEditor /> {/* flex-1, bg-[#191919], rounded-[8px] */}
+    
+    {/* Animated expanded panel */}
+    <div className={`transition-all duration-300 ease-in-out overflow-hidden flex-shrink-0 ${
+      expanded ? 'w-[320px] opacity-100' : 'w-0 opacity-0'
+    }`}>
+      <div className="w-[320px] h-full bg-[#191919] rounded-[8px]">
+        {/* Panel content */}
+      </div>
+    </div>
+  </div>
+</DashboardLayoutWithSidebar>
+```
+
+**Selection Logic:**
+- Only ONE audio selected at a time
+- Only ONE light config selected at a time
+- First item added = auto-selected
+- Clicking row = activates immediately AND marks as selected
+- Page-level play uses selected items only
+- Removing selected item = first remaining becomes selected
+
+**State Management:**
+- Store: `sceneLightConfigStore.ts` - Junction table for scene ↔ light_config
+- Store: `sceneAudioFileStore.ts` - Junction table for scene ↔ audio_file
+- Store: `sceneBlockStore.ts` - Enhanced with tag support
+
+---
+
 ## Component Status Summary
 
 ### UI Foundation (Tier 1) ✅
@@ -1967,9 +2141,10 @@ Collection-based audio organization with many-to-many relationships.
 
 ### Enhanced Components (Tier 2) ✅
 - [x] Scene Blocks editor (8 block types)
-- [x] Scene NPCs management
+- [x] Scene Manager (multi-config ambience, tags, expansion panel)
 - [x] Advanced File Explorer (tree view, drag-drop)
 - [x] Audio Playlists (sidebar + management)
+- [x] AddButton component (shared "Add X" pattern)
 
 ### Future Enhancements (Tier 3)
 - [ ] Loading skeleton components

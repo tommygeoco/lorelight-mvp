@@ -190,6 +190,67 @@ class SceneService {
       throw error
     }
   }
+
+  /**
+   * Toggle favorite status for a scene
+   */
+  async toggleFavorite(id: string): Promise<Scene> {
+    // First get the current favorite state
+    const scene = await this.get(id)
+    if (!scene) {
+      throw new Error('Scene not found')
+    }
+
+    // Handle undefined as false (for when column doesn't exist yet)
+    const currentFavorite = scene.is_favorite ?? false
+    return this.update(id, { is_favorite: !currentFavorite })
+  }
+
+  /**
+   * Update the last_viewed_at timestamp for a scene
+   */
+  async updateLastViewed(id: string): Promise<Scene> {
+    return this.update(id, { last_viewed_at: new Date().toISOString() })
+  }
+
+  /**
+   * Get all favorite scenes for the current user
+   */
+  async listFavorites(): Promise<Scene[]> {
+    await this.supabase.auth.getUser()
+
+    const { data, error } = await this.supabase
+      .from('scenes')
+      .select('*')
+      .eq('is_favorite', true)
+      .order('name', { ascending: true })
+
+    if (error) {
+      throw error
+    }
+
+    return data || []
+  }
+
+  /**
+   * Get recently viewed scenes for the current user
+   */
+  async listRecent(limit: number = 30): Promise<Scene[]> {
+    await this.supabase.auth.getUser()
+
+    const { data, error } = await this.supabase
+      .from('scenes')
+      .select('*')
+      .not('last_viewed_at', 'is', null)
+      .order('last_viewed_at', { ascending: false })
+      .limit(limit)
+
+    if (error) {
+      throw error
+    }
+
+    return data || []
+  }
 }
 
 export const sceneService = new SceneService()

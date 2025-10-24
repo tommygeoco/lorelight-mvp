@@ -25,6 +25,10 @@ interface SceneState {
   deactivateScene: (id: string) => Promise<void>
   reorderScenes: (campaignId: string, sceneIds: string[]) => Promise<void>
   setCurrentScene: (id: string | null) => void
+  toggleFavorite: (id: string) => Promise<void>
+  updateLastViewed: (id: string) => Promise<void>
+  fetchFavorites: () => Promise<void>
+  fetchRecent: () => Promise<void>
   clearError: () => void
 }
 
@@ -174,7 +178,9 @@ export const useSceneStore = create<SceneState>()(
                 if (sceneId === id) {
                   state.scenes.set(sceneId, castDraft(updated))
                 } else {
-                  const deactivated = { ...scene, is_active: false }
+                  // Create a new object to avoid type inference issues
+                  // @ts-expect-error - Deep type instantiation issue with Immer + complex Scene type
+                  const deactivated: Scene = Object.assign({}, scene, { is_active: false })
                   state.scenes.set(sceneId, castDraft(deactivated))
                 }
               }
@@ -242,7 +248,7 @@ export const useSceneStore = create<SceneState>()(
             sceneIds.forEach((id, index) => {
               const scene = state.scenes.get(id)
               if (scene) {
-                const reordered = { ...scene, order_index: index }
+                const reordered = { ...scene, order_index: index } as Scene
                 state.scenes.set(id, castDraft(reordered))
               }
             })
@@ -256,6 +262,88 @@ export const useSceneStore = create<SceneState>()(
 
       setCurrentScene: (id) => {
         set({ currentSceneId: id })
+      },
+
+      toggleFavorite: async (id) => {
+        set({ error: null })
+        const original = get().scenes.get(id)
+
+        // Optimistic update in sceneStore
+        if (original) {
+          const currentFavorite = original.is_favorite ?? false
+          const optimistic = { ...original, is_favorite: !currentFavorite } as Scene
+          set(state => {
+            state.scenes.set(id, castDraft(optimistic))
+          })
+        }
+
+        // Update database
+        try {
+          const updated = await sceneService.toggleFavorite(id)
+          set(state => {
+            state.scenes.set(id, castDraft(updated))
+          })
+        } catch (error) {
+          console.error('Toggle favorite failed:', error)
+          // Rollback on error
+          if (original) {
+            set(state => {
+              state.scenes.set(id, castDraft(original))
+            })
+          }
+          const message = error instanceof Error ? error.message : 'Failed to toggle favorite'
+          set({ error: message })
+          throw error
+        }
+      },
+
+      updateLastViewed: async (id) => {
+        // Silent update - no loading states
+        try {
+          const updated = await sceneService.updateLastViewed(id)
+          set(state => {
+            state.scenes.set(id, castDraft(updated))
+          })
+        } catch (error) {
+          // Silently fail for last viewed updates
+          console.error('Failed to update last viewed:', error)
+        }
+      },
+
+      fetchFavorites: async () => {
+        set({ isLoading: true, error: null })
+        try {
+          const favorites = await sceneService.listFavorites()
+          set(state => {
+            favorites.forEach(scene => {
+              state.scenes.set(scene.id, castDraft(scene))
+            })
+            state.isLoading = false
+          })
+        } catch (error) {
+          set({
+            error: error instanceof Error ? error.message : 'Failed to fetch favorites',
+            isLoading: false
+          })
+        }
+      },
+
+      fetchRecent: async () => {
+        set({ isLoading: true, error: null })
+        try {
+          const recent = await sceneService.listRecent()
+          set(state => {
+            recent.forEach(scene => {
+              state.scenes.set(scene.id, castDraft(scene))
+            })
+            state.isLoading = false
+          })
+        } catch (error) {
+          set({
+            error: error instanceof Error ? error.message : 'Failed to fetch recent scenes',
+            isLoading: false
+          })
+        }
       },
 
       clearError: () => {

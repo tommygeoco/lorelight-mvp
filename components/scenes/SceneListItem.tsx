@@ -1,7 +1,7 @@
 'use client'
 
 import { memo } from 'react'
-import { Play, Pause } from 'lucide-react'
+import { Star } from 'lucide-react'
 import type { Scene } from '@/types'
 import { getSceneGradientColors } from '@/lib/utils/gradients'
 
@@ -16,6 +16,7 @@ interface SceneListItemProps {
   onCancelEdit?: () => void
   onClick?: () => void
   onPlay?: () => void
+  onToggleFavorite?: () => void
   onContextMenu?: (e: React.MouseEvent) => void
 }
 
@@ -30,6 +31,7 @@ const SceneListItemComponent = ({
   onCancelEdit,
   onClick,
   onPlay,
+  onToggleFavorite,
   onContextMenu
 }: SceneListItemProps) => {
   const gradientColors = getSceneGradientColors(scene.scene_type)
@@ -106,32 +108,31 @@ const SceneListItemComponent = ({
         </div>
       )}
 
-      {/* Play/Pause Button */}
-      {!isEditing && (
+      {/* Star Button */}
+      {!isEditing && onToggleFavorite && (
         <div
           role="button"
           tabIndex={0}
           onClick={(e) => {
             e.stopPropagation()
-            onPlay?.()
+            onToggleFavorite()
           }}
           className={`hover:scale-110 transition-transform ${
-            isActive ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+            scene.is_favorite ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
           }`}
-          aria-label={isActive ? `Pause ${scene.name}` : `Play ${scene.name}`}
+          aria-label={scene.is_favorite ? `Remove ${scene.name} from favorites` : `Add ${scene.name} to favorites`}
           onKeyDown={(e) => {
             if (e.key === 'Enter' || e.key === ' ') {
               e.preventDefault()
               e.stopPropagation()
-              onPlay?.()
+              onToggleFavorite()
             }
           }}
         >
-          {isActive ? (
-            <Pause className="w-4 h-4 text-white/70 flex-shrink-0" />
-          ) : (
-            <Play className="w-4 h-4 text-white/70 flex-shrink-0" fill="currentColor" />
-          )}
+          <Star 
+            className={`w-4 h-4 flex-shrink-0 ${scene.is_favorite ? 'text-yellow-400' : 'text-white/70'}`}
+            fill={scene.is_favorite ? 'currentColor' : 'none'}
+          />
         </div>
       )}
     </div>

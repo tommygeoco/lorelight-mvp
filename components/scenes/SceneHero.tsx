@@ -1,11 +1,13 @@
 'use client'
 
-import { useState, useMemo, useRef } from 'react'
+import { useState, useRef, useMemo } from 'react'
 import { Play, Pause } from 'lucide-react'
 import type { Scene } from '@/types'
 import { useSceneStore } from '@/store/sceneStore'
 import { useSessionSceneStore } from '@/store/sessionSceneStore'
 import { useAudioStore } from '@/store/audioStore'
+import { useSceneLightConfigStore } from '@/store/sceneLightConfigStore'
+import { useSceneAudioFileStore } from '@/store/sceneAudioFileStore'
 
 interface SceneHeroProps {
   scene: Scene
@@ -42,14 +44,35 @@ export function SceneHero({ scene, sessionId }: SceneHeroProps) {
     }
   }
 
-  // Check if audio is actually playing this scene
-  const { isPlaying, sourceContext } = useAudioStore()
-  const isScenePlaying = useMemo(() => {
-    return scene.is_active &&
-           isPlaying &&
-           sourceContext?.type === 'scene' &&
-           sourceContext.id === scene.id
-  }, [scene.is_active, scene.id, isPlaying, sourceContext])
+  // Get selection state from stores
+  const { isPlaying, currentTrackId } = useAudioStore()
+  const sceneLightConfigs = useSceneLightConfigStore((state) => state.configs)
+  const sceneLightConfigIds = useSceneLightConfigStore((state) => state.sceneConfigs)
+  const sceneAudioFiles = useSceneAudioFileStore((state) => state.audioFiles)
+  const sceneAudioFileIds = useSceneAudioFileStore((state) => state.sceneAudioFiles)
+  const lightVersion = useSceneLightConfigStore((state) => state._version)
+  const audioVersion = useSceneAudioFileStore((state) => state._version)
+
+  // Memoize selection state computation
+  const { selectedAudio, selectedLight, hasSelection } = useMemo(() => {
+    const audioIds = sceneAudioFileIds.get(scene.id) || []
+    const selectedAudio = audioIds
+      .map(id => sceneAudioFiles.get(id))
+      .find(af => af?.is_selected)
+
+    const lightIds = sceneLightConfigIds.get(scene.id) || []
+    const selectedLight = lightIds
+      .map(id => sceneLightConfigs.get(id))
+      .find(lc => lc?.is_selected)
+
+    return {
+      selectedAudio,
+      selectedLight,
+      hasSelection: !!(selectedAudio || selectedLight)
+    }
+  }, [scene.id, sceneAudioFileIds, sceneAudioFiles, sceneLightConfigs, sceneLightConfigIds, lightVersion, audioVersion])
+
+  const isSelectedAudioPlaying = !!(selectedAudio && currentTrackId === selectedAudio.audio_file_id && isPlaying)
 
   const handleTitleSave = () => {
     const newTitle = titleInputRef.current?.value || ''
@@ -100,50 +123,56 @@ export function SceneHero({ scene, sessionId }: SceneHeroProps) {
     })
   }
 
-  const handlePlayPause = () => {
-    if (scene.is_active) {
-      // Optimistic UI update - deactivate
-      if (sessionId) {
-        useSessionSceneStore.getState().updateSceneInSession(sessionId, scene.id, {
-          is_active: false,
-          updated_at: new Date().toISOString()
-        })
-      }
+  const handlePlayPause = async () => {
+    // Use already computed selection state
+    if (!hasSelection) {
+      return
+    }
 
-      // Fire and forget - don't await
-      deactivateScene(scene.id).catch(console.error)
+    // Check if selected audio is currently playing
+    const audioStore = useAudioStore.getState()
+    const isAudioPlaying = selectedAudio && 
+      audioStore.currentTrackId === selectedAudio.audio_file_id && 
+      audioStore.isPlaying
+
+    if (isAudioPlaying) {
+      // Pause audio
+      audioStore.togglePlay()
     } else {
-      // Optimistic UI update - activate this, deactivate all others
-      if (sessionId) {
-        const state = useSessionSceneStore.getState()
-        const currentScenes = state.sessionScenes.get(sessionId) || []
-
-        // Deactivate all other scenes
-        currentScenes.forEach(s => {
-          if (s.id !== scene.id && s.is_active) {
-            useSessionSceneStore.getState().updateSceneInSession(sessionId, s.id, {
-              is_active: false,
-              updated_at: new Date().toISOString()
-            })
-          }
-        })
-
-        // Activate this scene
-        useSessionSceneStore.getState().updateSceneInSession(sessionId, scene.id, {
-          is_active: true,
-          updated_at: new Date().toISOString()
-        })
+      // Play selected audio
+      if (selectedAudio) {
+        const { useAudioFileStore } = await import('@/store/audioFileStore')
+        const audioFileData = useAudioFileStore.getState().audioFiles.get(selectedAudio.audio_file_id)
+        if (audioFileData?.file_url) {
+          audioStore.loadTrack(
+            audioFileData.id, 
+            audioFileData.file_url, 
+            { type: 'scene', id: scene.id, name: scene.name }
+          )
+          // Start playback
+          setTimeout(() => {
+            audioStore.play()
+          }, 100)
+        }
       }
 
-      // Fire and forget - don't await
-      activateScene(scene.id).catch(console.error)
+      // Activate selected lights
+      if (selectedLight) {
+        const { useLightConfigStore } = await import('@/store/lightConfigStore')
+        const { useHueStore } = await import('@/store/hueStore')
+        
+        const lightConfigData = useLightConfigStore.getState().lightConfigs.get(selectedLight.light_config_id)
+        if (lightConfigData?.rgb_color) {
+          await useHueStore.getState().applyLightConfig(lightConfigData.rgb_color as Record<string, unknown>)
+        }
+      }
     }
   }
 
   return (
-    <div className="relative w-full overflow-clip pb-0 pt-[80px]">
+    <div className="relative w-full">
       {/* Radial Gradient Background - matching PageHeader pattern */}
-      <div className="absolute left-0 right-0 pointer-events-none" style={{ top: '-100px', height: '300px' }}>
+      <div className="absolute left-0 right-0 pointer-events-none" style={{ top: '-80px', height: '400px' }}>
         {/* Pink gradient - left side */}
         <div
           className="absolute"
@@ -171,9 +200,29 @@ export function SceneHero({ scene, sessionId }: SceneHeroProps) {
       </div>
 
       {/* Content */}
-      <div className="max-w-[760px] mx-auto px-[32px] pb-[24px] space-y-[16px] relative z-10">
-        {/* Editable title */}
-        {isEditingTitle ? (
+      <div className="max-w-[760px] mx-auto px-[32px] pt-[80px] pb-[24px] relative z-10">
+        {/* Title and description container with play button */}
+        <div className="relative pl-[72px]">
+          {/* Circular Play/Pause - positioned to the left */}
+          <button
+            onClick={handlePlayPause}
+            disabled={!hasSelection}
+            className={`absolute left-0 top-[26px] w-[48px] h-[48px] rounded-full transition-all flex items-center justify-center shadow-lg ${
+              hasSelection
+                ? 'bg-gradient-to-br from-purple-500 to-pink-500 hover:from-purple-400 hover:to-pink-400 hover:shadow-xl hover:scale-105'
+                : 'bg-gradient-to-br from-purple-500/30 to-pink-500/30 opacity-50 cursor-not-allowed'
+            }`}
+            aria-label={!hasSelection ? "Add audio or lights first" : isSelectedAudioPlaying ? "Pause scene" : "Play scene"}
+          >
+            {isSelectedAudioPlaying ? (
+              <Pause className="w-5 h-5 text-white" fill="currentColor" />
+            ) : (
+              <Play className="w-5 h-5 text-white ml-0.5" fill="currentColor" />
+            )}
+          </button>
+
+          {/* Editable title */}
+          {isEditingTitle ? (
           <input
             ref={handleTitleMount}
             type="text"
@@ -200,71 +249,48 @@ export function SceneHero({ scene, sessionId }: SceneHeroProps) {
           </h1>
         )}
 
-        {/* Editable description */}
-        <div className="relative min-h-[60px]">
-          {isEditingDesc ? (
-            <textarea
-              ref={(el) => {
-                handleDescMount(el)
-                if (el) {
-                  el.style.height = 'auto'
-                  el.style.height = el.scrollHeight + 'px'
-                }
-              }}
-              defaultValue={scene.description || ''}
-              onBlur={handleDescSave}
-              onInput={(e) => {
-                const target = e.target as HTMLTextAreaElement
-                target.style.height = 'auto'
-                target.style.height = target.scrollHeight + 'px'
-              }}
-              onKeyDown={(e) => {
-                if (e.key === 'Escape') {
-                  e.preventDefault()
-                  setIsEditingDesc(false)
-                }
-              }}
-              className="w-full p-0 m-0 bg-transparent border-none outline-none font-['Inter'] text-[14px] leading-normal text-[#eeeeee] placeholder:text-white/40 resize-none overflow-hidden"
-              placeholder="Add a description..."
-              data-1p-ignore="true"
-              data-lpignore="true"
-            />
-          ) : (
-            <div
-              onClick={() => setIsEditingDesc(true)}
-              className="w-full p-0 m-0 font-['Inter'] text-[14px] leading-normal text-[#eeeeee] cursor-text whitespace-pre-wrap"
-              data-1p-ignore="true"
-              data-lpignore="true"
-            >
-              {scene.description || (
-                <span className="text-white/40">Add a description...</span>
-              )}
-            </div>
-          )}
-        </div>
-
-        {/* Play/Pause Button */}
-        <div className="mt-[24px]">
-          <button
-            onClick={handlePlayPause}
-            className={`flex items-center gap-2 px-[16px] py-[10px] rounded-[8px] font-['Inter'] text-[14px] font-medium transition-colors ${
-              isScenePlaying
-                ? 'bg-white/10 text-white hover:bg-white/15'
-                : 'bg-white/5 text-white/70 hover:bg-white/10 hover:text-white'
-            }`}
-          >
-            {isScenePlaying ? (
-              <>
-                <Pause className="w-4 h-4" />
-                <span>Deactivate Scene</span>
-              </>
+          {/* Editable description */}
+          <div className="relative min-h-[60px] mt-[16px]">
+            {isEditingDesc ? (
+              <textarea
+                ref={(el) => {
+                  handleDescMount(el)
+                  if (el) {
+                    el.style.height = 'auto'
+                    el.style.height = el.scrollHeight + 'px'
+                  }
+                }}
+                defaultValue={scene.description || ''}
+                onBlur={handleDescSave}
+                onInput={(e) => {
+                  const target = e.target as HTMLTextAreaElement
+                  target.style.height = 'auto'
+                  target.style.height = target.scrollHeight + 'px'
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Escape') {
+                    e.preventDefault()
+                    setIsEditingDesc(false)
+                  }
+                }}
+                className="w-full p-0 m-0 bg-transparent border-none outline-none font-['Inter'] text-[14px] leading-normal text-[#eeeeee] placeholder:text-white/40 resize-none overflow-hidden"
+                placeholder="Add a description..."
+                data-1p-ignore="true"
+                data-lpignore="true"
+              />
             ) : (
-              <>
-                <Play className="w-4 h-4" fill="currentColor" />
-                <span>Activate Scene</span>
-              </>
+              <div
+                onClick={() => setIsEditingDesc(true)}
+                className="w-full p-0 m-0 font-['Inter'] text-[14px] leading-normal text-[#eeeeee] cursor-text whitespace-pre-wrap"
+                data-1p-ignore="true"
+                data-lpignore="true"
+              >
+                {scene.description || (
+                  <span className="text-white/40">Add a description...</span>
+                )}
+              </div>
             )}
-          </button>
+          </div>
         </div>
       </div>
     </div>

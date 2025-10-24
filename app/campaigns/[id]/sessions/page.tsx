@@ -47,13 +47,19 @@ export default function SessionsPage({
     }
   }, [resolvedParams.id, fetchedCampaigns, isLoading, fetchSessionsForCampaign])
 
-  // If no campaign data and campaigns haven't loaded yet, redirect
+  // Redirect if campaign not found
+  useEffect(() => {
+    if (!campaign && campaigns.size > 0) {
+      router.push('/campaigns')
+    }
+  }, [campaign, campaigns.size, router])
+
+  // If no campaign data and campaigns haven't loaded yet, show nothing
   if (!campaign && campaigns.size === 0) {
     return null
   }
 
   if (!campaign) {
-    router.push('/campaigns')
     return null
   }
 

@@ -1,13 +1,13 @@
 'use client'
 
-import { use, useEffect, useState } from 'react'
+import { use, useEffect, useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { useCampaignStore } from '@/store/campaignStore'
 import { useSceneStore } from '@/store/sceneStore'
 import { useHueStore } from '@/store/hueStore'
 import { useAudioFileMap } from '@/hooks/useAudioFileMap'
 import { useToastStore } from '@/store/toastStore'
-import { Plus, Edit2, Copy, Trash2, Music, Lightbulb, Play } from 'lucide-react'
+import { Plus, Edit2, Copy, Trash2, Music, Lightbulb, Play, Star, Clock } from 'lucide-react'
 import { DashboardLayoutWithSidebar } from '@/components/layouts/DashboardLayoutWithSidebar'
 import { DashboardSidebar } from '@/components/layouts/DashboardSidebar'
 import { EmptyState } from '@/components/ui/EmptyState'
@@ -24,7 +24,7 @@ export default function ScenesPage({
   const resolvedParams = use(params)
   const router = useRouter()
   const { campaigns, fetchCampaigns } = useCampaignStore()
-  const { scenes, fetchScenesForCampaign, activateScene, createScene, deleteScene, fetchedCampaigns, isLoading } = useSceneStore()
+  const { scenes, fetchScenesForCampaign, activateScene, createScene, deleteScene, toggleFavorite, fetchedCampaigns, isLoading } = useSceneStore()
   const { rooms, lights, applyLightConfig } = useHueStore()
   const audioFileMap = useAudioFileMap()
   const { addToast } = useToastStore()
@@ -36,6 +36,7 @@ export default function ScenesPage({
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [sceneToDelete, setSceneToDelete] = useState<Scene | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
+  const [sceneFilter, setSceneFilter] = useState<'all' | 'favorites' | 'recent'>('all')
 
   const campaign = campaigns.get(resolvedParams.id)
   const campaignScenes = Array.from(scenes.values())
@@ -46,6 +47,22 @@ export default function ScenesPage({
       if (!a.is_active && b.is_active) return 1
       return a.order_index - b.order_index
     })
+
+  const filteredScenes = useMemo(() => {
+    if (sceneFilter === 'favorites') {
+      return campaignScenes.filter(s => s.is_favorite)
+    } else if (sceneFilter === 'recent') {
+      return campaignScenes
+        .filter(s => s.last_viewed_at)
+        .sort((a, b) => {
+          const dateA = a.last_viewed_at ? new Date(a.last_viewed_at).getTime() : 0
+          const dateB = b.last_viewed_at ? new Date(b.last_viewed_at).getTime() : 0
+          return dateB - dateA
+        })
+        .slice(0, 10)
+    }
+    return campaignScenes
+  }, [campaignScenes, sceneFilter])
 
   const selectedScene = selectedSceneId
     ? campaignScenes.find(s => s.id === selectedSceneId)
@@ -84,12 +101,18 @@ export default function ScenesPage({
     }
   }, [resolvedParams.id, fetchedCampaigns, isLoading, fetchScenesForCampaign])
 
+  // Redirect if campaign not found
+  useEffect(() => {
+    if (!campaign && campaigns.size > 0) {
+      router.push('/campaigns')
+    }
+  }, [campaign, campaigns.size, router])
+
   if (!campaign && campaigns.size === 0) {
     return null
   }
 
   if (!campaign) {
-    router.push('/campaigns')
     return null
   }
 
@@ -116,6 +139,9 @@ export default function ScenesPage({
   const handleSceneClick = async (scene: Scene) => {
     // Always select the scene for detail view
     setSelectedSceneId(scene.id)
+
+    // Track that this scene was viewed
+    useSceneStore.getState().updateLastViewed(scene.id)
 
     // If scene is configured and not already active, activate it
     if ((scene.audio_config || scene.light_config) && !scene.is_active) {
@@ -203,6 +229,18 @@ export default function ScenesPage({
     }
   }
 
+  const handleToggleFavorite = async (scene: Scene, e: React.MouseEvent) => {
+    e.stopPropagation()
+    try {
+      await toggleFavorite(scene.id)
+      const action = scene.is_favorite ? 'Removed from' : 'Added to'
+      addToast(`${action} favorites`, 'success')
+    } catch (error) {
+      console.error('Failed to toggle favorite:', error)
+      addToast('Failed to update favorite', 'error')
+    }
+  }
+
   const handleCloseModal = () => {
     setIsSceneModalOpen(false)
     setEditingSceneId(null)
@@ -218,7 +256,7 @@ export default function ScenesPage({
   const scenesSidebar = (
     <div className="w-[320px] h-full bg-[#191919] rounded-[8px] flex flex-col">
       {/* Header */}
-      <div className="px-6 py-4 flex items-center justify-between">
+      <div className="px-6 py-4 flex items-center justify-between border-b border-white/5">
         <h2 className="text-base font-semibold text-white">Scenes</h2>
         <button
           onClick={() => {
@@ -233,19 +271,60 @@ export default function ScenesPage({
         </button>
       </div>
 
+      {/* Filter Tabs */}
+      <div className="flex gap-2 px-6 pt-4 pb-3">
+        <button
+          onClick={() => setSceneFilter('all')}
+          className={`flex-1 px-3 py-1.5 text-xs font-medium rounded-[6px] transition-colors ${
+            sceneFilter === 'all'
+              ? 'bg-white/10 text-white'
+              : 'text-white/70 hover:text-white hover:bg-white/5'
+          }`}
+        >
+          All
+        </button>
+        <button
+          onClick={() => setSceneFilter('favorites')}
+          className={`flex-1 px-3 py-1.5 text-xs font-medium rounded-[6px] transition-colors flex items-center justify-center gap-1.5 ${
+            sceneFilter === 'favorites'
+              ? 'bg-white/10 text-white'
+              : 'text-white/70 hover:text-white hover:bg-white/5'
+          }`}
+        >
+          <Star className="w-3 h-3" fill={sceneFilter === 'favorites' ? 'currentColor' : 'none'} />
+          Favorites
+        </button>
+        <button
+          onClick={() => setSceneFilter('recent')}
+          className={`flex-1 px-3 py-1.5 text-xs font-medium rounded-[6px] transition-colors flex items-center justify-center gap-1.5 ${
+            sceneFilter === 'recent'
+              ? 'bg-white/10 text-white'
+              : 'text-white/70 hover:text-white hover:bg-white/5'
+          }`}
+        >
+          <Clock className="w-3 h-3" />
+          Recent
+        </button>
+      </div>
+
       {/* Scrollable List */}
       <div
         className="flex-1 overflow-y-auto scrollbar-custom px-6 py-4"
         onContextMenu={handleEmptySpaceContextMenu}
       >
         {/* Scenes List */}
-        {campaignScenes.length === 0 ? (
+        {filteredScenes.length === 0 ? (
           <div className="text-center py-8">
-            <p className="text-white/40 text-[0.875rem]">No scenes discovered...<br />Create a scene to begin</p>
+            <p className="text-white/40 text-[0.875rem]">
+              {sceneFilter === 'favorites' ? 'No favorite scenes...' : 
+               sceneFilter === 'recent' ? 'No recently viewed scenes...' : 
+               'No scenes discovered...'}<br />
+              {sceneFilter === 'all' && 'Create a scene to begin'}
+            </p>
           </div>
         ) : (
           <ul role="list" className="space-y-2">
-            {campaignScenes.map((scene) => {
+            {filteredScenes.map((scene) => {
               const isSelected = selectedSceneId === scene.id
               const hasAudio = !!scene.audio_config
               const hasLights = !!scene.light_config
@@ -261,6 +340,15 @@ export default function ScenesPage({
                   >
                     <div className="flex items-center gap-2">
                       <span className="flex-1 truncate text-[13px] text-white font-medium">{scene.name}</span>
+                      <button
+                        onClick={(e) => handleToggleFavorite(scene, e)}
+                        className={`w-5 h-5 flex items-center justify-center rounded hover:bg-yellow-500/10 transition-all flex-shrink-0 ${
+                          scene.is_favorite ? 'opacity-100 text-yellow-400' : 'opacity-0 group-hover:opacity-100 text-white/30 hover:text-yellow-400'
+                        }`}
+                        title={scene.is_favorite ? "Remove from favorites" : "Add to favorites"}
+                      >
+                        <Star className="w-3 h-3" fill={scene.is_favorite ? 'currentColor' : 'none'} />
+                      </button>
                       <button
                         onClick={(e) => handleDeleteClick(scene, e)}
                         className="opacity-0 group-hover:opacity-100 w-5 h-5 flex items-center justify-center rounded hover:bg-red-500/10 text-white/30 hover:text-red-400 transition-all flex-shrink-0"

@@ -6,7 +6,7 @@ import { useSessionSceneStore } from '@/store/sessionSceneStore'
 import { useSceneStore } from '@/store/sceneStore'
 import { useToastStore } from '@/store/toastStore'
 import { useAudioStore } from '@/store/audioStore'
-import { Plus, Edit2, Copy, Trash2 } from 'lucide-react'
+import { Plus, Edit2, Copy, Trash2, Star, Clock } from 'lucide-react'
 import { DashboardLayoutWithSidebar } from '@/components/layouts/DashboardLayoutWithSidebar'
 import { DashboardSidebar } from '@/components/layouts/DashboardSidebar'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
@@ -37,7 +37,8 @@ export function SessionSceneView({ campaignId, sessionId }: SessionSceneViewProp
 
   const {
     createScene,
-    deleteScene
+    deleteScene,
+    toggleFavorite
   } = useSceneStore()
 
   const { addToast } = useToastStore()
@@ -60,6 +61,9 @@ export function SessionSceneView({ campaignId, sessionId }: SessionSceneViewProp
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [sceneToDelete, setSceneToDelete] = useState<Scene | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
+  const [isCreatingScene, setIsCreatingScene] = useState(false)
+  const [newSceneName, setNewSceneName] = useState('')
+  const [expandedBlockId, setExpandedBlockId] = useState<string | null>(null)
 
   // Get session-specific scenes from sessionSceneStore
   const sceneArray = useMemo(
@@ -113,6 +117,43 @@ export function SessionSceneView({ campaignId, sessionId }: SessionSceneViewProp
 
   const handleSceneClick = async (scene: Scene) => {
     setSelectedSceneId(scene.id)
+    // Track that this scene was viewed
+    useSceneStore.getState().updateLastViewed(scene.id)
+  }
+
+  const handleToggleFavorite = async (scene: Scene) => {
+    const currentFavorite = scene.is_favorite ?? false
+    const newFavorite = !currentFavorite
+
+    // INSTANT: Update local sessionSceneStore first
+    const currentScenes = sessionScenes.get(sessionId) || []
+    const updatedScenes = currentScenes.map(s =>
+      s.id === scene.id ? { ...s, is_favorite: newFavorite } : s
+    )
+    useSessionSceneStore.setState((state) => ({
+      ...state,
+      sessionScenes: new Map(state.sessionScenes).set(sessionId, updatedScenes),
+      _version: state._version + 1
+    }))
+
+    // BACKGROUND: Update database and sceneStore
+    try {
+      await toggleFavorite(scene.id)
+      const action = newFavorite ? 'Added to' : 'Removed from'
+      addToast(`${action} favorites`, 'success')
+    } catch (error) {
+      console.error('Failed to toggle favorite:', error)
+      addToast('Failed to update favorite', 'error')
+      // Rollback
+      const rollbackScenes = currentScenes.map(s =>
+        s.id === scene.id ? { ...s, is_favorite: currentFavorite } : s
+      )
+      useSessionSceneStore.setState((state) => ({
+        ...state,
+        sessionScenes: new Map(state.sessionScenes).set(sessionId, rollbackScenes),
+        _version: state._version + 1
+      }))
+    }
   }
 
   const handlePlayScene = (scene: Scene) => {
@@ -217,6 +258,52 @@ export function SessionSceneView({ campaignId, sessionId }: SessionSceneViewProp
     setEditingName('')
   }
 
+  const handleStartSceneCreation = () => {
+    setIsCreatingScene(true)
+    setNewSceneName('')
+  }
+
+  const handleCreateSceneSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!newSceneName.trim()) {
+      setIsCreatingScene(false)
+      return
+    }
+
+    try {
+      // Create minimal scene
+      const newScene = await createScene({
+        campaign_id: campaignId,
+        name: newSceneName.trim(),
+        description: null,
+        scene_type: 'default',
+        audio_config: null,
+        light_config: null,
+        notes: null,
+        order_index: sceneArray.length,
+        is_active: false
+      })
+
+      // Add to session
+      await addSceneToSession(sessionId, newScene.id)
+
+      // Auto-select and navigate
+      setSelectedSceneId(newScene.id)
+      setIsCreatingScene(false)
+      setNewSceneName('')
+      addToast(`Created "${newScene.name}"`, 'success')
+    } catch (error) {
+      console.error('Failed to create scene:', error)
+      addToast('Failed to create scene', 'error')
+      setIsCreatingScene(false)
+    }
+  }
+
+  const handleCancelSceneCreation = () => {
+    setIsCreatingScene(false)
+    setNewSceneName('')
+  }
+
   const handleDuplicate = async (scene: Scene) => {
     try {
       const duplicatedScene = await createScene({
@@ -290,21 +377,72 @@ export function SessionSceneView({ campaignId, sessionId }: SessionSceneViewProp
     onOpenHueSetup: () => setIsHueSetupOpen(true),
   })
 
+  const [sceneFilter, setSceneFilter] = useState<'all' | 'favorites' | 'recent'>('all')
+
+  const filteredScenes = useMemo(() => {
+    if (sceneFilter === 'favorites') {
+      return sortedScenes.filter(s => s.is_favorite)
+    } else if (sceneFilter === 'recent') {
+      return sortedScenes
+        .filter(s => s.last_viewed_at)
+        .sort((a, b) => {
+          const dateA = a.last_viewed_at ? new Date(a.last_viewed_at).getTime() : 0
+          const dateB = b.last_viewed_at ? new Date(b.last_viewed_at).getTime() : 0
+          return dateB - dateA
+        })
+        .slice(0, 10) // Top 10 recent
+    }
+    return sortedScenes
+  }, [sortedScenes, sceneFilter])
+
   const scenesSidebar = (
     <div className="w-[320px] h-full bg-[#191919] rounded-[8px] flex flex-col" aria-label="Scenes list">
       {/* Header */}
-      <div className="px-6 py-4 flex items-center justify-between">
+      <div className="px-6 py-4 flex items-center justify-between border-b border-white/5">
         <h2 className="text-sm font-semibold text-white">Scenes</h2>
         <button
-          onClick={() => {
-            setEditingScene(undefined)
-            setIsSceneModalOpen(true)
-          }}
+          onClick={handleStartSceneCreation}
           className="w-8 h-8 rounded-[8px] hover:bg-white/5 flex items-center justify-center transition-colors"
           aria-label="Add new scene"
-          title="Create scene..."
+          title="Create scene"
         >
           <Plus className="w-[18px] h-[18px] text-white/70" />
+        </button>
+      </div>
+
+      {/* Filter Tabs */}
+      <div className="flex gap-2 px-6 pt-4 pb-3">
+        <button
+          onClick={() => setSceneFilter('all')}
+          className={`flex-1 px-3 py-1.5 text-xs font-medium rounded-[6px] transition-colors ${
+            sceneFilter === 'all'
+              ? 'bg-white/10 text-white'
+              : 'text-white/70 hover:text-white hover:bg-white/5'
+          }`}
+        >
+          All
+        </button>
+        <button
+          onClick={() => setSceneFilter('favorites')}
+          className={`flex-1 px-3 py-1.5 text-xs font-medium rounded-[6px] transition-colors flex items-center justify-center gap-1.5 ${
+            sceneFilter === 'favorites'
+              ? 'bg-white/10 text-white'
+              : 'text-white/70 hover:text-white hover:bg-white/5'
+          }`}
+        >
+          <Star className="w-3 h-3" fill={sceneFilter === 'favorites' ? 'currentColor' : 'none'} />
+          Favorites
+        </button>
+        <button
+          onClick={() => setSceneFilter('recent')}
+          className={`flex-1 px-3 py-1.5 text-xs font-medium rounded-[6px] transition-colors flex items-center justify-center gap-1.5 ${
+            sceneFilter === 'recent'
+              ? 'bg-white/10 text-white'
+              : 'text-white/70 hover:text-white hover:bg-white/5'
+          }`}
+        >
+          <Clock className="w-3 h-3" />
+          Recent
         </button>
       </div>
 
@@ -313,13 +451,46 @@ export function SessionSceneView({ campaignId, sessionId }: SessionSceneViewProp
         className="flex-1 overflow-y-auto scrollbar-custom px-6 py-4"
         onContextMenu={handleEmptySpaceContextMenu}
       >
-        {sortedScenes.length === 0 ? (
+        {/* Inline scene creation form */}
+        {isCreatingScene && (
+          <form onSubmit={handleCreateSceneSubmit} className="mb-4">
+            <div className="flex items-center gap-2 px-3 py-2 bg-white/[0.05] rounded-[8px] border border-white/10">
+              <div className="w-9 h-9 rounded-[6px] bg-white/[0.07] flex-shrink-0" />
+              <input
+                type="text"
+                value={newSceneName}
+                onChange={(e) => setNewSceneName(e.target.value)}
+                onBlur={() => {
+                  if (!newSceneName.trim()) {
+                    handleCancelSceneCreation()
+                  }
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Escape') {
+                    e.preventDefault()
+                    handleCancelSceneCreation()
+                  }
+                }}
+                placeholder="Scene name..."
+                autoFocus
+                className="flex-1 bg-transparent border-none outline-none text-[13px] text-white placeholder:text-white/40"
+              />
+            </div>
+          </form>
+        )}
+
+        {filteredScenes.length === 0 && !isCreatingScene ? (
           <div className="text-center py-8">
-            <p className="text-white/40 text-[0.875rem]">No scenes discovered...<br />Create a scene to begin</p>
+            <p className="text-white/40 text-[0.875rem]">
+              {sceneFilter === 'favorites' ? 'No favorite scenes...' : 
+               sceneFilter === 'recent' ? 'No recently viewed scenes...' : 
+               'No scenes discovered...'}<br />
+              {sceneFilter === 'all' && 'Create a scene to begin'}
+            </p>
           </div>
-        ) : (
+        ) : filteredScenes.length > 0 ? (
           <ul role="list" className="space-y-2">
-            {sortedScenes.map((scene) => {
+            {filteredScenes.map((scene) => {
               // Scene is truly active only if it's marked active AND audio is playing it
               const isScenePlaying = scene.is_active &&
                                     isPlaying &&
@@ -339,13 +510,14 @@ export function SessionSceneView({ campaignId, sessionId }: SessionSceneViewProp
                     onCancelEdit={handleCancelEdit}
                     onClick={() => handleSceneClick(scene)}
                     onPlay={() => handlePlayScene(scene)}
+                    onToggleFavorite={() => handleToggleFavorite(scene)}
                     onContextMenu={(e) => handleContextMenu(e, scene)}
                   />
                 </li>
               )
             })}
           </ul>
-        )}
+        ) : null}
       </div>
     </div>
   )
@@ -355,21 +527,46 @@ export function SessionSceneView({ campaignId, sessionId }: SessionSceneViewProp
       navSidebar={<DashboardSidebar buttons={sidebarButtons} />}
       contentSidebar={scenesSidebar}
     >
-      {selectedScene ? (
-        <SceneEditor
-          scene={selectedScene}
-          campaignId={campaignId}
-          sessionId={sessionId}
-        />
-      ) : (
-        <div className="flex items-center justify-center h-full">
-          <EmptyState
-            title="No scene chosen"
-            description="The stage awaits your selection"
-            variant="centered"
+      <div className="flex h-full gap-2 bg-[#111111] -m-px p-px">
+        {/* Main scene content */}
+        {selectedScene ? (
+          <SceneEditor
+            scene={selectedScene}
+            campaignId={campaignId}
+            sessionId={sessionId}
+            expandedBlockId={expandedBlockId}
+            onExpandNote={setExpandedBlockId}
           />
+        ) : (
+          <div className="flex-1 flex items-center justify-center">
+            <EmptyState
+              title="No scene chosen"
+              description="The stage awaits your selection"
+              variant="centered"
+            />
+          </div>
+        )}
+
+        {/* Expanded notes panel - 4th column with smooth transition */}
+        <div className={`h-full flex-shrink-0 transition-all duration-300 ease-in-out overflow-hidden ${
+          expandedBlockId && selectedScene ? 'w-[320px] opacity-100' : 'w-0 opacity-0'
+        }`}>
+          <div className="w-[320px] h-full bg-[#191919] rounded-[8px] flex flex-col">
+            <div className="px-6 py-4 flex items-center justify-between border-b border-white/5 flex-shrink-0">
+              <h2 className="text-sm font-semibold text-white">Note Details</h2>
+              <button
+                onClick={() => setExpandedBlockId(null)}
+                className="w-8 h-8 rounded-[8px] hover:bg-white/5 flex items-center justify-center transition-colors"
+              >
+                <span className="text-white/60 hover:text-white text-xl">×</span>
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto scrollbar-custom px-6 py-4">
+              <p className="text-[13px] text-white/60">Expanded note view coming soon...</p>
+            </div>
+          </div>
         </div>
-      )}
+      </div>
 
       <SceneModal
         isOpen={isSceneModalOpen}

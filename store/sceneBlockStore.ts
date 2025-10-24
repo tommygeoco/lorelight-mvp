@@ -2,7 +2,7 @@ import { create } from 'zustand'
 // import { persist } from 'zustand/middleware'
 import { immer } from 'zustand/middleware/immer'
 import { enableMapSet } from 'immer'
-import type { SceneBlock, SceneBlockInsert, SceneBlockUpdate } from '@/types'
+import type { SceneBlock, SceneBlockInsert, SceneBlockUpdate, SceneBlockTag } from '@/types'
 import { sceneBlockService } from '@/lib/services/browser/sceneBlockService'
 
 // Enable Immer MapSet plugin for Map/Set support
@@ -10,6 +10,7 @@ enableMapSet()
 
 interface SceneBlockState {
   blocks: Map<string, SceneBlock>
+  tags: Map<string, SceneBlockTag[]> // blockId -> tags array
   isLoading: boolean
   error: string | null
   fetchedScenes: Set<string> // Track which scenes we&apos;ve fetched
@@ -22,6 +23,10 @@ interface SceneBlockState {
     deleteBlock: (id: string) => Promise<void>
     reorder: (sceneId: string, blockIds: string[]) => Promise<void>
     setBlocks: (sceneId: string, blocks: SceneBlock[]) => void
+    // Tag actions
+    fetchTagsForScene: (sceneId: string) => Promise<void>
+    addTag: (sceneId: string, blockId: string, tagName: string) => Promise<void>
+    removeTag: (blockId: string, tagName: string) => Promise<void>
     clearError: () => void
   }
 }
@@ -34,6 +39,7 @@ export const useSceneBlockStore = create<SceneBlockState>()(
   // persist(
     immer((set, get) => ({
       blocks: new Map(),
+      tags: new Map(),
       isLoading: false,
       error: null,
       fetchedScenes: new Set(),
@@ -200,6 +206,53 @@ export const useSceneBlockStore = create<SceneBlockState>()(
             state.fetchedScenes.add(sceneId)
             state._version++ // Force re-render
           })
+        },
+
+        // Tag actions
+        fetchTagsForScene: async (sceneId: string) => {
+          try {
+            const sceneTags = await sceneBlockService.getTagsForScene(sceneId)
+            set(state => {
+              // Group tags by blockId
+              sceneTags.forEach(tag => {
+                const existing = state.tags.get(tag.block_id) || []
+                if (!existing.find(t => t.tag_name === tag.tag_name)) {
+                  state.tags.set(tag.block_id, [...existing, tag])
+                }
+              })
+              state._version++
+            })
+          } catch (error) {
+            console.error('Failed to fetch tags:', error)
+          }
+        },
+
+        addTag: async (sceneId: string, blockId: string, tagName: string) => {
+          try {
+            const tag = await sceneBlockService.addTag(sceneId, blockId, tagName)
+            set(state => {
+              const existing = state.tags.get(blockId) || []
+              state.tags.set(blockId, [...existing, tag])
+              state._version++
+            })
+          } catch (error) {
+            console.error('Failed to add tag:', error)
+            throw error
+          }
+        },
+
+        removeTag: async (blockId: string, tagName: string) => {
+          try {
+            await sceneBlockService.removeTag(blockId, tagName)
+            set(state => {
+              const existing = state.tags.get(blockId) || []
+              state.tags.set(blockId, existing.filter(t => t.tag_name !== tagName))
+              state._version++
+            })
+          } catch (error) {
+            console.error('Failed to remove tag:', error)
+            throw error
+          }
         },
 
         clearError: () => set({ error: null }),

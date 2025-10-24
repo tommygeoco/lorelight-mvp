@@ -530,7 +530,89 @@ interface BlockContent {
 
 ---
 
-### Scene NPCs (Enemy Management)
+### Multi-Configuration Ambience System
+
+**Purpose:** Allow scenes to have multiple audio tracks and lighting configurations with intelligent selection-based activation.
+
+**Architecture:**
+
+**Database Schema:**
+```sql
+-- Junction table: Scene to Light Configs (many-to-many)
+CREATE TABLE scene_light_configs (
+  id UUID PRIMARY KEY,
+  scene_id UUID REFERENCES scenes(id) ON DELETE CASCADE,
+  light_config_id UUID REFERENCES light_configs(id) ON DELETE CASCADE,
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+  is_selected BOOLEAN DEFAULT false,
+  order_index INTEGER DEFAULT 0,
+  UNIQUE(scene_id, light_config_id)
+);
+
+-- Junction table: Scene to Audio Files (many-to-many)
+CREATE TABLE scene_audio_files (
+  id UUID PRIMARY KEY,
+  scene_id UUID REFERENCES scenes(id) ON DELETE CASCADE,
+  audio_file_id UUID REFERENCES audio_files(id) ON DELETE CASCADE,
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+  is_selected BOOLEAN DEFAULT false,
+  volume NUMERIC DEFAULT 0.7,
+  loop BOOLEAN DEFAULT true,
+  order_index INTEGER DEFAULT 0,
+  UNIQUE(scene_id, audio_file_id)
+);
+
+-- Tag system for notes
+CREATE TABLE scene_block_tags (
+  id UUID PRIMARY KEY,
+  scene_id UUID REFERENCES scenes(id) ON DELETE CASCADE,
+  block_id UUID REFERENCES scene_blocks(id) ON DELETE CASCADE,
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+  tag_name TEXT NOT NULL,
+  UNIQUE(block_id, tag_name)
+);
+```
+
+**Selection & Activation Logic:**
+- **One selected item per category**: Only ONE audio and ONE light config can be selected at a time
+- **First added = auto-selected**: When first audio/light is added to scene, automatically marked as selected
+- **Click = activate + select**: Clicking a row immediately activates AND marks as selected (deselects others)
+- **Page-level play**: Circular play button activates all currently selected items
+- **Independent control**: Can play audio or activate lights without scene-level activation
+- **Smart defaults**: Removing selected item auto-selects first remaining item
+
+**User Flow:**
+1. Add multiple audio tracks to scene
+2. Add multiple lighting configurations to scene
+3. First added automatically selected as default
+4. Click any row to immediately activate AND select it
+5. Page-level play button activates all selected configs
+6. Remove items with X button (hover) or context menu
+
+**UI Components:**
+- `SceneAmbienceSection.tsx` - Lighting and Audio sections with table-based lists
+- `light-config/LightingRow.tsx` - Clickable row for light selection
+- `light-config/AudioRow.tsx` - Audio row with visualizer bars (matches library style)
+- `SceneHero.tsx` - Page-level play button (circular gradient, disabled when no selection)
+
+**Notes Enhancement:**
+- Tag system: Add/remove tags on notes
+- Tag filtering: Tab navigation to filter by tag
+- Expansion panel: 4th column (320px) slides in smoothly
+- Highlight: Expanded note shows purple background
+
+**Current Status:** ✅ Implemented (Migration 019)
+- Stores: `sceneLightConfigStore.ts`, `sceneAudioFileStore.ts`
+- Services: `sceneLightConfigService.ts`, `sceneAudioFileService.ts`
+- Enhanced: `sceneBlockStore.ts` with tag actions
+
+---
+
+### Scene NPCs (Enemy Management) - DEPRECATED
+
+**Note:** Scene NPCs feature has been removed in favor of simplified scene management. NPC tracking moved to external tools or campaign-level management.
+
+**Previous Purpose:** Track NPCs and enemies relevant to specific scenes for quick reference during gameplay.
 
 **Purpose:** Track NPCs and enemies relevant to specific scenes for quick reference during gameplay.
 

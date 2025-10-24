@@ -1,24 +1,30 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import type { Scene } from '@/types'
 import { useSceneBlockStore } from '@/store/sceneBlockStore'
 import { SceneNoteCard } from './SceneNoteCard'
-import { Plus } from 'lucide-react'
+import { AddButton } from '@/components/ui/AddButton'
 
 interface SceneNotesSectionProps {
   scene: Scene
+  onExpandNote?: (blockId: string | null) => void
+  expandedBlockId?: string | null
 }
 
 /**
- * SceneNotesSection - Card-based notes display matching Figma design
- * Context7: Minimal state, optimistic updates, fetch-once pattern
+ * SceneNotesSection - Card-based notes with tag filtering
  */
-export function SceneNotesSection({ scene }: SceneNotesSectionProps) {
+export function SceneNotesSection({ scene, onExpandNote, expandedBlockId }: SceneNotesSectionProps) {
   const blocksMap = useSceneBlockStore((state) => state.blocks)
-  const version = useSceneBlockStore((state) => state._version) // Subscribe to changes
+  const tagsMap = useSceneBlockStore((state) => state.tags)
+  const version = useSceneBlockStore((state) => state._version)
   const addBlock = useSceneBlockStore((state) => state.actions.addBlock)
   const deleteBlock = useSceneBlockStore((state) => state.actions.deleteBlock)
+  
+  const [activeTag, setActiveTag] = useState<string | null>(null)
+
+  // Tags are preloaded by SceneEditor - no fetching here for instant display
 
   // Get blocks for this scene
   const blocks = useMemo(() => {
@@ -29,11 +35,31 @@ export function SceneNotesSection({ scene }: SceneNotesSectionProps) {
 
     return filtered
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [blocksMap, scene.id, version]) // version intentionally included to force re-render on changes
+  }, [blocksMap, scene.id, version])
+
+  // Get unique tags for this scene
+  const uniqueTags = useMemo(() => {
+    const tagSet = new Set<string>()
+    blocks.forEach(block => {
+      const blockTags = tagsMap.get(block.id) || []
+      blockTags.forEach(tag => tagSet.add(tag.tag_name))
+    })
+    return Array.from(tagSet).sort()
+  }, [blocks, tagsMap, version])
+
+  // Filter blocks by active tag
+  const filteredBlocks = useMemo(() => {
+    if (!activeTag) return blocks
+    
+    return blocks.filter(block => {
+      const blockTags = tagsMap.get(block.id) || []
+      return blockTags.some(tag => tag.tag_name === activeTag)
+    })
+  }, [blocks, activeTag, tagsMap, version])
 
   const handleAddNote = async () => {
     try {
-      await addBlock({
+      const newBlock = await addBlock({
         scene_id: scene.id,
         type: 'text',
         content: {
@@ -42,28 +68,41 @@ export function SceneNotesSection({ scene }: SceneNotesSectionProps) {
         },
         order_index: blocks.length,
       })
+
+      // If we have an active tag filter, add that tag to the new note
+      if (activeTag) {
+        const { addTag } = useSceneBlockStore.getState().actions
+        await addTag(scene.id, newBlock.id, activeTag).catch(() => {
+          // Silently handle tag addition failure
+        })
+      }
     } catch (error) {
       console.error('Failed to add note:', error)
-      // Silently fail - migration 015 may not be applied yet
     }
   }
 
   const handleClearAll = async () => {
     if (!confirm(`Delete all ${blocks.length} notes? This cannot be undone.`)) return
 
-    // Delete all blocks in parallel
     await Promise.allSettled(
       blocks.map(block => deleteBlock(block.id))
     )
   }
 
   return (
-    <div className="w-full">
+    <div className="w-full pt-[48px]">
       {/* Section header */}
-      <div className="pb-0 pt-[24px] flex items-center justify-between">
-        <h2 className="font-['Inter'] text-[16px] font-semibold leading-[24px] text-white">
-          Notes {blocks.length > 0 && <span className="text-white/40">({blocks.length})</span>}
-        </h2>
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-2">
+          <h2 className="font-['Inter'] text-[16px] font-semibold leading-[24px] text-white">
+            Notes
+          </h2>
+          {blocks.length > 0 && (
+            <span className="px-2 py-0.5 bg-purple-500/20 border border-purple-500/30 rounded-[6px] text-[11px] text-white/70">
+              {blocks.length}
+            </span>
+          )}
+        </div>
         {blocks.length > 3 && (
           <button
             onClick={handleClearAll}
@@ -74,39 +113,79 @@ export function SceneNotesSection({ scene }: SceneNotesSectionProps) {
         )}
       </div>
 
-      {/* Notes grid */}
-      <div className="px-0 py-[24px]">
-        {blocks.length === 0 ? (
+      {/* Tag filter tabs - styled like audio library */}
+      {uniqueTags.length > 0 && (
+        <div className="flex gap-1.5 overflow-x-auto scrollbar-custom py-2">
           <button
-            onClick={handleAddNote}
-            className="w-full flex items-center justify-center gap-2 px-[16px] py-[12px] rounded-[12px] bg-white/[0.03] hover:bg-white/[0.05] text-white/40 hover:text-white/70 transition-colors font-['Inter'] text-[14px]"
+            onClick={() => setActiveTag(null)}
+            className={`px-2 py-1 rounded-[6px] text-[12px] whitespace-nowrap transition-colors ${
+              activeTag === null 
+                ? 'bg-purple-500/30 border border-purple-500/50 text-white' 
+                : 'bg-white/5 border border-white/10 text-white/60 hover:bg-white/10 hover:text-white'
+            }`}
           >
-            <Plus className="w-4 h-4" />
-            Add Note
+            All ({blocks.length})
           </button>
-        ) : (
-          <div className="space-y-4">
-            {/* 2-column grid */}
-            <div className="grid grid-cols-2 gap-4">
-              {blocks.map((block) => (
-                <SceneNoteCard
-                  key={block.id}
-                  block={block}
-                />
-              ))}
-            </div>
+          {uniqueTags.map(tag => {
+            const count = blocks.filter(b => {
+              const blockTags = tagsMap.get(b.id) || []
+              return blockTags.some(t => t.tag_name === tag)
+            }).length
+            
+            return (
+              <button
+                key={tag}
+                onClick={() => setActiveTag(tag)}
+                className={`px-2 py-1 rounded-[6px] text-[12px] whitespace-nowrap transition-colors ${
+                  activeTag === tag 
+                    ? 'bg-purple-500/30 border border-purple-500/50 text-white' 
+                    : 'bg-white/5 border border-white/10 text-white/60 hover:bg-white/10 hover:text-white'
+                }`}
+              >
+                {tag} ({count})
+              </button>
+            )
+          })}
+        </div>
+      )}
 
-            {/* Add note button */}
-            <button
-              onClick={handleAddNote}
-              className="w-full flex items-center justify-center gap-2 px-[16px] py-[12px] rounded-[12px] bg-white/[0.03] hover:bg-white/[0.05] text-white/40 hover:text-white/70 transition-colors font-['Inter'] text-[14px]"
-            >
-              <Plus className="w-4 h-4" />
-              Add Note
-            </button>
+      {/* Notes grid */}
+      {filteredBlocks.length === 0 ? (
+        <>
+          {blocks.length > 0 && (
+            <div className="text-center py-4">
+              <p className="text-white/40 text-[0.875rem]">
+                No notes with this tag
+              </p>
+            </div>
+          )}
+          <AddButton onClick={handleAddNote}>
+            Add Note
+          </AddButton>
+        </>
+      ) : (
+        <>
+          {/* 2-column grid */}
+          <div className="grid grid-cols-2 gap-4">
+            {filteredBlocks.map((block) => (
+              <SceneNoteCard
+                key={block.id}
+                block={block}
+                sceneId={scene.id}
+                isExpanded={expandedBlockId === block.id}
+                onExpand={onExpandNote}
+              />
+            ))}
           </div>
-        )}
-      </div>
+
+          {/* Add note button */}
+          <div className="mt-2">
+            <AddButton onClick={handleAddNote}>
+              Add Note
+            </AddButton>
+          </div>
+        </>
+      )}
     </div>
   )
 }
